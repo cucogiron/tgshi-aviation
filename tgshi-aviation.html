@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>TG-SHI · Shenshi</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+
+:root {
+–navy: #1B2A4A;
+–navy-mid: #2E4272;
+–sky: #4A90D9;
+–sky-light: #EAF2FB;
+–green: #1A6B3A;
+–green-light: #E3F5EB;
+–amber: #B8600A;
+–amber-light: #FFF3CC;
+–red: #8B1A1A;
+–red-light: #FDECEA;
+–gray-bg: #F4F5F7;
+–gray-border: #DDE1E8;
+–white: #FFFFFF;
+–text: #1A1F2E;
+–muted: #6B7280;
+–mono: ‘IBM Plex Mono’, monospace;
+–sans: ‘IBM Plex Sans’, sans-serif;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+font-family: var(–sans);
+background: var(–gray-bg);
+color: var(–text);
+min-height: 100vh;
+max-width: 480px;
+margin: 0 auto;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+background: var(–navy);
+padding: 16px 20px 12px;
+position: sticky; top: 0; z-index: 100;
+}
+.topbar-row { display: flex; align-items: center; justify-content: space-between; }
+.topbar h1 { font-family: var(–mono); font-size: 18px; color: white; letter-spacing: 0.05em; }
+.topbar .sub { font-size: 11px; color: rgba(255,255,255,0.55); font-family: var(–mono); margin-top: 2px; }
+.tach-pill {
+background: rgba(255,255,255,0.12);
+border: 1px solid rgba(255,255,255,0.2);
+border-radius: 20px;
+padding: 4px 12px;
+font-family: var(–mono);
+font-size: 12px;
+color: white;
+}
+.tach-pill span { color: rgba(255,255,255,0.6); margin-right: 4px; }
+
+/* ── TABS ── */
+.tabs {
+background: var(–navy);
+display: flex;
+padding: 0 20px 0;
+gap: 4px;
+}
+.tab {
+flex: 1;
+padding: 10px 4px;
+text-align: center;
+font-size: 11px;
+font-weight: 600;
+color: rgba(255,255,255,0.45);
+cursor: pointer;
+border-bottom: 2px solid transparent;
+transition: all 0.2s;
+letter-spacing: 0.04em;
+text-transform: uppercase;
+}
+.tab.active { color: white; border-bottom-color: var(–sky); }
+
+/* ── CONTENT ── */
+.page { display: none; padding: 16px; }
+.page.active { display: block; }
+
+/* ── CARDS ── */
+.card {
+background: var(–white);
+border-radius: 12px;
+border: 1px solid var(–gray-border);
+margin-bottom: 12px;
+overflow: hidden;
+}
+.card-header {
+padding: 12px 16px 10px;
+border-bottom: 1px solid var(–gray-border);
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+.card-title {
+font-size: 11px;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.08em;
+color: var(–muted);
+}
+.card-body { padding: 14px 16px; }
+
+/* ── STAT GRID ── */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.stat {
+background: var(–white);
+border-radius: 10px;
+border: 1px solid var(–gray-border);
+padding: 12px 10px;
+text-align: center;
+}
+.stat-label { font-size: 10px; font-weight: 600; color: var(–muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.stat-value { font-family: var(–mono); font-size: 22px; font-weight: 600; margin-top: 4px; line-height: 1; }
+.stat.coco .stat-value { color: #1B4E8A; }
+.stat.cuco .stat-value { color: #1A6B3A; }
+.stat.senshi .stat-value { color: #B8600A; }
+
+/* ── MONTH BARS ── */
+.month-row {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 7px 0;
+border-bottom: 1px solid #F0F2F5;
+}
+.month-row:last-child { border-bottom: none; }
+.month-label { font-family: var(–mono); font-size: 11px; color: var(–muted); width: 28px; flex-shrink: 0; }
+.bar-track { flex: 1; height: 8px; background: #F0F2F5; border-radius: 4px; overflow: hidden; display: flex; }
+.bar-seg { height: 100%; transition: width 0.5s; }
+.bar-coco { background: #4A7CC7; }
+.bar-cuco { background: #2DA05A; }
+.bar-senshi { background: #E08B20; }
+.month-total { font-family: var(–mono); font-size: 11px; color: var(–muted); width: 32px; text-align: right; flex-shrink: 0; }
+
+/* ── FLIGHT LIST ── */
+.flight-item {
+padding: 12px 16px;
+border-bottom: 1px solid #F0F2F5;
+display: flex;
+gap: 12px;
+align-items: flex-start;
+}
+.flight-item:last-child { border-bottom: none; }
+.flight-dot {
+width: 8px; height: 8px; border-radius: 50%;
+flex-shrink: 0; margin-top: 5px;
+}
+.dot-coco { background: #4A7CC7; }
+.dot-cuco { background: #2DA05A; }
+.dot-senshi { background: #E08B20; }
+.flight-main { flex: 1; min-width: 0; }
+.flight-route { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.flight-meta { font-size: 11px; color: var(–muted); margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; }
+.flight-right { text-align: right; flex-shrink: 0; }
+.flight-hrs { font-family: var(–mono); font-size: 15px; font-weight: 600; }
+.flight-date { font-family: var(–mono); font-size: 10px; color: var(–muted); }
+.badge {
+display: inline-block;
+padding: 2px 7px;
+border-radius: 10px;
+font-size: 10px;
+font-weight: 600;
+letter-spacing: 0.04em;
+}
+.badge-std { background: #E8F0FD; color: #1B4E8A; }
+.badge-ff  { background: #FEF3CD; color: #8B5E00; }
+.badge-personal { background: #F0F2F5; color: #4B5563; }
+.badge-mante { background: #FDE8E8; color: #8B1A1A; }
+
+/* ── LOG FORM ── */
+.form-section { margin-bottom: 20px; }
+.form-label {
+display: block;
+font-size: 11px;
+font-weight: 600;
+color: var(–muted);
+text-transform: uppercase;
+letter-spacing: 0.07em;
+margin-bottom: 6px;
+}
+.form-input, .form-select {
+width: 100%;
+padding: 12px 14px;
+border: 1.5px solid var(–gray-border);
+border-radius: 10px;
+font-family: var(–sans);
+font-size: 15px;
+color: var(–text);
+background: var(–white);
+appearance: none;
+-webkit-appearance: none;
+outline: none;
+transition: border-color 0.2s;
+}
+.form-input:focus, .form-select:focus { border-color: var(–sky); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+.seg-control {
+display: grid;
+grid-template-columns: repeat(var(–cols, 3), 1fr);
+background: #F0F2F5;
+border-radius: 10px;
+padding: 3px;
+gap: 2px;
+}
+.seg-btn {
+padding: 9px 4px;
+border: none;
+border-radius: 8px;
+background: transparent;
+font-family: var(–sans);
+font-size: 13px;
+font-weight: 500;
+color: var(–muted);
+cursor: pointer;
+transition: all 0.15s;
+text-align: center;
+}
+.seg-btn.active {
+background: var(–white);
+color: var(–text);
+font-weight: 600;
+box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.tipo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tipo-card {
+padding: 12px;
+border: 2px solid var(–gray-border);
+border-radius: 10px;
+cursor: pointer;
+transition: all 0.15s;
+text-align: center;
+}
+.tipo-card.active { border-color: var(–sky); background: var(–sky-light); }
+.tipo-card .tipo-icon { font-size: 20px; margin-bottom: 4px; }
+.tipo-card .tipo-name { font-size: 12px; font-weight: 600; }
+.tipo-card .tipo-desc { font-size: 10px; color: var(–muted); margin-top: 2px; }
+
+.btn-primary {
+width: 100%;
+padding: 16px;
+background: var(–navy);
+color: white;
+border: none;
+border-radius: 12px;
+font-family: var(–sans);
+font-size: 16px;
+font-weight: 600;
+cursor: pointer;
+transition: opacity 0.2s;
+letter-spacing: 0.02em;
+}
+.btn-primary:active { opacity: 0.85; }
+
+.csv-preview {
+background: #F8F9FC;
+border: 1px solid var(–gray-border);
+border-radius: 10px;
+padding: 14px;
+font-family: var(–mono);
+font-size: 11px;
+color: var(–muted);
+white-space: pre;
+overflow-x: auto;
+margin-top: 12px;
+display: none;
+}
+
+.success-bar {
+background: var(–green);
+color: white;
+padding: 12px 16px;
+border-radius: 10px;
+font-size: 13px;
+font-weight: 600;
+margin-bottom: 12px;
+display: none;
+align-items: center;
+gap: 8px;
+}
+.success-bar::before { content: “✓”; font-size: 16px; }
+
+/* ── QUICK STATS ── */
+.qs-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F0F2F5; }
+.qs-row:last-child { border-bottom: none; }
+.qs-label { font-size: 13px; color: var(–text); }
+.qs-val { font-family: var(–mono); font-size: 13px; font-weight: 600; }
+.qs-coco { color: #1B4E8A; }
+.qs-cuco { color: #1A6B3A; }
+.qs-senshi { color: #B8600A; }
+
+/* ── FILTER ROW ── */
+.filter-row { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; }
+.filter-pill {
+padding: 5px 12px;
+border-radius: 20px;
+border: 1.5px solid var(–gray-border);
+font-size: 12px;
+font-weight: 600;
+white-space: nowrap;
+cursor: pointer;
+background: var(–white);
+color: var(–muted);
+transition: all 0.15s;
+flex-shrink: 0;
+}
+.filter-pill.active { background: var(–navy); color: white; border-color: var(–navy); }
+
+.empty-state {
+text-align: center;
+padding: 32px 16px;
+color: var(–muted);
+font-size: 13px;
+}
+.empty-state .big { font-size: 32px; margin-bottom: 8px; }
+</style>
+
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <div>
+      <h1>TG-SHI</h1>
+      <div class="sub">SHENSHI AVIATION</div>
+    </div>
+    <div class="tach-pill"><span>TACH</span><span id="tachDisplay">916.0</span></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('dashboard')">Panel</div>
+  <div class="tab" onclick="switchTab('flights')">Vuelos</div>
+  <div class="tab" onclick="switchTab('log')">+ Registrar</div>
+</div>
+
+<!-- ═══════════════════════════════════ DASHBOARD ═══════════════════════════════════ -->
+
+<div class="page active" id="page-dashboard">
+
+  <div class="stat-grid">
+    <div class="stat coco">
+      <div class="stat-label">COCO</div>
+      <div class="stat-value" id="dash-coco-hrs">—</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">hrs 2026</div>
+    </div>
+    <div class="stat cuco">
+      <div class="stat-label">CUCO</div>
+      <div class="stat-value" id="dash-cuco-hrs">—</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">hrs 2026</div>
+    </div>
+    <div class="stat senshi">
+      <div class="stat-label">CHARTER</div>
+      <div class="stat-value" id="dash-senshi-hrs">—</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">hrs 2026</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Horas mensuales 2026</div>
+      <div style="display:flex;gap:10px;font-size:10px;">
+        <span style="color:#4A7CC7">■ COCO</span>
+        <span style="color:#2DA05A">■ CUCO</span>
+        <span style="color:#E08B20">■ Charter</span>
+      </div>
+    </div>
+    <div class="card-body" id="monthBars"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Últimos 5 vuelos</div>
+    </div>
+    <div id="recentFlights"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Resumen 2026</div>
+    </div>
+    <div class="card-body" id="summary2026"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════ FLIGHTS ═══════════════════════════════════ -->
+
+<div class="page" id="page-flights">
+
+  <div class="filter-row" id="filterRow">
+    <div class="filter-pill active" onclick="filterFlights('ALL',this)">Todos</div>
+    <div class="filter-pill" onclick="filterFlights('COCO',this)">COCO</div>
+    <div class="filter-pill" onclick="filterFlights('CUCO',this)">CUCO</div>
+    <div class="filter-pill" onclick="filterFlights('SENSHI',this)">Charter</div>
+    <div class="filter-pill" onclick="filterFlights('2026',this)">2026</div>
+    <div class="filter-pill" onclick="filterFlights('2025',this)">2025</div>
+  </div>
+
+  <div class="card">
+    <div id="flightList"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════ LOG ENTRY ═══════════════════════════════════ -->
+
+<div class="page" id="page-log">
+
+  <div class="success-bar" id="successBar">Vuelo guardado. Copia el CSV al Excel.</div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">Nuevo vuelo — TG-SHI</div></div>
+    <div class="card-body">
+
+```
+  <div class="form-section">
+    <label class="form-label">Fecha</label>
+    <input type="date" class="form-input" id="f-fecha">
+  </div>
+
+  <div class="form-section">
+    <label class="form-label">Piloto</label>
+    <div class="seg-control" style="--cols:3">
+      <button class="seg-btn active" onclick="setPiloto('FERNANDO',this)">FERNANDO</button>
+      <button class="seg-btn" onclick="setPiloto('BARRAGAN',this)">BARRAGAN</button>
+      <button class="seg-btn" onclick="setPiloto('OTRO',this)">OTRO</button>
+    </div>
+    <input type="text" class="form-input" id="f-piloto-otro" placeholder="Nombre del piloto" style="margin-top:8px;display:none">
+  </div>
+
+  <div class="form-section">
+    <label class="form-label">Responsable</label>
+    <div class="seg-control" style="--cols:3">
+      <button class="seg-btn active" onclick="setResp('COCO',this)">COCO</button>
+      <button class="seg-btn" onclick="setResp('CUCO',this)">CUCO</button>
+      <button class="seg-btn" onclick="setResp('SENSHI',this)">SHENSHI</button>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <label class="form-label">Tipo de vuelo</label>
+    <div class="tipo-grid">
+      <div class="tipo-card active" onclick="setTipo('PERSONAL',this)">
+        <div class="tipo-icon">✈</div>
+        <div class="tipo-name">Personal</div>
+        <div class="tipo-desc">Sin ingreso</div>
+      </div>
+      <div class="tipo-card" onclick="setTipo('STD',this)">
+        <div class="tipo-icon">💼</div>
+        <div class="tipo-name">Charter STD</div>
+        <div class="tipo-desc">/hr</div>
+      </div>
+      <div class="tipo-card" onclick="setTipo('FF',this)">
+        <div class="tipo-icon">👥</div>
+        <div class="tipo-name">Charter FF</div>
+        <div class="tipo-desc">/hr</div>
+      </div>
+      <div class="tipo-card" onclick="setTipo('MANTE',this)">
+        <div class="tipo-icon">🔧</div>
+        <div class="tipo-name">Mantenimiento</div>
+        <div class="tipo-desc">Sin ingreso</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section" id="usuarioSection">
+    <label class="form-label">Usuario / Cliente</label>
+    <select class="form-select" id="f-usuario">
+      <option value="COCO">COCO (personal)</option>
+      <option value="CUCO">CUCO (personal)</option>
+      <option value="ALQ COCO">ALQ COCO</option>
+      <option value="ALQ CUCO">ALQ CUCO</option>
+      <option value="ALQ COCO FF">ALQ COCO FF</option>
+      <option value="ALQ CUCO FF">ALQ CUCO FF</option>
+      <option value="ALQ LICO">ALQ LICO</option>
+      <option value="ALQ PREMISA">ALQ PREMISA</option>
+      <option value="ALQ FER">ALQ FER</option>
+      <option value="MANTE">MANTE</option>
+      <option value="SENSHI">SENSHI</option>
+    </select>
+  </div>
+
+  <div class="form-section">
+    <label class="form-label">Ruta</label>
+    <input type="text" class="form-input" id="f-ruta" placeholder="ej. AUR-MGPB-AUR" autocomplete="off" style="text-transform:uppercase">
+  </div>
+
+  <div class="form-row">
+    <div class="form-section" style="margin:0">
+      <label class="form-label">HRM Inicio</label>
+      <input type="number" class="form-input" id="f-hrm-ini" placeholder="916.0" step="0.1" inputmode="decimal">
+    </div>
+    <div class="form-section" style="margin:0">
+      <label class="form-label">HRM Fin</label>
+      <input type="number" class="form-input" id="f-hrm-fin" placeholder="917.8" step="0.1" inputmode="decimal">
+    </div>
+  </div>
+
+  <div id="hrsCalc" style="text-align:center;padding:10px 0 4px;font-family:var(--mono);font-size:13px;color:var(--muted);display:none">
+    <span id="hrsResult"></span>
+  </div>
+
+  <div class="form-section" id="combustSection" style="margin-top:12px">
+    <label class="form-label">Combustible (QTZ) <span style="font-weight:400;color:var(--muted)">(opcional)</span></label>
+    <input type="number" class="form-input" id="f-comb" placeholder="0.00" step="0.01" inputmode="decimal">
+  </div>
+
+  <div class="form-section" id="esperaSection">
+    <label class="form-label">Espera en tierra (hrs)</label>
+    <input type="number" class="form-input" id="f-espera" placeholder="0.0" step="0.5" inputmode="decimal" value="0">
+  </div>
+
+  <div class="form-section" id="revenueSection" style="display:none">
+    <label class="form-label">Ingreso charter ($)</label>
+    <input type="number" class="form-input" id="f-rev" placeholder="auto" step="0.01" inputmode="decimal">
+    <div style="font-size:11px;color:var(--muted);margin-top:4px" id="revHint"></div>
+  </div>
+
+  <div class="form-section">
+    <label class="form-label">Notas</label>
+    <input type="text" class="form-input" id="f-notes" placeholder="opcional">
+  </div>
+
+  <button class="btn-primary" onclick="saveEntry()">Guardar vuelo</button>
+
+</div>
+```
+
+  </div>
+
+  <div class="card" id="csvCard" style="display:none">
+    <div class="card-header">
+      <div class="card-title">Copiar al Excel</div>
+      <button onclick="copyCSV()" style="font-size:12px;font-weight:600;color:var(--sky);background:none;border:none;cursor:pointer;padding:4px 8px">Copiar</button>
+    </div>
+    <div class="card-body">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
+        Pega esta fila en el <strong>FLIGHT LOG</strong> del Excel:<br>
+        Abre la siguiente fila vacía y pega con Ctrl+V
+      </div>
+      <div class="csv-preview" id="csvPreview" style="display:block"></div>
+    </div>
+  </div>
+
+  <div id="savedList" style="margin-top:8px"></div>
+
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const flights = [{"date":"2023-03-03","resp":"COCO","usuario":"COCO","ruta":"AUR-REU-AUR","piloto":"FERNANDO","hrm_ini":333.0,"hrm_fin":334.8,"hrs":1.8,"tipo":"PERSONAL","rev":0.0},{"date":"2023-03-24","resp":"COCO","usuario":"COCO","ruta":"AUR-YSV-AUR","piloto":"FERNANDO","hrm_ini":334.8,"hrm_fin":337.1,"hrs":2.3,"tipo":"PERSONAL","rev":0.0},{"date":"2023-03-24","resp":"COCO","usuario":"COCO","ruta":"AUR-YSV-AUR","piloto":"FERNANDO","hrm_ini":337.1,"hrm_fin":339.0,"hrs":1.9,"tipo":"PERSONAL","rev":0.0},{"date":"2023-03-30","resp":"COCO","usuario":"COCO","ruta":"AUR-YSV-AUR","piloto":"FERNANDO","hrm_ini":339.0,"hrm_fin":340.9,"hrs":1.9,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-01","resp":"COCO","usuario":"COCO","ruta":"RIO","piloto":"OTTO VALDEZ","hrm_ini":340.9,"hrm_fin":342.9,"hrs":2.0,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-01","resp":"COCO","usuario":"COCO","ruta":"RIO","piloto":"OTTO VALDEZ","hrm_ini":342.9,"hrm_fin":345.0,"hrs":2.1,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-03","resp":"COCO","usuario":"COCO","ruta":"AUR-YSV-AUR","piloto":"FERNANDO MENDEZ","hrm_ini":345.0,"hrm_fin":347.4,"hrs":2.4,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-04","resp":"COCO","usuario":"COCO","ruta":"AUR-IZT-AUR","piloto":"OTTO VALDEZ","hrm_ini":347.4,"hrm_fin":348.7,"hrs":1.3,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-09","resp":"COCO","usuario":"COCO","ruta":"RP","piloto":"FERNANDO","hrm_ini":348.7,"hrm_fin":349.7,"hrs":1.0,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-10","resp":"COCO","usuario":"COCO","ruta":"MSLR","piloto":"FERNANDO","hrm_ini":349.7,"hrm_fin":351.9,"hrs":2.2,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-11","resp":"CUCO","usuario":"CUCO","ruta":"PBR","piloto":"FERNANDO","hrm_ini":351.9,"hrm_fin":354.2,"hrs":2.3,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-11","resp":"SENSHI","usuario":"MANTE","ruta":"BOMBA COMB","piloto":"","hrm_ini":354.2,"hrm_fin":354.8,"hrs":0.6,"tipo":"MANTE","rev":0.0},{"date":"2023-04-25","resp":"COCO","usuario":"COCO","ruta":"RP","piloto":"FERNANDO","hrm_ini":354.8,"hrm_fin":356.1,"hrs":1.3,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-25","resp":"SENSHI","usuario":"MANTE","ruta":"AEROMOTORES","piloto":"","hrm_ini":356.1,"hrm_fin":356.9,"hrs":0.8,"tipo":"MANTE","rev":0.0},{"date":"2023-04-26","resp":"COCO","usuario":"COCO","ruta":"YSV","piloto":"FERNANDO","hrm_ini":356.9,"hrm_fin":359.0,"hrs":2.1,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-26","resp":"COCO","usuario":"COCO","ruta":"YSV","piloto":"FERNANDO","hrm_ini":359.0,"hrm_fin":361.2,"hrs":2.2,"tipo":"PERSONAL","rev":0.0},{"date":"2023-05-19","resp":"CUCO","usuario":"CUCO","ruta":"MGPB","piloto":"MANUEL","hrm_ini":361.2,"hrm_fin":363.8,"hrs":2.6,"tipo":"PERSONAL","rev":0.0},{"date":"2023-05-21","resp":"CUCO","usuario":"CUCO","ruta":"MGPB","piloto":"MANUEL","hrm_ini":363.8,"hrm_fin":366.1,"hrs":2.3,"tipo":"PERSONAL","rev":0.0},{"date":"2023-06-02","resp":"CUCO","usuario":"CUCO","ruta":"Local","piloto":"L. VIVAS","hrm_ini":366.1,"hrm_fin":366.7,"hrs":0.6,"tipo":"PERSONAL","rev":0.0},{"date":"2023-06-03","resp":"COCO","usuario":"COCO","ruta":"YSV","piloto":"FERNANDO","hrm_ini":366.7,"hrm_fin":368.7,"hrs":2.0,"tipo":"PERSONAL","rev":0.0},{"date":"2026-03-03","resp":"COCO","usuario":"COCO","ruta":"MZBZ","piloto":"","hrm_ini":889.9,"hrm_fin":893.4,"hrs":3.5,"tipo":"PERSONAL","rev":0.0},{"date":"2026-03-04","resp":"COCO","usuario":"COCO","ruta":"MGRD","piloto":"","hrm_ini":893.4,"hrm_fin":895.4,"hrs":2.0,"tipo":"PERSONAL","rev":0.0},{"date":"2026-03-24","resp":"COCO","usuario":"COCO","ruta":"PB","piloto":"","hrm_ini":895.4,"hrm_fin":898.4,"hrs":3.0,"tipo":"PERSONAL","rev":0.0},{"date":"2026-03-25","resp":"COCO","usuario":"COCO","ruta":"TNT","piloto":"","hrm_ini":898.4,"hrm_fin":902.1,"hrs":3.7,"tipo":"PERSONAL","rev":0.0},{"date":"2026-03-28","resp":"COCO","usuario":"ALQ HRS PIVARAL COCO","ruta":"IZP","piloto":"","hrm_ini":902.1,"hrm_fin":903.0,"hrs":0.9,"tipo":"STD","rev":675.0},{"date":"2026-03-28","resp":"SENSHI","usuario":"ALQ CUCO FF","ruta":"RIO","piloto":"","hrm_ini":903.0,"hrm_fin":904.8,"hrs":1.8,"tipo":"FF","rev":1170.0},{"date":"2026-03-29","resp":"CUCO","usuario":"CUCO","ruta":"MGPB","piloto":"","hrm_ini":904.8,"hrm_fin":907.2,"hrs":2.4,"tipo":"PERSONAL","rev":0.0},{"date":"2026-03-31","resp":"SENSHI","usuario":"ALQ COCO FF","ruta":"RIO","piloto":"","hrm_ini":907.2,"hrm_fin":909.1,"hrs":1.9,"tipo":"FF","rev":1235.0},{"date":"2026-04-03","resp":"SENSHI","usuario":"ALQ COCO FF","ruta":"RIO","piloto":"","hrm_ini":909.1,"hrm_fin":910.9,"hrs":1.8,"tipo":"FF","rev":1170.0},{"date":"2026-04-04","resp":"COCO","usuario":"ALQ HRS PIVARAL COCO","ruta":"EL ROSARIO","piloto":"","hrm_ini":910.9,"hrm_fin":911.8,"hrs":0.9,"tipo":"STD","rev":675.0},{"date":"2026-04-04","resp":"CUCO","usuario":"CUCO","ruta":"MGPB","piloto":"","hrm_ini":911.8,"hrm_fin":914.1,"hrs":2.3,"tipo":"PERSONAL","rev":0.0},{"date":"2026-04-05","resp":"SENSHI","usuario":"ALQ CUCO FF","ruta":"RIO","piloto":"","hrm_ini":914.1,"hrm_fin":916.0,"hrs":1.9,"tipo":"FF","rev":1235.0}];
+
+const monthly2026 = {"1":{"coco":5.4,"cuco":7.2,"senshi":17.0,"total":29.6},"2":{"coco":0.0,"cuco":0.0,"senshi":4.5,"total":4.5},"3":{"coco":13.1,"cuco":2.4,"senshi":3.7,"total":19.2},"4":{"coco":0.9,"cuco":2.3,"senshi":3.7,"total":6.9}};
+
+const MONTH_NAMES = ['','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+let lastTach = 916.0;
+let newEntries = JSON.parse(localStorage.getItem('tgshi_entries') || '[]');
+let currentFilter = 'ALL';
+let selectedPiloto = 'FERNANDO';
+let selectedResp = 'COCO';
+let selectedTipo = 'PERSONAL';
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('tachDisplay').textContent = lastTach.toFixed(1);
+  setToday();
+  buildDashboard();
+  buildFlightList('ALL');
+  buildSavedList();
+  calcHrs();
+  ['f-hrm-ini','f-hrm-fin'].forEach(id => {
+    document.getElementById(id).addEventListener('input', calcHrs);
+  });
+});
+
+function setToday() {
+  const d = new Date(); const pad = n => String(n).padStart(2,'0');
+  document.getElementById('f-fecha').value = `--`;
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function buildDashboard() {
+  const allFlights = [...flights, ...newEntries];
+
+  // 2026 totals
+  let coco26=0, cuco26=0, sen26=0;
+  allFlights.filter(f=>f.date.startsWith('2026')).forEach(f => {
+    if(f.resp==='COCO') coco26+=f.hrs;
+    else if(f.resp==='CUCO') cuco26+=f.hrs;
+    else sen26+=f.hrs;
+  });
+  document.getElementById('dash-coco-hrs').textContent = coco26.toFixed(1);
+  document.getElementById('dash-cuco-hrs').textContent = cuco26.toFixed(1);
+  document.getElementById('dash-senshi-hrs').textContent = sen26.toFixed(1);
+
+  // Month bars
+  const maxTotal = Math.max(...Object.values(monthly2026).map(m=>m.total), 1);
+  let barsHtml = '';
+  for(let m=1; m<=4; m++) {
+    const d = monthly2026[m] || {coco:0,cuco:0,senshi:0,total:0};
+    const scale = 100/maxTotal;
+    barsHtml += `<div class="month-row">
+      <div class="month-label"></div>
+      <div class="bar-track">
+        <div class="bar-seg bar-coco" style="width:%"></div>
+        <div class="bar-seg bar-cuco" style="width:%"></div>
+        <div class="bar-seg bar-senshi" style="width:%"></div>
+      </div>
+      <div class="month-total"></div>
+    </div>`;
+  }
+  document.getElementById('monthBars').innerHTML = barsHtml;
+
+  // Recent flights (last 5)
+  const recent = [...allFlights].reverse().slice(0,5);
+  document.getElementById('recentFlights').innerHTML = recent.map(f => flightHTML(f)).join('');
+
+  // Summary
+  const total26 = coco26+cuco26+sen26;
+  const pct = total26>0 ? t => `${((t/total26)*100).toFixed(0)}%` : ()=>'—';
+  document.getElementById('summary2026').innerHTML = `
+    <div class="qs-row"><div class="qs-label">Total horas 2026</div><div class="qs-val"> hrs</div></div>
+    <div class="qs-row"><div class="qs-label">COCO</div><div class="qs-val qs-coco"> hrs ()</div></div>
+    <div class="qs-row"><div class="qs-label">CUCO</div><div class="qs-val qs-cuco"> hrs ()</div></div>
+    <div class="qs-row"><div class="qs-label">Charter/Shenshi</div><div class="qs-val qs-senshi"> hrs ()</div></div>
+    <div class="qs-row"><div class="qs-label">Tach actual</div><div class="qs-val"></div></div>
+    <div class="qs-row"><div class="qs-label">Vuelos registrados</div><div class="qs-val"></div></div>
+  `;
+}
+
+// ── FLIGHT LIST ───────────────────────────────────────────────────────────────
+function flightHTML(f) {
+  const dotClass = f.resp==='COCO'?'dot-coco':f.resp==='CUCO'?'dot-cuco':'dot-senshi';
+  const badge = f.tipo==='STD'?'<span class="badge badge-std">STD</span>':
+                f.tipo==='FF'?'<span class="badge badge-ff">FF</span>':
+                f.tipo==='MANTE'?'<span class="badge badge-mante">MANTE</span>':
+                '<span class="badge badge-personal">Personal</span>';
+  const piloto = f.piloto ? `· ` : '';
+  const rev = f.rev>0 ? `· <strong>$</strong>` : '';
+  return `<div class="flight-item">
+    <div class="flight-dot "></div>
+    <div class="flight-main">
+      <div class="flight-route"> </div>
+      <div class="flight-meta">
+        <span></span><span></span></span>`:''}</span>`:''}
+      </div>
+    </div>
+    <div class="flight-right">
+      <div class="flight-hrs"><span style="font-size:10px;color:var(--muted)">hr</span></div>
+      <div class="flight-date"></div>
+    </div>
+  </div>`;
+}
+
+function buildFlightList(filter) {
+  const allFlights = [...flights, ...newEntries].reverse();
+  let filtered = allFlights;
+  if(filter==='COCO') filtered = allFlights.filter(f=>f.resp==='COCO');
+  else if(filter==='CUCO') filtered = allFlights.filter(f=>f.resp==='CUCO');
+  else if(filter==='SENSHI') filtered = allFlights.filter(f=>f.resp==='SENSHI');
+  else if(filter==='2026') filtered = allFlights.filter(f=>f.date.startsWith('2026'));
+  else if(filter==='2025') filtered = allFlights.filter(f=>f.date.startsWith('2025'));
+
+  if(filtered.length===0) {
+    document.getElementById('flightList').innerHTML = '<div class="empty-state"><div class="big">✈</div>Sin vuelos</div>';
+    return;
+  }
+  document.getElementById('flightList').innerHTML = filtered.slice(0,80).map(flightHTML).join('');
+}
+
+function filterFlights(filter, el) {
+  currentFilter = filter;
+  document.querySelectorAll('#filterRow .filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  buildFlightList(filter);
+}
+
+// ── LOG FORM ──────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['dashboard','flights','log'];
+    t.classList.toggle('active', names[i]===tab);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+}
+
+function setPiloto(val, el) {
+  selectedPiloto = val;
+  document.querySelectorAll('[onclick^="setPiloto"]').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('f-piloto-otro').style.display = val==='OTRO' ? 'block' : 'none';
+}
+
+function setResp(val, el) {
+  selectedResp = val;
+  document.querySelectorAll('[onclick^="setResp"]').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  updateUsuarioOptions();
+}
+
+function setTipo(val, el) {
+  selectedTipo = val;
+  document.querySelectorAll('.tipo-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  const isCharter = val==='STD'||val==='FF';
+  document.getElementById('revenueSection').style.display = isCharter ? 'block' : 'none';
+  if(isCharter) updateRevHint();
+  updateUsuarioOptions();
+}
+
+function updateRevHint() {
+  const ini = parseFloat(document.getElementById('f-hrm-ini').value)||0;
+  const fin = parseFloat(document.getElementById('f-hrm-fin').value)||0;
+  const hrs = Math.max(0, fin-ini);
+  const rate = selectedTipo==='FF' ? 650 : 750;
+  if(hrs>0) document.getElementById('revHint').textContent = `Auto: hr × $ = $${(hrs*rate).toFixed(2)}`;
+}
+
+function updateUsuarioOptions() {
+  const sel = document.getElementById('f-usuario');
+  const opts = {
+    personal: ['COCO','CUCO'],
+    charter_coco: ['ALQ COCO','ALQ COCO FF','ALQ HRS PIVARAL COCO'],
+    charter_cuco: ['ALQ CUCO','ALQ CUCO FF','CUCO HRS ADAN'],
+    charter_ext:  ['ALQ LICO','ALQ PREMISA','ALQ FER','ALQ LECLAIRE'],
+    mante: ['MANTE','SENSHI'],
+  };
+  let choices = [];
+  if(selectedTipo==='PERSONAL') choices = selectedResp==='COCO'?['COCO']:selectedResp==='CUCO'?['CUCO']:['SENSHI'];
+  else if(selectedTipo==='MANTE') choices = opts.mante;
+  else if(selectedResp==='COCO') choices = [...opts.charter_coco,...opts.charter_ext];
+  else if(selectedResp==='CUCO') choices = [...opts.charter_cuco,...opts.charter_ext];
+  else choices = [...opts.charter_coco,...opts.charter_cuco,...opts.charter_ext];
+
+  sel.innerHTML = choices.map(v=>`<option value=""></option>`).join('');
+}
+
+function calcHrs() {
+  const ini = parseFloat(document.getElementById('f-hrm-ini').value);
+  const fin = parseFloat(document.getElementById('f-hrm-fin').value);
+  const div = document.getElementById('hrsCalc');
+  if(!isNaN(ini) && !isNaN(fin) && fin>ini) {
+    const hrs = (fin-ini).toFixed(1);
+    const billed = parseFloat(hrs)<1.0 ? '1.0 (roundup)' : hrs;
+    document.getElementById('hrsResult').textContent = `hrs voladas · facturadas: `;
+    div.style.display = 'block';
+    updateRevHint();
+  } else {
+    div.style.display = 'none';
+  }
+}
+
+function saveEntry() {
+  const fecha = document.getElementById('f-fecha').value;
+  const piloto = selectedPiloto==='OTRO' ? document.getElementById('f-piloto-otro').value : selectedPiloto;
+  const resp = selectedResp;
+  const usuario = document.getElementById('f-usuario').value;
+  const ruta = document.getElementById('f-ruta').value.toUpperCase();
+  const hrm_ini = parseFloat(document.getElementById('f-hrm-ini').value);
+  const hrm_fin = parseFloat(document.getElementById('f-hrm-fin').value);
+  const comb = parseFloat(document.getElementById('f-comb').value)||0;
+  const espera = parseFloat(document.getElementById('f-espera').value)||0;
+  const notes = document.getElementById('f-notes').value;
+
+  if(!fecha||!ruta||isNaN(hrm_ini)||isNaN(hrm_fin)||hrm_fin<=hrm_ini) {
+    alert('Por favor completa: Fecha, Ruta, HRM Inicio y HRM Fin (fin > inicio)');
+    return;
+  }
+
+  const hrs = parseFloat((hrm_fin-hrm_ini).toFixed(1));
+  const rate = selectedTipo==='FF'?650:selectedTipo==='STD'?750:0;
+  const rev = document.getElementById('f-rev').value ?
+    parseFloat(document.getElementById('f-rev').value) :
+    (rate>0 ? parseFloat((hrs*rate).toFixed(2)) : 0);
+
+  // Period number for S column
+  const d = new Date(fecha);
+  const periodo = d.getFullYear()*12 + (d.getMonth()+1);
+
+  const entry = {fecha,piloto,resp,usuario,ruta,hrm_ini,hrm_fin,hrs,comb,espera,tipo:selectedTipo,rev,notes,periodo,
+    date:fecha  // for display
+  };
+
+  newEntries.unshift(entry);
+  localStorage.setItem('tgshi_entries', JSON.stringify(newEntries));
+
+  // Update tach
+  lastTach = Math.max(lastTach, hrm_fin);
+  document.getElementById('tachDisplay').textContent = lastTach.toFixed(1);
+
+  // Build CSV row for pasting into Excel
+  // Columns: # | FECHA | DÍA | PILOTO | RESPONSABLE | USUARIO | RUTA | HRM INI | HRM FIN | HRS VUELO | GAL | COSTO COMB | QTZ/GAL | ESPERA HRS | COSTO ESPERA | COSTO PILOTO | TIPO | INGRESOS $ | PERÍODO
+  const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const dia = days[new Date(fecha+'T12:00:00').getDay()];
+  const row = [
+    '',fecha,dia,piloto,resp,usuario,ruta,
+    hrm_ini,hrm_fin,hrs,
+    comb||'','','',
+    espera||'','','',
+    selectedTipo,rev||'',periodo
+  ].join('\t');
+
+  document.getElementById('csvPreview').textContent = row;
+  document.getElementById('csvCard').style.display = 'block';
+
+  const sb = document.getElementById('successBar');
+  sb.style.display = 'flex';
+  setTimeout(()=>sb.style.display='none', 4000);
+
+  buildSavedList();
+  buildDashboard();
+
+  // Reset form (keep date and hrm_ini as last tach)
+  document.getElementById('f-hrm-ini').value = hrm_fin;
+  document.getElementById('f-hrm-fin').value = '';
+  document.getElementById('f-ruta').value = '';
+  document.getElementById('f-comb').value = '';
+  document.getElementById('f-espera').value = '0';
+  document.getElementById('f-rev').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('hrsCalc').style.display = 'none';
+}
+
+function copyCSV() {
+  const text = document.getElementById('csvPreview').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copiado';
+    setTimeout(()=>btn.textContent=orig, 2000);
+  }).catch(()=>alert('Selecciona el texto manualmente y copia'));
+}
+
+function buildSavedList() {
+  if(newEntries.length===0) { document.getElementById('savedList').innerHTML=''; return; }
+  document.getElementById('savedList').innerHTML = `
+    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">
+      Registrados esta sesión ()
+      <button onclick="clearEntries()" style="float:right;font-size:10px;color:var(--red);background:none;border:none;cursor:pointer">Limpiar</button>
+    </div>
+    <div class="card">e.fecha,resp:e.resp)).join('')}</div>`;
+}
+
+function clearEntries() {
+  if(!confirm('¿Borrar todos los registros de esta sesión?')) return;
+  newEntries = [];
+  localStorage.removeItem('tgshi_entries');
+  buildSavedList();
+  document.getElementById('csvCard').style.display='none';
+}
+</script>
+
+</body>
+</html>
