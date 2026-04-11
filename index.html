@@ -3,863 +3,496 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>TG-SHI · Shenshi</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TG-SHI</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
-
-:root {
-–navy: #1B2A4A;
-–navy-mid: #2E4272;
-–sky: #4A90D9;
-–sky-light: #EAF2FB;
-–green: #1A6B3A;
-–green-light: #E3F5EB;
-–amber: #B8600A;
-–amber-light: #FFF3CC;
-–red: #8B1A1A;
-–red-light: #FDECEA;
-–gray-bg: #F4F5F7;
-–gray-border: #DDE1E8;
-–white: #FFFFFF;
-–text: #1A1F2E;
-–muted: #6B7280;
-–mono: ‘IBM Plex Mono’, monospace;
-–sans: ‘IBM Plex Sans’, sans-serif;
-}
-
-- { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-font-family: var(–sans);
-background: var(–gray-bg);
-color: var(–text);
-min-height: 100vh;
-max-width: 480px;
-margin: 0 auto;
-}
-
-/* ── TOP BAR ── */
-.topbar {
-background: var(–navy);
-padding: 16px 20px 12px;
-position: sticky; top: 0; z-index: 100;
-}
-.topbar-row { display: flex; align-items: center; justify-content: space-between; }
-.topbar h1 { font-family: var(–mono); font-size: 18px; color: white; letter-spacing: 0.05em; }
-.topbar .sub { font-size: 11px; color: rgba(255,255,255,0.55); font-family: var(–mono); margin-top: 2px; }
-.tach-pill {
-background: rgba(255,255,255,0.12);
-border: 1px solid rgba(255,255,255,0.2);
-border-radius: 20px;
-padding: 4px 12px;
-font-family: var(–mono);
-font-size: 12px;
-color: white;
-}
-.tach-pill span { color: rgba(255,255,255,0.6); margin-right: 4px; }
-
-/* ── TABS ── */
-.tabs {
-background: var(–navy);
-display: flex;
-padding: 0 20px 0;
-gap: 4px;
-}
-.tab {
-flex: 1;
-padding: 10px 4px;
-text-align: center;
-font-size: 11px;
-font-weight: 600;
-color: rgba(255,255,255,0.45);
-cursor: pointer;
-border-bottom: 2px solid transparent;
-transition: all 0.2s;
-letter-spacing: 0.04em;
-text-transform: uppercase;
-}
-.tab.active { color: white; border-bottom-color: var(–sky); }
-
-/* ── CONTENT ── */
-.page { display: none; padding: 16px; }
-.page.active { display: block; }
-
-/* ── CARDS ── */
-.card {
-background: var(–white);
-border-radius: 12px;
-border: 1px solid var(–gray-border);
-margin-bottom: 12px;
-overflow: hidden;
-}
-.card-header {
-padding: 12px 16px 10px;
-border-bottom: 1px solid var(–gray-border);
-display: flex;
-align-items: center;
-justify-content: space-between;
-}
-.card-title {
-font-size: 11px;
-font-weight: 600;
-text-transform: uppercase;
-letter-spacing: 0.08em;
-color: var(–muted);
-}
-.card-body { padding: 14px 16px; }
-
-/* ── STAT GRID ── */
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-.stat {
-background: var(–white);
-border-radius: 10px;
-border: 1px solid var(–gray-border);
-padding: 12px 10px;
-text-align: center;
-}
-.stat-label { font-size: 10px; font-weight: 600; color: var(–muted); text-transform: uppercase; letter-spacing: 0.06em; }
-.stat-value { font-family: var(–mono); font-size: 22px; font-weight: 600; margin-top: 4px; line-height: 1; }
-.stat.coco .stat-value { color: #1B4E8A; }
-.stat.cuco .stat-value { color: #1A6B3A; }
-.stat.senshi .stat-value { color: #B8600A; }
-
-/* ── MONTH BARS ── */
-.month-row {
-display: flex;
-align-items: center;
-gap: 8px;
-padding: 7px 0;
-border-bottom: 1px solid #F0F2F5;
-}
-.month-row:last-child { border-bottom: none; }
-.month-label { font-family: var(–mono); font-size: 11px; color: var(–muted); width: 28px; flex-shrink: 0; }
-.bar-track { flex: 1; height: 8px; background: #F0F2F5; border-radius: 4px; overflow: hidden; display: flex; }
-.bar-seg { height: 100%; transition: width 0.5s; }
-.bar-coco { background: #4A7CC7; }
-.bar-cuco { background: #2DA05A; }
-.bar-senshi { background: #E08B20; }
-.month-total { font-family: var(–mono); font-size: 11px; color: var(–muted); width: 32px; text-align: right; flex-shrink: 0; }
-
-/* ── FLIGHT LIST ── */
-.flight-item {
-padding: 12px 16px;
-border-bottom: 1px solid #F0F2F5;
-display: flex;
-gap: 12px;
-align-items: flex-start;
-}
-.flight-item:last-child { border-bottom: none; }
-.flight-dot {
-width: 8px; height: 8px; border-radius: 50%;
-flex-shrink: 0; margin-top: 5px;
-}
-.dot-coco { background: #4A7CC7; }
-.dot-cuco { background: #2DA05A; }
-.dot-senshi { background: #E08B20; }
-.flight-main { flex: 1; min-width: 0; }
-.flight-route { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.flight-meta { font-size: 11px; color: var(–muted); margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; }
-.flight-right { text-align: right; flex-shrink: 0; }
-.flight-hrs { font-family: var(–mono); font-size: 15px; font-weight: 600; }
-.flight-date { font-family: var(–mono); font-size: 10px; color: var(–muted); }
-.badge {
-display: inline-block;
-padding: 2px 7px;
-border-radius: 10px;
-font-size: 10px;
-font-weight: 600;
-letter-spacing: 0.04em;
-}
-.badge-std { background: #E8F0FD; color: #1B4E8A; }
-.badge-ff  { background: #FEF3CD; color: #8B5E00; }
-.badge-personal { background: #F0F2F5; color: #4B5563; }
-.badge-mante { background: #FDE8E8; color: #8B1A1A; }
-
-/* ── LOG FORM ── */
-.form-section { margin-bottom: 20px; }
-.form-label {
-display: block;
-font-size: 11px;
-font-weight: 600;
-color: var(–muted);
-text-transform: uppercase;
-letter-spacing: 0.07em;
-margin-bottom: 6px;
-}
-.form-input, .form-select {
-width: 100%;
-padding: 12px 14px;
-border: 1.5px solid var(–gray-border);
-border-radius: 10px;
-font-family: var(–sans);
-font-size: 15px;
-color: var(–text);
-background: var(–white);
-appearance: none;
--webkit-appearance: none;
-outline: none;
-transition: border-color 0.2s;
-}
-.form-input:focus, .form-select:focus { border-color: var(–sky); }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-
-.seg-control {
-display: grid;
-grid-template-columns: repeat(var(–cols, 3), 1fr);
-background: #F0F2F5;
-border-radius: 10px;
-padding: 3px;
-gap: 2px;
-}
-.seg-btn {
-padding: 9px 4px;
-border: none;
-border-radius: 8px;
-background: transparent;
-font-family: var(–sans);
-font-size: 13px;
-font-weight: 500;
-color: var(–muted);
-cursor: pointer;
-transition: all 0.15s;
-text-align: center;
-}
-.seg-btn.active {
-background: var(–white);
-color: var(–text);
-font-weight: 600;
-box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-}
-
-.tipo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.tipo-card {
-padding: 12px;
-border: 2px solid var(–gray-border);
-border-radius: 10px;
-cursor: pointer;
-transition: all 0.15s;
-text-align: center;
-}
-.tipo-card.active { border-color: var(–sky); background: var(–sky-light); }
-.tipo-card .tipo-icon { font-size: 20px; margin-bottom: 4px; }
-.tipo-card .tipo-name { font-size: 12px; font-weight: 600; }
-.tipo-card .tipo-desc { font-size: 10px; color: var(–muted); margin-top: 2px; }
-
-.btn-primary {
-width: 100%;
-padding: 16px;
-background: var(–navy);
-color: white;
-border: none;
-border-radius: 12px;
-font-family: var(–sans);
-font-size: 16px;
-font-weight: 600;
-cursor: pointer;
-transition: opacity 0.2s;
-letter-spacing: 0.02em;
-}
-.btn-primary:active { opacity: 0.85; }
-
-.csv-preview {
-background: #F8F9FC;
-border: 1px solid var(–gray-border);
-border-radius: 10px;
-padding: 14px;
-font-family: var(–mono);
-font-size: 11px;
-color: var(–muted);
-white-space: pre;
-overflow-x: auto;
-margin-top: 12px;
-display: none;
-}
-
-.success-bar {
-background: var(–green);
-color: white;
-padding: 12px 16px;
-border-radius: 10px;
-font-size: 13px;
-font-weight: 600;
-margin-bottom: 12px;
-display: none;
-align-items: center;
-gap: 8px;
-}
-.success-bar::before { content: “✓”; font-size: 16px; }
-
-/* ── QUICK STATS ── */
-.qs-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F0F2F5; }
-.qs-row:last-child { border-bottom: none; }
-.qs-label { font-size: 13px; color: var(–text); }
-.qs-val { font-family: var(–mono); font-size: 13px; font-weight: 600; }
-.qs-coco { color: #1B4E8A; }
-.qs-cuco { color: #1A6B3A; }
-.qs-senshi { color: #B8600A; }
-
-/* ── FILTER ROW ── */
-.filter-row { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; }
-.filter-pill {
-padding: 5px 12px;
-border-radius: 20px;
-border: 1.5px solid var(–gray-border);
-font-size: 12px;
-font-weight: 600;
-white-space: nowrap;
-cursor: pointer;
-background: var(–white);
-color: var(–muted);
-transition: all 0.15s;
-flex-shrink: 0;
-}
-.filter-pill.active { background: var(–navy); color: white; border-color: var(–navy); }
-
-.empty-state {
-text-align: center;
-padding: 32px 16px;
-color: var(–muted);
-font-size: 13px;
-}
-.empty-state .big { font-size: 32px; margin-bottom: 8px; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:#F2F3F7;color:#1A1F2E;max-width:480px;margin:0 auto;min-height:100vh}
+/* TOP BAR */
+.bar{background:#1B2A4A;padding:14px 18px 10px;position:sticky;top:0;z-index:99}
+.bar-top{display:flex;justify-content:space-between;align-items:center}
+.bar h1{font-size:20px;font-weight:700;color:#fff;letter-spacing:.06em}
+.bar .sub{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.1em;margin-top:1px}
+.tach{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:4px 12px;font-size:12px;color:#fff;font-variant-numeric:tabular-nums}
+.tach b{color:rgba(255,255,255,.55);font-weight:400;margin-right:3px}
+/* TABS */
+.tabs{display:flex;background:#162238;padding:0 18px}
+.tab{flex:1;padding:10px 2px;text-align:center;font-size:11px;font-weight:600;color:rgba(255,255,255,.4);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:.06em;text-transform:uppercase;transition:all .2s}
+.tab.on{color:#fff;border-bottom-color:#4A9EE8}
+/* PAGES */
+.pg{display:none;padding:14px}
+.pg.on{display:block}
+/* CARDS */
+.card{background:#fff;border-radius:12px;border:1px solid #E4E7EE;margin-bottom:12px;overflow:hidden}
+.ch{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-bottom:1px solid #F0F2F6}
+.ct{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#8892A4}
+.cb{padding:13px 14px}
+/* STAT GRID */
+.sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:12px}
+.st{background:#fff;border-radius:10px;border:1px solid #E4E7EE;padding:12px 8px;text-align:center}
+.sl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8892A4}
+.sv{font-size:24px;font-weight:700;margin-top:3px;line-height:1;font-variant-numeric:tabular-nums}
+.sd{font-size:9px;color:#8892A4;margin-top:3px}
+.c1 .sv{color:#1B4E8A}.c2 .sv{color:#1A6B3A}.c3 .sv{color:#B8600A}
+/* BARS */
+.mr{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F5F6F8}
+.mr:last-child{border:none}
+.ml{font-size:10px;color:#8892A4;width:26px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.bt{flex:1;height:7px;background:#F0F2F6;border-radius:4px;overflow:hidden;display:flex}
+.bs{height:100%}
+.b1{background:#4A7CC7}.b2{background:#2DA05A}.b3{background:#E08B20}
+.mh{font-size:10px;color:#8892A4;width:30px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+/* FLIGHT ROW */
+.fi{display:flex;gap:11px;align-items:flex-start;padding:11px 14px;border-bottom:1px solid #F5F6F8}
+.fi:last-child{border:none}
+.fd{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.fd.c1{background:#4A7CC7}.fd.c2{background:#2DA05A}.fd.c3{background:#E08B20}
+.fm{flex:1;min-width:0}
+.fr{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fm2{font-size:11px;color:#8892A4;margin-top:2px;display:flex;gap:6px;flex-wrap:wrap}
+.fright{text-align:right;flex-shrink:0}
+.fh{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.fh small{font-size:9px;font-weight:400;color:#8892A4}
+.fd2{font-size:10px;color:#8892A4;margin-top:1px}
+.bx{display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:.03em}
+.bx.s{background:#E8F0FD;color:#1B4E8A}
+.bx.f{background:#FEF3CD;color:#8B5E00}
+.bx.p{background:#F0F2F6;color:#4B5563}
+.bx.m{background:#FDE8E8;color:#8B1A1A}
+/* QUICK STATS */
+.qr{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F5F6F8}
+.qr:last-child{border:none}
+.ql{font-size:13px}
+.qv{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.qv.c1{color:#1B4E8A}.qv.c2{color:#1A6B3A}.qv.c3{color:#B8600A}
+/* FILTER */
+.fr2{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.fr2::-webkit-scrollbar{display:none}
+.fp{padding:5px 13px;border-radius:16px;border:1.5px solid #DDE1E8;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;background:#fff;color:#8892A4;flex-shrink:0;transition:all .15s}
+.fp.on{background:#1B2A4A;color:#fff;border-color:#1B2A4A}
+/* FORM */
+.fs{margin-bottom:16px}
+.fl{display:block;font-size:10px;font-weight:700;color:#8892A4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+input,select{width:100%;padding:12px 13px;border:1.5px solid #DDE1E8;border-radius:10px;font-size:15px;font-family:inherit;color:#1A1F2E;background:#fff;-webkit-appearance:none;outline:none}
+input:focus,select:focus{border-color:#4A9EE8}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sc{display:grid;background:#F0F2F6;border-radius:10px;padding:3px;gap:2px}
+.sb{padding:9px 4px;border:none;border-radius:8px;background:transparent;font-family:inherit;font-size:13px;font-weight:500;color:#8892A4;cursor:pointer;transition:all .15s;text-align:center}
+.sb.on{background:#fff;color:#1A1F2E;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tc{padding:12px 8px;border:2px solid #DDE1E8;border-radius:10px;cursor:pointer;transition:all .15s;text-align:center}
+.tc.on{border-color:#4A9EE8;background:#EAF4FD}
+.ti{font-size:18px;margin-bottom:3px}
+.tn{font-size:11px;font-weight:700}
+.td{font-size:10px;color:#8892A4;margin-top:1px}
+.btn{width:100%;padding:15px;background:#1B2A4A;color:#fff;border:none;border-radius:11px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.02em;margin-top:4px}
+.btn:active{opacity:.85}
+.csv{background:#F8F9FC;border:1px solid #DDE1E8;border-radius:10px;padding:13px;font-family:monospace;font-size:10px;color:#5A6172;white-space:pre-wrap;word-break:break-all;margin-top:10px}
+.ok{background:#1A6B3A;color:#fff;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:11px;display:none;align-items:center;gap:7px}
+.ok::before{content:"✓";font-size:16px}
+.hint{font-size:11px;color:#8892A4;margin-top:4px}
+.cp-btn{font-size:12px;font-weight:600;color:#4A9EE8;background:none;border:none;cursor:pointer;padding:3px 8px}
+.empty{text-align:center;padding:28px 16px;color:#8892A4;font-size:13px}
+.empty .big{font-size:28px;margin-bottom:6px}
 </style>
-
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-row">
-    <div>
-      <h1>TG-SHI</h1>
-      <div class="sub">SHENSHI AVIATION</div>
-    </div>
-    <div class="tach-pill"><span>TACH</span><span id="tachDisplay">916.0</span></div>
+<div class="bar">
+  <div class="bar-top">
+    <div><h1>TG-SHI</h1><div class="sub">SHENSHI AVIATION</div></div>
+    <div class="tach"><b>TACH</b><span id="tachVal">916.0</span></div>
   </div>
 </div>
-
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('dashboard')">Panel</div>
-  <div class="tab" onclick="switchTab('flights')">Vuelos</div>
-  <div class="tab" onclick="switchTab('log')">+ Registrar</div>
+  <div class="tab on" onclick="show('dash',this)">Panel</div>
+  <div class="tab" onclick="show('list',this)">Vuelos</div>
+  <div class="tab" onclick="show('log',this)">+ Registrar</div>
 </div>
 
-<!-- ═══════════════════════════════════ DASHBOARD ═══════════════════════════════════ -->
+<!-- DASHBOARD -->
 
-<div class="page active" id="page-dashboard">
-
-  <div class="stat-grid">
-    <div class="stat coco">
-      <div class="stat-label">COCO</div>
-      <div class="stat-value" id="dash-coco-hrs">—</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:2px">hrs 2026</div>
-    </div>
-    <div class="stat cuco">
-      <div class="stat-label">CUCO</div>
-      <div class="stat-value" id="dash-cuco-hrs">—</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:2px">hrs 2026</div>
-    </div>
-    <div class="stat senshi">
-      <div class="stat-label">CHARTER</div>
-      <div class="stat-value" id="dash-senshi-hrs">—</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:2px">hrs 2026</div>
-    </div>
+<div class="pg on" id="pg-dash">
+  <div class="sg">
+    <div class="st c1"><div class="sl">COCO</div><div class="sv" id="s-coco">—</div><div class="sd">hrs 2026</div></div>
+    <div class="st c2"><div class="sl">CUCO</div><div class="sv" id="s-cuco">—</div><div class="sd">hrs 2026</div></div>
+    <div class="st c3"><div class="sl">CHARTER</div><div class="sv" id="s-sen">—</div><div class="sd">hrs 2026</div></div>
   </div>
-
   <div class="card">
-    <div class="card-header">
-      <div class="card-title">Horas mensuales 2026</div>
-      <div style="display:flex;gap:10px;font-size:10px;">
-        <span style="color:#4A7CC7">■ COCO</span>
-        <span style="color:#2DA05A">■ CUCO</span>
-        <span style="color:#E08B20">■ Charter</span>
+    <div class="ch"><div class="ct">Horas mensuales 2026</div>
+      <div style="display:flex;gap:8px;font-size:9px">
+        <span style="color:#4A7CC7">■ COCO</span><span style="color:#2DA05A">■ CUCO</span><span style="color:#E08B20">■ Charter</span>
       </div>
     </div>
-    <div class="card-body" id="monthBars"></div>
+    <div class="cb" id="bars"></div>
   </div>
-
   <div class="card">
-    <div class="card-header">
-      <div class="card-title">Últimos 5 vuelos</div>
-    </div>
-    <div id="recentFlights"></div>
+    <div class="ch"><div class="ct">Últimos 5 vuelos</div></div>
+    <div id="recent"></div>
   </div>
-
   <div class="card">
-    <div class="card-header">
-      <div class="card-title">Resumen 2026</div>
-    </div>
-    <div class="card-body" id="summary2026"></div>
+    <div class="ch"><div class="ct">Resumen 2026</div></div>
+    <div class="cb" id="sum26"></div>
   </div>
-
 </div>
 
-<!-- ═══════════════════════════════════ FLIGHTS ═══════════════════════════════════ -->
+<!-- FLIGHT LIST -->
 
-<div class="page" id="page-flights">
-
-  <div class="filter-row" id="filterRow">
-    <div class="filter-pill active" onclick="filterFlights('ALL',this)">Todos</div>
-    <div class="filter-pill" onclick="filterFlights('COCO',this)">COCO</div>
-    <div class="filter-pill" onclick="filterFlights('CUCO',this)">CUCO</div>
-    <div class="filter-pill" onclick="filterFlights('SENSHI',this)">Charter</div>
-    <div class="filter-pill" onclick="filterFlights('2026',this)">2026</div>
-    <div class="filter-pill" onclick="filterFlights('2025',this)">2025</div>
+<div class="pg" id="pg-list">
+  <div class="fr2" id="filters">
+    <div class="fp on" onclick="filt('ALL',this)">Todos</div>
+    <div class="fp" onclick="filt('COCO',this)">COCO</div>
+    <div class="fp" onclick="filt('CUCO',this)">CUCO</div>
+    <div class="fp" onclick="filt('SENSHI',this)">Charter</div>
+    <div class="fp" onclick="filt('2026',this)">2026</div>
+    <div class="fp" onclick="filt('2025',this)">2025</div>
+    <div class="fp" onclick="filt('2024',this)">2024</div>
   </div>
-
-  <div class="card">
-    <div id="flightList"></div>
-  </div>
-
+  <div class="card" id="flist"></div>
 </div>
 
-<!-- ═══════════════════════════════════ LOG ENTRY ═══════════════════════════════════ -->
+<!-- LOG -->
 
-<div class="page" id="page-log">
-
-  <div class="success-bar" id="successBar">Vuelo guardado. Copia el CSV al Excel.</div>
+<div class="pg" id="pg-log">
+  <div class="ok" id="okbar">Vuelo guardado — copia la fila al Excel</div>
 
   <div class="card">
-    <div class="card-header"><div class="card-title">Nuevo vuelo — TG-SHI</div></div>
-    <div class="card-body">
+    <div class="ch"><div class="ct">Nuevo vuelo — TG-SHI</div></div>
+    <div class="cb">
 
 ```
-  <div class="form-section">
-    <label class="form-label">Fecha</label>
-    <input type="date" class="form-input" id="f-fecha">
+  <div class="fs">
+    <label class="fl">Fecha</label>
+    <input type="date" id="f-d">
   </div>
 
-  <div class="form-section">
-    <label class="form-label">Piloto</label>
-    <div class="seg-control" style="--cols:3">
-      <button class="seg-btn active" onclick="setPiloto('FERNANDO',this)">FERNANDO</button>
-      <button class="seg-btn" onclick="setPiloto('BARRAGAN',this)">BARRAGAN</button>
-      <button class="seg-btn" onclick="setPiloto('OTRO',this)">OTRO</button>
+  <div class="fs">
+    <label class="fl">Piloto</label>
+    <div class="sc" style="grid-template-columns:1fr 1fr 1fr">
+      <button class="sb on" onclick="setSeg('piloto','FERNANDO',this)">FERNANDO</button>
+      <button class="sb" onclick="setSeg('piloto','BARRAGAN',this)">BARRAGAN</button>
+      <button class="sb" onclick="setSeg('piloto','OTRO',this)">OTRO</button>
     </div>
-    <input type="text" class="form-input" id="f-piloto-otro" placeholder="Nombre del piloto" style="margin-top:8px;display:none">
+    <input type="text" id="f-piloto-o" placeholder="Nombre del piloto" style="margin-top:7px;display:none">
   </div>
 
-  <div class="form-section">
-    <label class="form-label">Responsable</label>
-    <div class="seg-control" style="--cols:3">
-      <button class="seg-btn active" onclick="setResp('COCO',this)">COCO</button>
-      <button class="seg-btn" onclick="setResp('CUCO',this)">CUCO</button>
-      <button class="seg-btn" onclick="setResp('SENSHI',this)">SHENSHI</button>
-    </div>
-  </div>
-
-  <div class="form-section">
-    <label class="form-label">Tipo de vuelo</label>
-    <div class="tipo-grid">
-      <div class="tipo-card active" onclick="setTipo('PERSONAL',this)">
-        <div class="tipo-icon">✈</div>
-        <div class="tipo-name">Personal</div>
-        <div class="tipo-desc">Sin ingreso</div>
-      </div>
-      <div class="tipo-card" onclick="setTipo('STD',this)">
-        <div class="tipo-icon">💼</div>
-        <div class="tipo-name">Charter STD</div>
-        <div class="tipo-desc">$750/hr</div>
-      </div>
-      <div class="tipo-card" onclick="setTipo('FF',this)">
-        <div class="tipo-icon">👥</div>
-        <div class="tipo-name">Charter FF</div>
-        <div class="tipo-desc">$650/hr</div>
-      </div>
-      <div class="tipo-card" onclick="setTipo('MANTE',this)">
-        <div class="tipo-icon">🔧</div>
-        <div class="tipo-name">Mantenimiento</div>
-        <div class="tipo-desc">Sin ingreso</div>
-      </div>
+  <div class="fs">
+    <label class="fl">Responsable</label>
+    <div class="sc" style="grid-template-columns:1fr 1fr 1fr">
+      <button class="sb on" onclick="setSeg('resp','COCO',this)">COCO</button>
+      <button class="sb" onclick="setSeg('resp','CUCO',this)">CUCO</button>
+      <button class="sb" onclick="setSeg('resp','SENSHI',this)">SHENSHI</button>
     </div>
   </div>
 
-  <div class="form-section" id="usuarioSection">
-    <label class="form-label">Usuario / Cliente</label>
-    <select class="form-select" id="f-usuario">
-      <option value="COCO">COCO (personal)</option>
-      <option value="CUCO">CUCO (personal)</option>
-      <option value="ALQ COCO">ALQ COCO</option>
-      <option value="ALQ CUCO">ALQ CUCO</option>
-      <option value="ALQ COCO FF">ALQ COCO FF</option>
-      <option value="ALQ CUCO FF">ALQ CUCO FF</option>
-      <option value="ALQ LICO">ALQ LICO</option>
-      <option value="ALQ PREMISA">ALQ PREMISA</option>
-      <option value="ALQ FER">ALQ FER</option>
-      <option value="MANTE">MANTE</option>
-      <option value="SENSHI">SENSHI</option>
-    </select>
-  </div>
-
-  <div class="form-section">
-    <label class="form-label">Ruta</label>
-    <input type="text" class="form-input" id="f-ruta" placeholder="ej. AUR-MGPB-AUR" autocomplete="off" style="text-transform:uppercase">
-  </div>
-
-  <div class="form-row">
-    <div class="form-section" style="margin:0">
-      <label class="form-label">HRM Inicio</label>
-      <input type="number" class="form-input" id="f-hrm-ini" placeholder="916.0" step="0.1" inputmode="decimal">
-    </div>
-    <div class="form-section" style="margin:0">
-      <label class="form-label">HRM Fin</label>
-      <input type="number" class="form-input" id="f-hrm-fin" placeholder="917.8" step="0.1" inputmode="decimal">
+  <div class="fs">
+    <label class="fl">Tipo</label>
+    <div class="tg">
+      <div class="tc on" onclick="setTipo('PERSONAL',this)"><div class="ti">✈</div><div class="tn">Personal</div><div class="td">Sin ingreso</div></div>
+      <div class="tc" onclick="setTipo('STD',this)"><div class="ti">💼</div><div class="tn">Charter STD</div><div class="td">$750/hr</div></div>
+      <div class="tc" onclick="setTipo('FF',this)"><div class="ti">👥</div><div class="tn">Charter FF</div><div class="td">$650/hr</div></div>
+      <div class="tc" onclick="setTipo('MANTE',this)"><div class="ti">🔧</div><div class="tn">Mante</div><div class="td">Sin ingreso</div></div>
     </div>
   </div>
 
-  <div id="hrsCalc" style="text-align:center;padding:10px 0 4px;font-family:var(--mono);font-size:13px;color:var(--muted);display:none">
-    <span id="hrsResult"></span>
+  <div class="fs">
+    <label class="fl">Usuario / Cliente</label>
+    <select id="f-u"></select>
   </div>
 
-  <div class="form-section" id="combustSection" style="margin-top:12px">
-    <label class="form-label">Combustible (QTZ) <span style="font-weight:400;color:var(--muted)">(opcional)</span></label>
-    <input type="number" class="form-input" id="f-comb" placeholder="0.00" step="0.01" inputmode="decimal">
+  <div class="fs">
+    <label class="fl">Ruta</label>
+    <input type="text" id="f-rt" placeholder="ej. AUR-MGPB" style="text-transform:uppercase" autocomplete="off">
   </div>
 
-  <div class="form-section" id="esperaSection">
-    <label class="form-label">Espera en tierra (hrs)</label>
-    <input type="number" class="form-input" id="f-espera" placeholder="0.0" step="0.5" inputmode="decimal" value="0">
+  <div class="row2" style="margin-bottom:16px">
+    <div><label class="fl">HRM Inicio</label><input type="number" id="f-hi" placeholder="916.0" step="0.1" inputmode="decimal" oninput="calcH()"></div>
+    <div><label class="fl">HRM Fin</label><input type="number" id="f-hf" placeholder="917.8" step="0.1" inputmode="decimal" oninput="calcH()"></div>
   </div>
 
-  <div class="form-section" id="revenueSection" style="display:none">
-    <label class="form-label">Ingreso charter ($)</label>
-    <input type="number" class="form-input" id="f-rev" placeholder="auto" step="0.01" inputmode="decimal">
-    <div style="font-size:11px;color:var(--muted);margin-top:4px" id="revHint"></div>
+  <div id="hcalc" style="text-align:center;font-size:12px;color:#8892A4;margin:-8px 0 12px;display:none"></div>
+
+  <div class="row2" style="margin-bottom:16px">
+    <div><label class="fl">Combustible (QTZ)</label><input type="number" id="f-cb" placeholder="0.00" step="0.01" inputmode="decimal"></div>
+    <div><label class="fl">Espera tierra (hrs)</label><input type="number" id="f-es" placeholder="0.0" step="0.5" inputmode="decimal" value="0"></div>
   </div>
 
-  <div class="form-section">
-    <label class="form-label">Notas</label>
-    <input type="text" class="form-input" id="f-notes" placeholder="opcional">
+  <div class="fs" id="rev-s" style="display:none">
+    <label class="fl">Ingreso charter ($)</label>
+    <input type="number" id="f-rv" placeholder="auto" step="0.01" inputmode="decimal">
+    <div class="hint" id="rev-hint"></div>
   </div>
 
-  <button class="btn-primary" onclick="saveEntry()">Guardar vuelo</button>
+  <div class="fs">
+    <label class="fl">Notas</label>
+    <input type="text" id="f-no" placeholder="opcional">
+  </div>
 
+  <button class="btn" onclick="save()">Guardar vuelo</button>
 </div>
 ```
 
   </div>
 
-  <div class="card" id="csvCard" style="display:none">
-    <div class="card-header">
-      <div class="card-title">Copiar al Excel</div>
-      <button onclick="copyCSV()" style="font-size:12px;font-weight:600;color:var(--sky);background:none;border:none;cursor:pointer;padding:4px 8px">Copiar</button>
-    </div>
-    <div class="card-body">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
-        Pega esta fila en el <strong>FLIGHT LOG</strong> del Excel:<br>
-        Abre la siguiente fila vacía y pega con Ctrl+V
+  <div id="csv-card" style="display:none">
+    <div class="card">
+      <div class="ch">
+        <div class="ct">Copiar al Excel (Flight Log)</div>
+        <button class="cp-btn" onclick="copyCSV()">Copiar</button>
       </div>
-      <div class="csv-preview" id="csvPreview" style="display:block"></div>
+      <div class="cb">
+        <div style="font-size:12px;color:#8892A4;margin-bottom:8px">Pega en la <strong>siguiente fila vacía</strong> del Flight Log en Excel:</div>
+        <div class="csv" id="csv-out"></div>
+      </div>
     </div>
   </div>
 
-  <div id="savedList" style="margin-top:8px"></div>
-
+  <div id="saved-list"></div>
 </div>
 
 <script>
-// ── DATA ──────────────────────────────────────────────────────────────────────
-const flights = [{"date":"2023-03-03","resp":"COCO","usuario":"COCO","ruta":"AUR-REU-AUR","piloto":"FERNANDO","hrm_ini":333.0,"hrm_fin":334.8,"hrs":1.8,"tipo":"PERSONAL","rev":0.0},{"date":"2023-03-24","resp":"COCO","usuario":"COCO","ruta":"AUR-YSV-AUR","piloto":"FERNANDO","hrm_ini":334.8,"hrm_fin":337.1,"hrs":2.3,"tipo":"PERSONAL","rev":0.0},{"date":"2023-03-24","resp":"COCO","usuario":"COCO","ruta":"AUR-YSV-AUR","piloto":"FERNANDO","hrm_ini":337.1,"hrm_fin":339.0,"hrs":1.9,"tipo":"PERSONAL","rev":0.0},{"date":"2023-03-30","resp":"COCO","usuario":"COCO","ruta":"AUR-YSV-AUR","piloto":"FERNANDO","hrm_ini":339.0,"hrm_fin":340.9,"hrs":1.9,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-01","resp":"COCO","usuario":"COCO","ruta":"RIO","piloto":"OTTO VALDEZ","hrm_ini":340.9,"hrm_fin":342.9,"hrs":2.0,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-01","resp":"COCO","usuario":"COCO","ruta":"RIO","piloto":"OTTO VALDEZ","hrm_ini":342.9,"hrm_fin":345.0,"hrs":2.1,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-03","resp":"COCO","usuario":"COCO","ruta":"AUR-YSV-AUR","piloto":"FERNANDO MENDEZ","hrm_ini":345.0,"hrm_fin":347.4,"hrs":2.4,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-04","resp":"COCO","usuario":"COCO","ruta":"AUR-IZT-AUR","piloto":"OTTO VALDEZ","hrm_ini":347.4,"hrm_fin":348.7,"hrs":1.3,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-09","resp":"COCO","usuario":"COCO","ruta":"RP","piloto":"FERNANDO","hrm_ini":348.7,"hrm_fin":349.7,"hrs":1.0,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-10","resp":"COCO","usuario":"COCO","ruta":"MSLR","piloto":"FERNANDO","hrm_ini":349.7,"hrm_fin":351.9,"hrs":2.2,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-11","resp":"CUCO","usuario":"CUCO","ruta":"PBR","piloto":"FERNANDO","hrm_ini":351.9,"hrm_fin":354.2,"hrs":2.3,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-11","resp":"SENSHI","usuario":"MANTE","ruta":"BOMBA COMB","piloto":"","hrm_ini":354.2,"hrm_fin":354.8,"hrs":0.6,"tipo":"MANTE","rev":0.0},{"date":"2023-04-25","resp":"COCO","usuario":"COCO","ruta":"RP","piloto":"FERNANDO","hrm_ini":354.8,"hrm_fin":356.1,"hrs":1.3,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-25","resp":"SENSHI","usuario":"MANTE","ruta":"AEROMOTORES","piloto":"","hrm_ini":356.1,"hrm_fin":356.9,"hrs":0.8,"tipo":"MANTE","rev":0.0},{"date":"2023-04-26","resp":"COCO","usuario":"COCO","ruta":"YSV","piloto":"FERNANDO","hrm_ini":356.9,"hrm_fin":359.0,"hrs":2.1,"tipo":"PERSONAL","rev":0.0},{"date":"2023-04-26","resp":"COCO","usuario":"COCO","ruta":"YSV","piloto":"FERNANDO","hrm_ini":359.0,"hrm_fin":361.2,"hrs":2.2,"tipo":"PERSONAL","rev":0.0},{"date":"2023-05-19","resp":"CUCO","usuario":"CUCO","ruta":"MGPB","piloto":"MANUEL","hrm_ini":361.2,"hrm_fin":363.8,"hrs":2.6,"tipo":"PERSONAL","rev":0.0},{"date":"2023-05-21","resp":"CUCO","usuario":"CUCO","ruta":"MGPB","piloto":"MANUEL","hrm_ini":363.8,"hrm_fin":366.1,"hrs":2.3,"tipo":"PERSONAL","rev":0.0},{"date":"2023-06-02","resp":"CUCO","usuario":"CUCO","ruta":"Local","piloto":"L. VIVAS","hrm_ini":366.1,"hrm_fin":366.7,"hrs":0.6,"tipo":"PERSONAL","rev":0.0},{"date":"2023-06-03","resp":"COCO","usuario":"COCO","ruta":"YSV","piloto":"FERNANDO","hrm_ini":366.7,"hrm_fin":368.7,"hrs":2.0,"tipo":"PERSONAL","rev":0.0},{"date":"2026-03-03","resp":"COCO","usuario":"COCO","ruta":"MZBZ","piloto":"","hrm_ini":889.9,"hrm_fin":893.4,"hrs":3.5,"tipo":"PERSONAL","rev":0.0},{"date":"2026-03-04","resp":"COCO","usuario":"COCO","ruta":"MGRD","piloto":"","hrm_ini":893.4,"hrm_fin":895.4,"hrs":2.0,"tipo":"PERSONAL","rev":0.0},{"date":"2026-03-24","resp":"COCO","usuario":"COCO","ruta":"PB","piloto":"","hrm_ini":895.4,"hrm_fin":898.4,"hrs":3.0,"tipo":"PERSONAL","rev":0.0},{"date":"2026-03-25","resp":"COCO","usuario":"COCO","ruta":"TNT","piloto":"","hrm_ini":898.4,"hrm_fin":902.1,"hrs":3.7,"tipo":"PERSONAL","rev":0.0},{"date":"2026-03-28","resp":"COCO","usuario":"ALQ HRS PIVARAL COCO","ruta":"IZP","piloto":"","hrm_ini":902.1,"hrm_fin":903.0,"hrs":0.9,"tipo":"STD","rev":675.0},{"date":"2026-03-28","resp":"SENSHI","usuario":"ALQ CUCO FF","ruta":"RIO","piloto":"","hrm_ini":903.0,"hrm_fin":904.8,"hrs":1.8,"tipo":"FF","rev":1170.0},{"date":"2026-03-29","resp":"CUCO","usuario":"CUCO","ruta":"MGPB","piloto":"","hrm_ini":904.8,"hrm_fin":907.2,"hrs":2.4,"tipo":"PERSONAL","rev":0.0},{"date":"2026-03-31","resp":"SENSHI","usuario":"ALQ COCO FF","ruta":"RIO","piloto":"","hrm_ini":907.2,"hrm_fin":909.1,"hrs":1.9,"tipo":"FF","rev":1235.0},{"date":"2026-04-03","resp":"SENSHI","usuario":"ALQ COCO FF","ruta":"RIO","piloto":"","hrm_ini":909.1,"hrm_fin":910.9,"hrs":1.8,"tipo":"FF","rev":1170.0},{"date":"2026-04-04","resp":"COCO","usuario":"ALQ HRS PIVARAL COCO","ruta":"EL ROSARIO","piloto":"","hrm_ini":910.9,"hrm_fin":911.8,"hrs":0.9,"tipo":"STD","rev":675.0},{"date":"2026-04-04","resp":"CUCO","usuario":"CUCO","ruta":"MGPB","piloto":"","hrm_ini":911.8,"hrm_fin":914.1,"hrs":2.3,"tipo":"PERSONAL","rev":0.0},{"date":"2026-04-05","resp":"SENSHI","usuario":"ALQ CUCO FF","ruta":"RIO","piloto":"","hrm_ini":914.1,"hrm_fin":916.0,"hrs":1.9,"tipo":"FF","rev":1235.0}];
+const RAW = [{"d": "2023-03-03", "r": "COCO", "u": "COCO", "rt": "AUR-REU-AUR", "p": "FERNANDO", "hi": 333.0, "hf": 334.8, "h": 1.8, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-03-24", "r": "COCO", "u": "COCO", "rt": "AUR-YSV-AUR", "p": "FERNANDO", "hi": 334.8, "hf": 337.1, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-03-24", "r": "COCO", "u": "COCO", "rt": "AUR-YSV-AUR", "p": "FERNANDO", "hi": 337.1, "hf": 339.0, "h": 1.9, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-03-30", "r": "COCO", "u": "COCO", "rt": "AUR-YSV-AUR", "p": "FERNANDO", "hi": 339.0, "hf": 340.9, "h": 1.9, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-04-01", "r": "COCO", "u": "COCO", "rt": "RIO", "p": "OTTO VALDEZ", "hi": 340.9, "hf": 342.9, "h": 2.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-04-01", "r": "COCO", "u": "COCO", "rt": "RIO", "p": "OTTO VALDEZ", "hi": 342.9, "hf": 345.0, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-04-03", "r": "COCO", "u": "COCO", "rt": "AUR-YSV-AUR", "p": "FERNANDO MENDEZ", "hi": 345.0, "hf": 347.4, "h": 2.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-04-04", "r": "COCO", "u": "COCO", "rt": "AUR-IZT-AUR", "p": "OTTO VALDEZ", "hi": 347.4, "hf": 348.7, "h": 1.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-04-09", "r": "COCO", "u": "COCO", "rt": "RP", "p": "FERNANDO", "hi": 348.7, "hf": 349.7, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-04-10", "r": "COCO", "u": "COCO", "rt": "MSLR", "p": "FERNANDO", "hi": 349.7, "hf": 351.9, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-04-11", "r": "CUCO", "u": "CUCO", "rt": "PBR", "p": "FERNANDO", "hi": 351.9, "hf": 354.2, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-04-11", "r": "SENSHI", "u": "MANTE", "rt": "MANTE", "p": "", "hi": 354.2, "hf": 354.8, "h": 0.6, "t": "MANTE", "rv": 0.0}, {"d": "2023-04-25", "r": "COCO", "u": "COCO", "rt": "RP", "p": "FERNANDO", "hi": 354.8, "hf": 356.1, "h": 1.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-04-25", "r": "SENSHI", "u": "MANTE", "rt": "MANTE", "p": "", "hi": 356.1, "hf": 356.9, "h": 0.8, "t": "MANTE", "rv": 0.0}, {"d": "2023-04-26", "r": "COCO", "u": "COCO", "rt": "YSV", "p": "FERNANDO", "hi": 356.9, "hf": 359.0, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-04-26", "r": "COCO", "u": "COCO", "rt": "YSV", "p": "FERNANDO", "hi": 359.0, "hf": 361.2, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-05-19", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "MANUEL", "hi": 361.2, "hf": 363.8, "h": 2.6, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-05-21", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "MANUEL", "hi": 363.8, "hf": 366.1, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-06-02", "r": "CUCO", "u": "CUCO", "rt": "Local", "p": "L. VIVAS", "hi": 366.1, "hf": 366.7, "h": 0.6, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-06-03", "r": "COCO", "u": "COCO", "rt": "YSV", "p": "FERNANDO", "hi": 366.7, "hf": 368.7, "h": 2.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-06-04", "r": "COCO", "u": "COCO", "rt": "MSSS", "p": "MANUEL", "hi": 368.7, "hf": 370.8, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-06-05", "r": "COCO", "u": "COCO", "rt": "MSSS", "p": "MANUEL", "hi": 370.8, "hf": 372.8, "h": 2.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-06-09", "r": "COCO", "u": "COCO", "rt": "AUR-MSSS-AUR", "p": "FERNANDO MENDEZ", "hi": 372.8, "hf": 375.0, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-06-16", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 375.0, "hf": 377.3, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-06-19", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 377.3, "hf": 379.7, "h": 2.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-06-30", "r": "SENSHI", "u": "ALQ", "rt": "AU-MGPB-AUR", "p": "", "hi": 379.7, "hf": 381.8, "h": 2.1, "t": "STD", "rv": 1575.0}, {"d": "2023-07-04", "r": "SENSHI", "u": "ALQ", "rt": "ARU-MGPB-AUR", "p": "", "hi": 381.8, "hf": 384.1, "h": 2.3, "t": "STD", "rv": 1725.0}, {"d": "2023-07-08", "r": "COCO", "u": "COCO", "rt": "ARU-IZT_AUR", "p": "", "hi": 384.1, "hf": 385.0, "h": 0.9, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-07-08", "r": "COCO", "u": "COCO", "rt": "RP", "p": "", "hi": 385.0, "hf": 386.0, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-07-22", "r": "SENSHI", "u": "ALQ", "rt": "AUR-PB-AUR", "p": "", "hi": 386.0, "hf": 388.3, "h": 2.3, "t": "STD", "rv": 1725.0}, {"d": "2023-07-26", "r": "SENSHI", "u": "ALQ", "rt": "AUR-TNT-ILO-AUR", "p": "", "hi": 388.3, "hf": 392.4, "h": 4.1, "t": "STD", "rv": 3075.0}, {"d": "2023-07-26", "r": "SENSHI", "u": "SENSHI", "rt": "MANTE", "p": "", "hi": 392.4, "hf": 392.8, "h": 0.4, "t": "MANTE", "rv": 0.0}, {"d": "2023-08-12", "r": "CUCO", "u": "CUCO", "rt": "AUR-PB-AUR", "p": "MANUEL", "hi": 392.8, "hf": 395.4, "h": 2.6, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-08-15", "r": "CUCO", "u": "CUCO", "rt": "AUR-PB-AUR", "p": "MANUEL", "hi": 395.4, "hf": 397.8, "h": 2.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-08-30", "r": "SENSHI", "u": "ALQ", "rt": "GUA-SPS", "p": "OSCAR AREVALO", "hi": 397.8, "hf": 399.5, "h": 1.7, "t": "STD", "rv": 1275.0}, {"d": "2023-09-01", "r": "SENSHI", "u": "ALQ", "rt": "SPS-TGU", "p": "OSCAR AREVALO", "hi": 399.5, "hf": 400.5, "h": 1.0, "t": "STD", "rv": 750.0}, {"d": "2023-09-01", "r": "SENSHI", "u": "ALQ", "rt": "TGU-GUA", "p": "OSCAR AREVALO", "hi": 400.5, "hf": 402.0, "h": 1.5, "t": "STD", "rv": 1125.0}, {"d": "2023-09-12", "r": "COCO", "u": "COCO", "rt": "AUR-PB-AUR", "p": "MANUEL", "hi": 402.0, "hf": 404.4, "h": 2.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-09-15", "r": "CUCO", "u": "CUCO", "rt": "AUR-LOS", "p": "FERNANDO", "hi": 404.4, "hf": 405.6, "h": 1.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-09-17", "r": "CUCO", "u": "CUCO", "rt": "LOS-AUR", "p": "FERNANDO", "hi": 405.6, "hf": 406.8, "h": 1.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-09-22", "r": "CUCO", "u": "CUCO", "rt": "AUR-YSV-AUR", "p": "OSCAR AREVALO", "hi": 406.8, "hf": 408.9, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-09-26", "r": "COCO", "u": "COCO", "rt": "AUR-YSV-AUR", "p": "MANUEL", "hi": 408.9, "hf": 411.1, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-09-27", "r": "COCO", "u": "COCO", "rt": "AUR-IZT-AUR", "p": "MANUEL", "hi": 411.1, "hf": 412.1, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-09-28", "r": "COCO", "u": "COCO", "rt": "AUR-IZT-AUR", "p": "MANUEL", "hi": 412.1, "hf": 413.5, "h": 1.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-09-07", "r": "SENSHI", "u": "SENSHI", "rt": "MANTE", "p": "", "hi": 413.5, "hf": 414.7, "h": 1.2, "t": "MANTE", "rv": 0.0}, {"d": "2023-12-22", "r": "SENSHI", "u": "SENSHI", "rt": "MANT", "p": "", "hi": 414.7, "hf": 415.7, "h": 1.0, "t": "MANTE", "rv": 0.0}, {"d": "2023-12-23", "r": "SENSHI", "u": "SENSHI", "rt": "MANT", "p": "", "hi": 415.7, "hf": 416.9, "h": 1.2, "t": "MANTE", "rv": 0.0}, {"d": "2023-12-26", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "OSCAR AREVALO", "hi": 416.9, "hf": 419.1, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2023-12-30", "r": "COCO", "u": "COCO", "rt": "XELA", "p": "FERNANDO", "hi": 419.1, "hf": 420.4, "h": 1.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-01-02", "r": "COCO", "u": "COCO", "rt": "FLORES", "p": "MANUEL", "hi": 420.4, "hf": 422.8, "h": 2.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-01-03", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "FERNANDO", "hi": 422.8, "hf": 425.0, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-01-04", "r": "COCO", "u": "COCO", "rt": "FLORES", "p": "FERNANDO", "hi": 425.0, "hf": 427.3, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-01-06", "r": "SENSHI", "u": "ALQ", "rt": "FERCO", "p": "MANUEL", "hi": 427.3, "hf": 429.2, "h": 1.9, "t": "STD", "rv": 1425.0}, {"d": "2024-01-08", "r": "COCO", "u": "COCO", "rt": "XELA", "p": "FERNANDO", "hi": 429.2, "hf": 430.4, "h": 1.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-01-13", "r": "SENSHI", "u": "ALQ", "rt": "IZTAPA", "p": "MANUEL", "hi": 430.4, "hf": 431.6, "h": 1.2, "t": "STD", "rv": 900.0}, {"d": "2024-01-14", "r": "COCO", "u": "COCO", "rt": "ILOPANGO", "p": "MANUEL", "hi": 431.6, "hf": 433.9, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-01-15", "r": "COCO", "u": "COCO", "rt": "ILOPANGO", "p": "MANUEL", "hi": 433.9, "hf": 436.0, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-01-17", "r": "COCO", "u": "COCO", "rt": "ILOPANGO", "p": "MANUEL", "hi": 436.0, "hf": 438.0, "h": 2.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-01-23", "r": "COCO", "u": "COCO", "rt": "ILOPANGO", "p": "FERNANDO", "hi": 438.0, "hf": 440.0, "h": 2.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-01-24", "r": "COCO", "u": "COCO", "rt": "ILOPANGO", "p": "MANUEL", "hi": 440.0, "hf": 442.5, "h": 2.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-01-26", "r": "SENSHI", "u": "ALQ", "rt": "FLORES", "p": "MANUEL", "hi": 442.5, "hf": 445.1, "h": 2.6, "t": "STD", "rv": 1950.0}, {"d": "2024-01-27", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "MANUEL", "hi": 445.1, "hf": 447.4, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-01-30", "r": "SENSHI", "u": "ALQ", "rt": "SAN PEDRO", "p": "FERNANDO", "hi": 447.4, "hf": 450.6, "h": 3.2, "t": "STD", "rv": 2400.0}, {"d": "2024-01-19", "r": "SENSHI", "u": "MANTE", "rt": "PRUEBA", "p": "FERNANDO", "hi": 450.6, "hf": 451.3, "h": 0.7, "t": "MANTE", "rv": 0.0}, {"d": "2024-01-19", "r": "SENSHI", "u": "MANTE", "rt": "PRUEBA", "p": "FERNANDO", "hi": 451.3, "hf": 451.7, "h": 0.4, "t": "MANTE", "rv": 0.0}, {"d": "2024-02-21", "r": "SENSHI", "u": "ALQ", "rt": "SAN PEDRO", "p": "MANUEL", "hi": 451.7, "hf": 453.3, "h": 1.6, "t": "STD", "rv": 1200.0}, {"d": "2024-02-22", "r": "SENSHI", "u": "ALQ", "rt": "TGU", "p": "MANUEL", "hi": 453.3, "hf": 454.5, "h": 1.2, "t": "STD", "rv": 900.0}, {"d": "2024-02-23", "r": "SENSHI", "u": "ALQ", "rt": "GUA", "p": "MANUEL", "hi": 454.5, "hf": 456.2, "h": 1.7, "t": "STD", "rv": 1275.0}, {"d": "2024-02-27", "r": "SENSHI", "u": "MANTE", "rt": "TALLER", "p": "AEROMOTORES", "hi": 456.2, "hf": 456.9, "h": 0.7, "t": "MANTE", "rv": 0.0}, {"d": "2024-02-27", "r": "COCO", "u": "COCO", "rt": "ILOPANGO", "p": "JOSE BARRERA", "hi": 456.9, "hf": 459.3, "h": 2.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-02-28", "r": "COCO", "u": "COCO", "rt": "ILOPANGO", "p": "MANUEL", "hi": 459.3, "hf": 461.3, "h": 2.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-03-01", "r": "SENSHI", "u": "ALQ", "rt": "SAN PEDRO", "p": "", "hi": 461.3, "hf": 464.7, "h": 3.4, "t": "STD", "rv": 2550.0}, {"d": "2024-03-09", "r": "CUCO", "u": "CUCO", "rt": "PUERTO BARRIOS", "p": "MANUEL", "hi": 464.7, "hf": 466.9, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-03-09", "r": "CUCO", "u": "CUCO", "rt": "RIO DULCE", "p": "MANUEL", "hi": 466.9, "hf": 469.0, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-03-10", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "JOSE BARRERA", "hi": 469.0, "hf": 471.3, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-03-11", "r": "SENSHI", "u": "ALQ", "rt": "XELA", "p": "ARNOL C", "hi": 471.3, "hf": 473.6, "h": 2.3, "t": "STD", "rv": 1725.0}, {"d": "2024-03-22", "r": "COCO", "u": "COCO", "rt": "ILOPANGO", "p": "MANUEL", "hi": 473.6, "hf": 475.9, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-03-24", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "FERNANDO", "hi": 475.9, "hf": 478.2, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-03-24", "r": "COCO", "u": "COCO", "rt": "ILOPANGO", "p": "FERNANDO", "hi": 478.2, "hf": 481.1, "h": 2.9, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-03-26", "r": "COCO", "u": "COCO", "rt": "ILOPANGO", "p": "FERNANDO", "hi": 481.1, "hf": 482.9, "h": 1.8, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-03-28", "r": "SENSHI", "u": "ALQ", "rt": "IZTAPA", "p": "FERNANDO", "hi": 482.9, "hf": 483.9, "h": 1.0, "t": "STD", "rv": 750.0}, {"d": "2024-03-29", "r": "SENSHI", "u": "ALQ", "rt": "IZTAPA -RD", "p": "MANUEL", "hi": 483.9, "hf": 486.5, "h": 2.6, "t": "STD", "rv": 1950.0}, {"d": "2024-03-31", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "FERNANDO", "hi": 486.5, "hf": 488.7, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-04-04", "r": "CUCO", "u": "CUCO", "rt": "RD", "p": "MANUEL", "hi": 488.7, "hf": 491.0, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-04-15", "r": "SENSHI", "u": "ALQ", "rt": "FRAY BARTOLOME", "p": "FERNANDO MENDEZ", "hi": 491.0, "hf": 493.1, "h": 2.1, "t": "STD", "rv": 1575.0}, {"d": "2024-04-16", "r": "SENSHI", "u": "ALQ", "rt": "RD", "p": "MANUEL", "hi": 493.1, "hf": 495.0, "h": 1.9, "t": "STD", "rv": 1425.0}, {"d": "2024-04-17", "r": "SENSHI", "u": "ALQ", "rt": "RD", "p": "FERNANDO", "hi": 495.0, "hf": 497.0, "h": 2.0, "t": "STD", "rv": 1500.0}, {"d": "2024-04-18", "r": "SENSHI", "u": "ALQ", "rt": "YSV", "p": "MANUEL", "hi": 497.0, "hf": 499.0, "h": 2.0, "t": "STD", "rv": 1500.0}, {"d": "2024-04-19", "r": "SENSHI", "u": "ALQ", "rt": "TGU", "p": "MANUEL", "hi": 499.0, "hf": 502.5, "h": 3.5, "t": "STD", "rv": 2625.0}, {"d": "2024-04-20", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "MANUEL", "hi": 502.5, "hf": 504.8, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-04-21", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "MANUEL", "hi": 504.8, "hf": 507.2, "h": 2.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-04-23", "r": "CUCO", "u": "CUCO", "rt": "PILAR", "p": "FERNANDO", "hi": 507.2, "hf": 508.6, "h": 1.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-05-07", "r": "SENSHI", "u": "MANTE", "rt": "Prueba Mante", "p": "FERNANDO", "hi": 508.6, "hf": 509.7, "h": 1.1, "t": "MANTE", "rv": 0.0}, {"d": "2024-05-22", "r": "SENSHI", "u": "MANTE", "rt": "instalacion radio", "p": "FERNANDO", "hi": 509.7, "hf": 509.9, "h": 0.2, "t": "MANTE", "rv": 0.0}, {"d": "2024-05-23", "r": "SENSHI", "u": "ALQ CUCO", "rt": "SPS-GUA", "p": "OSCAR AREVALO", "hi": 509.9, "hf": 513.4, "h": 3.5, "t": "STD", "rv": 2625.0}, {"d": "2024-05-24", "r": "SENSHI", "u": "ALQ COCO", "rt": "YSV", "p": "OSCAR AREVALO", "hi": 513.4, "hf": 515.6, "h": 2.2, "t": "STD", "rv": 1650.0}, {"d": "2024-05-26", "r": "SENSHI", "u": "ALQ CUCO", "rt": "RIO", "p": "OSCAR AREVALO", "hi": 515.6, "hf": 517.5, "h": 1.9, "t": "STD", "rv": 1425.0}, {"d": "2024-05-30", "r": "SENSHI", "u": "ALQ CUCO", "rt": "RIO", "p": "FERNANDO", "hi": 517.5, "hf": 519.4, "h": 1.9, "t": "STD", "rv": 1425.0}, {"d": "2024-05-31", "r": "COCO", "u": "COCO", "rt": "YSV", "p": "OSCAR AREVALO", "hi": 519.4, "hf": 521.5, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-06-02", "r": "COCO", "u": "COCO", "rt": "YSV", "p": "OSCAR AREVALO", "hi": 521.5, "hf": 523.6, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-06-08", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "JOSE BARRERA", "hi": 523.6, "hf": 525.7, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-06-09", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "JOSE BARRERA", "hi": 525.7, "hf": 528.1, "h": 2.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-06-11", "r": "SENSHI", "u": "ALQ CUCO", "rt": "MSSS", "p": "MANUEL", "hi": 528.1, "hf": 530.6, "h": 2.5, "t": "STD", "rv": 1875.0}, {"d": "2024-06-11", "r": "SENSHI", "u": "ALQ CUCO", "rt": "REU", "p": "", "hi": 530.6, "hf": 531.9, "h": 1.3, "t": "STD", "rv": 975.0}, {"d": "2024-06-11", "r": "SENSHI", "u": "ALQ CUCO", "rt": "REU", "p": "", "hi": 531.9, "hf": 533.1, "h": 1.2, "t": "STD", "rv": 900.0}, {"d": "2024-06-29", "r": "SENSHI", "u": "ALQ FER", "rt": "RIO DULCE", "p": "", "hi": 533.1, "hf": 535.4, "h": 2.3, "t": "STD", "rv": 1725.0}, {"d": "2024-07-01", "r": "SENSHI", "u": "ALQ FER", "rt": "RIO DULCE", "p": "", "hi": 535.4, "hf": 537.8, "h": 2.4, "t": "STD", "rv": 1800.0}, {"d": "2024-07-03", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "JOSE BARRERA", "hi": 537.8, "hf": 538.9, "h": 1.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-07-12", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "MANUEL", "hi": 538.9, "hf": 540.0, "h": 1.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-07-14", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "OSCAR AREVALO", "hi": 540.0, "hf": 541.0, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-07-14", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "OSCAR AREVALO", "hi": 541.0, "hf": 542.0, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-07-18", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "FERNANDO MENDEZ", "hi": 542.0, "hf": 544.5, "h": 2.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-07-21", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "MANUEL", "hi": 544.5, "hf": 546.9, "h": 2.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-07-24", "r": "SENSHI", "u": "ALQ CUCO", "rt": "SAN PEDRO", "p": "MANUEL", "hi": 546.9, "hf": 549.8, "h": 2.9, "t": "STD", "rv": 2175.0}, {"d": "2024-07-25", "r": "SENSHI", "u": "ALQ COCO", "rt": "YSV", "p": "FERNANDO", "hi": 549.8, "hf": 551.6, "h": 1.8, "t": "STD", "rv": 1350.0}, {"d": "2024-07-26", "r": "SENSHI", "u": "ALQ COCO", "rt": "YSV", "p": "MANUEL", "hi": 551.6, "hf": 552.7, "h": 1.1, "t": "STD", "rv": 825.0}, {"d": "2024-07-26", "r": "SENSHI", "u": "ALQ COCO", "rt": "YSV/SPS", "p": "MANUEL", "hi": 552.7, "hf": 553.4, "h": 0.7, "t": "STD", "rv": 525.0}, {"d": "2024-07-26", "r": "SENSHI", "u": "ALQ CUCO", "rt": "YSV/SPS", "p": "MANUEL", "hi": 553.4, "hf": 554.1, "h": 0.7, "t": "STD", "rv": 525.0}, {"d": "2024-07-26", "r": "SENSHI", "u": "ALQ CUCO", "rt": "SPS-GUA", "p": "MANUEL", "hi": 554.1, "hf": 555.6, "h": 1.5, "t": "STD", "rv": 1125.0}, {"d": "2024-07-28", "r": "COCO", "u": "COCO HRS ADAN", "rt": "IZP", "p": "MANUEL", "hi": 555.6, "hf": 556.6, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-07-31", "r": "SENSHI", "u": "ALQ FER", "rt": "SAP", "p": "MANUEL", "hi": 556.6, "hf": 559.6, "h": 3.0, "t": "STD", "rv": 2250.0}, {"d": "2024-07-31", "r": "SENSHI", "u": "ALQ COCO", "rt": "IZP", "p": "FERNANDO", "hi": 559.6, "hf": 560.9, "h": 1.3, "t": "STD", "rv": 975.0}, {"d": "2024-08-01", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "FERNANDO", "hi": 560.9, "hf": 561.8, "h": 0.9, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-08-09", "r": "SENSHI", "u": "MANTE", "rt": "MODER", "p": "FERNANDO", "hi": 561.8, "hf": 562.9, "h": 1.1, "t": "MANTE", "rv": 0.0}, {"d": "2024-08-09", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "FERNANDO MENDEZ", "hi": 562.9, "hf": 564.4, "h": 1.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-08-11", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "FERNANDO", "hi": 564.4, "hf": 565.2, "h": 0.8, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-08-11", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "FERNANDO", "hi": 565.2, "hf": 566.1, "h": 0.9, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-08-14", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "OSCAR AREVALO", "hi": 566.1, "hf": 567.1, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-08-15", "r": "CUCO", "u": "CUCO", "rt": "ROA", "p": "MANUEL", "hi": 567.1, "hf": 572.1, "h": 5.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-08-16", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "FERNANDO MENDEZ", "hi": 572.1, "hf": 573.2, "h": 1.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-08-18", "r": "CUCO", "u": "CUCO", "rt": "ROA", "p": "MANUEL", "hi": 573.2, "hf": 577.7, "h": 4.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-08-22", "r": "COCO", "u": "COCO", "rt": "MSSS", "p": "FERNANDO", "hi": 577.7, "hf": 579.6, "h": 1.9, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-08-23", "r": "SENSHI", "u": "ALQ FER", "rt": "RIO DULCE", "p": "E. SANTIZO", "hi": 579.6, "hf": 581.5, "h": 1.9, "t": "STD", "rv": 1425.0}, {"d": "2024-08-25", "r": "SENSHI", "u": "ALQ FER", "rt": "RIO DULCE", "p": "E. SANTIZO", "hi": 581.5, "hf": 583.6, "h": 2.1, "t": "STD", "rv": 1575.0}, {"d": "2024-08-26", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "FERNANDO", "hi": 583.6, "hf": 584.6, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-08-26", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "FERNANDO", "hi": 584.6, "hf": 585.6, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-09-04", "r": "SENSHI", "u": "ALQ FER", "rt": "TGU-GUA", "p": "JOSE BARRERA", "hi": 585.6, "hf": 590.3, "h": 4.7, "t": "STD", "rv": 3525.0}, {"d": "2024-09-11", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "JOSE BARRERA", "hi": 590.3, "hf": 591.6, "h": 1.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-09-19", "r": "COCO", "u": "COCO", "rt": "YSV", "p": "MANUEL", "hi": 591.6, "hf": 593.6, "h": 2.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-09-20", "r": "CUCO", "u": "CUCO", "rt": "YSV", "p": "MANUEL", "hi": 593.6, "hf": 595.4, "h": 1.8, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-09-21", "r": "SENSHI", "u": "ALQ CUCO", "rt": "SANTIAGO", "p": "MANUEL", "hi": 595.4, "hf": 596.6, "h": 1.2, "t": "STD", "rv": 900.0}, {"d": "2024-09-23", "r": "SENSHI", "u": "ALQ CUCO", "rt": "SANTIAGO", "p": "FERNANDOF", "hi": 596.6, "hf": 597.4, "h": 0.8, "t": "STD", "rv": 600.0}, {"d": "2024-09-27", "r": "COCO", "u": "COCO", "rt": "YSV", "p": "JOSE BARRERA", "hi": 597.4, "hf": 600.5, "h": 3.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-09-28", "r": "COCO", "u": "COCO", "rt": "YSV", "p": "JOSE BARRERA", "hi": 600.5, "hf": 602.7, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-10-01", "r": "SENSHI", "u": "MANTE", "rt": "AEROMOTORES", "p": "FERNANDO", "hi": 602.7, "hf": 603.3, "h": 0.6, "t": "MANTE", "rv": 0.0}, {"d": "2024-10-12", "r": "SENSHI", "u": "ALQ FER", "rt": "IZP", "p": "SANTIZO", "hi": 603.3, "hf": 604.4, "h": 1.1, "t": "STD", "rv": 825.0}, {"d": "2024-10-14", "r": "SENSHI", "u": "ALQ FER", "rt": "IZP", "p": "FERNANDO", "hi": 604.4, "hf": 605.3, "h": 0.9, "t": "STD", "rv": 675.0}, {"d": "2024-10-18", "r": "SENSHI", "u": "ALQ FER", "rt": "IZP", "p": "SANTIZO", "hi": 605.3, "hf": 606.4, "h": 1.1, "t": "STD", "rv": 825.0}, {"d": "2024-10-25", "r": "SENSHI", "u": "ALQ CUCO", "rt": "GUA-SPS-GUA", "p": "BARRAGAN", "hi": 606.4, "hf": 609.8, "h": 3.4, "t": "STD", "rv": 2550.0}, {"d": "2024-11-09", "r": "COCO", "u": "COCO", "rt": "RIO DULCE", "p": "BARRAGAN", "hi": 609.8, "hf": 612.0, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-11-10", "r": "COCO", "u": "COCO", "rt": "RIO DULCE", "p": "BARRAGAN", "hi": 612.0, "hf": 614.0, "h": 2.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-11-22", "r": "CUCO", "u": "CUCO", "rt": "BARRIOS", "p": "BARRAGAN", "hi": 614.0, "hf": 616.5, "h": 2.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-12-05", "r": "COCO", "u": "COCO", "rt": "YSV", "p": "BARRAGAN", "hi": 616.5, "hf": 619.0, "h": 2.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-12-05", "r": "SENSHI", "u": "ALQ CUCO", "rt": "TGU", "p": "BARRAGAN", "hi": 619.0, "hf": 621.2, "h": 2.2, "t": "STD", "rv": 1650.0}, {"d": "2024-12-06", "r": "SENSHI", "u": "ALQ CUCO", "rt": "TGU-YSV", "p": "BARRAGAN", "hi": 621.2, "hf": 622.1, "h": 0.9, "t": "STD", "rv": 675.0}, {"d": "2024-12-06", "r": "SENSHI", "u": "ALQ CUCO", "rt": "YSV-GUA", "p": "BARRAGAN", "hi": 622.1, "hf": 623.2, "h": 1.1, "t": "STD", "rv": 825.0}, {"d": "2024-12-11", "r": "COCO", "u": "COCO", "rt": "IZTAPA", "p": "BARRAGAN", "hi": 623.2, "hf": 624.3, "h": 1.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-12-15", "r": "SENSHI", "u": "ALQ FER", "rt": "MGMM", "p": "BARRAGAN", "hi": 624.3, "hf": 627.3, "h": 3.0, "t": "STD", "rv": 2250.0}, {"d": "2024-12-18", "r": "SENSHI", "u": "MANTE", "rt": "GUA-GUA", "p": "BARRAGAN", "hi": 627.3, "hf": 628.2, "h": 0.9, "t": "MANTE", "rv": 0.0}, {"d": "2024-12-18", "r": "SENSHI", "u": "ALQ COCO BOG SAL", "rt": "YSV", "p": "BARRAGAN", "hi": 628.2, "hf": 631.0, "h": 2.8, "t": "STD", "rv": 2100.0}, {"d": "2024-12-18", "r": "COCO", "u": "COCO", "rt": "IZTAPA", "p": "BARRAGAN", "hi": 631.0, "hf": 632.0, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-12-19", "r": "SENSHI", "u": "ALQ COCO BOG SAL", "rt": "MSSS", "p": "", "hi": 632.0, "hf": 634.7, "h": 2.7, "t": "STD", "rv": 2025.0}, {"d": "2024-12-25", "r": "SENSHI", "u": "ALQ FER", "rt": "MSSS", "p": "", "hi": 634.7, "hf": 636.4, "h": 1.7, "t": "STD", "rv": 1275.0}, {"d": "2024-12-26", "r": "COCO", "u": "COCO", "rt": "IZTAPA", "p": "", "hi": 636.4, "hf": 637.7, "h": 1.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2024-12-28", "r": "SENSHI", "u": "ALQ CUCO", "rt": "RIO DULCE", "p": "BARRAGAN", "hi": 637.7, "hf": 639.8, "h": 2.1, "t": "STD", "rv": 1575.0}, {"d": "2025-01-01", "r": "SENSHI", "u": "ALQ CUCO", "rt": "RIO DULCE", "p": "BARRAGAN", "hi": 639.8, "hf": 641.8, "h": 2.0, "t": "STD", "rv": 1500.0}, {"d": "2025-01-03", "r": "COCO", "u": "COCO", "rt": "IZT", "p": "FERNANDO MENDEZ", "hi": 641.8, "hf": 643.0, "h": 1.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-01-04", "r": "COCO", "u": "COCO", "rt": "IZT", "p": "BARRAGAN", "hi": 643.0, "hf": 644.9, "h": 1.9, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-01-04", "r": "COCO", "u": "COCO", "rt": "IZT", "p": "FERNANDO", "hi": 644.9, "hf": 645.8, "h": 0.9, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-01-05", "r": "COCO", "u": "COCO", "rt": "IZT", "p": "FERNANDO", "hi": 645.8, "hf": 646.7, "h": 0.9, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-01-14", "r": "SENSHI", "u": "ALQ COCO RIO NICKEL", "rt": "RIO", "p": "BARRAGAN", "hi": 646.7, "hf": 648.9, "h": 2.2, "t": "STD", "rv": 1650.0}, {"d": "2025-01-16", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "", "hi": 648.9, "hf": 650.1, "h": 1.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-01-18", "r": "SENSHI", "u": "ALQ COCO RIO NICKEL", "rt": "RIO", "p": "", "hi": 650.1, "hf": 652.2, "h": 2.1, "t": "STD", "rv": 1575.0}, {"d": "2025-01-20", "r": "CUCO", "u": "CUCO", "rt": "PBR", "p": "", "hi": 652.2, "hf": 654.4, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-01-21", "r": "SENSHI", "u": "ALQ COCO RIO NICKEL", "rt": "RIO", "p": "", "hi": 654.4, "hf": 656.3, "h": 1.9, "t": "STD", "rv": 1425.0}, {"d": "2025-01-22", "r": "CUCO", "u": "CUCO", "rt": "PBR", "p": "", "hi": 656.3, "hf": 658.5, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-02-10", "r": "SENSHI", "u": "MANTE", "rt": "MANTE", "p": "", "hi": 658.5, "hf": 658.8, "h": 0.3, "t": "MANTE", "rv": 0.0}, {"d": "2025-02-10", "r": "COCO", "u": "COCO", "rt": "IZTAPA", "p": "", "hi": 658.8, "hf": 659.8, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-02-12", "r": "COCO", "u": "COCO", "rt": "IZTAPA", "p": "", "hi": 659.8, "hf": 661.3, "h": 1.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-02-19", "r": "COCO", "u": "COCO", "rt": "IZTAPA", "p": "", "hi": 661.3, "hf": 662.6, "h": 1.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-02-23", "r": "CUCO", "u": "CUCO", "rt": "PBR", "p": "BARRAGAN", "hi": 662.6, "hf": 664.9, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-02-24", "r": "CUCO", "u": "CUCO", "rt": "PBR", "p": "BARRAGAN", "hi": 664.9, "hf": 667.3, "h": 2.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-02-26", "r": "COCO", "u": "COCO HRS ADAN", "rt": "ILOPANGO", "p": "", "hi": 667.3, "hf": 669.5, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-02-27", "r": "SENSHI", "u": "ALQ CUCO", "rt": "ILOPANGO", "p": "", "hi": 669.5, "hf": 672.0, "h": 2.5, "t": "STD", "rv": 1875.0}, {"d": "2025-02-28", "r": "SENSHI", "u": "ALQ CUCO", "rt": "ILOPANGO", "p": "", "hi": 672.0, "hf": 674.5, "h": 2.5, "t": "STD", "rv": 1875.0}, {"d": "2025-03-03", "r": "SENSHI", "u": "MANTE", "rt": "MANTE", "p": "", "hi": 674.5, "hf": 675.0, "h": 0.5, "t": "MANTE", "rv": 0.0}, {"d": "2025-03-04", "r": "COCO", "u": "COCO", "rt": "ILOPANGO", "p": "", "hi": 675.0, "hf": 677.2, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-03-07", "r": "CUCO", "u": "CUCO", "rt": "IZP", "p": "", "hi": 677.2, "hf": 678.4, "h": 1.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-03-10", "r": "COCO", "u": "COCO", "rt": "IZP-RIO", "p": "", "hi": 678.4, "hf": 681.1, "h": 2.7, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-03-16", "r": "COCO", "u": "COCO", "rt": "RIO-IZP", "p": "", "hi": 681.1, "hf": 683.7, "h": 2.6, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-03-17", "r": "CUCO", "u": "CUCO", "rt": "XELA", "p": "", "hi": 683.7, "hf": 685.2, "h": 1.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-03-18", "r": "CUCO", "u": "CUCO", "rt": "XELA", "p": "", "hi": 685.2, "hf": 686.5, "h": 1.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-03-26", "r": "CUCO", "u": "CUCO HRS ADAN", "rt": "YSV", "p": "", "hi": 686.5, "hf": 688.7, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-03-27", "r": "SENSHI", "u": "ALQ FER", "rt": "MGTB", "p": "", "hi": 688.7, "hf": 692.1, "h": 3.4, "t": "STD", "rv": 2550.0}, {"d": "2025-04-04", "r": "CUCO", "u": "ALQ CUCO FF", "rt": "MGPB", "p": "", "hi": 692.1, "hf": 694.3, "h": 2.2, "t": "FF", "rv": 1430.0}, {"d": "2025-04-04", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "", "hi": 694.3, "hf": 695.3, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-04-06", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 695.3, "hf": 697.6, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-04-09", "r": "COCO", "u": "ALQ COCO", "rt": "RIO", "p": "BARRAGAN", "hi": 697.6, "hf": 699.7, "h": 2.1, "t": "STD", "rv": 1575.0}, {"d": "2025-04-11", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "BARRAGAN", "hi": 699.7, "hf": 700.8, "h": 1.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-04-12", "r": "SENSHI", "u": "ALQ CUCO FF", "rt": "MGPB", "p": "FERNANDO", "hi": 700.8, "hf": 703.0, "h": 2.2, "t": "FF", "rv": 1430.0}, {"d": "2025-04-13", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "FERNANDO", "hi": 703.0, "hf": 705.2, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-04-19", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "FERNANDO", "hi": 705.2, "hf": 707.4, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-05-01", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "OSCAR AREVALO", "hi": 707.4, "hf": 709.6, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-05-04", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "OSCAR AREVALO", "hi": 709.6, "hf": 712.2, "h": 2.6, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-05-18", "r": "CUCO", "u": "CUCO", "rt": "REU", "p": "BARRAGAN", "hi": 712.2, "hf": 714.0, "h": 1.8, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-05-18", "r": "SENSHI", "u": "SENSHI", "rt": "MANTE", "p": "BARRAGAN", "hi": 714.0, "hf": 718.2, "h": 4.2, "t": "MANTE", "rv": 0.0}, {"d": "2025-05-22", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "BARRAGAN", "hi": 718.2, "hf": 719.3, "h": 1.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-05-22", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "FERNANDO MENDEZ", "hi": 719.3, "hf": 720.3, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-05-27", "r": "COCO", "u": "ALQ COCO", "rt": "MGPB", "p": "OSCAR AREVALO", "hi": 720.3, "hf": 722.5, "h": 2.2, "t": "STD", "rv": 1650.0}, {"d": "2025-05-29", "r": "COCO", "u": "ALQ COCO", "rt": "MGPB", "p": "BARRAGAN", "hi": 722.5, "hf": 724.7, "h": 2.2, "t": "STD", "rv": 1650.0}, {"d": "2025-06-18", "r": "CUCO", "u": "ALQ CUCO FF", "rt": "FLORES", "p": "BARRAGAN", "hi": 724.7, "hf": 727.1, "h": 2.4, "t": "FF", "rv": 1560.0}, {"d": "2025-06-21", "r": "CUCO", "u": "ALQ CUCO FF", "rt": "FLORES", "p": "FERNANDO", "hi": 727.1, "hf": 729.5, "h": 2.4, "t": "FF", "rv": 1560.0}, {"d": "2025-06-27", "r": "COCO", "u": "COCO HRS ADAN", "rt": "COMALAPA", "p": "BARRAGAN", "hi": 729.5, "hf": 733.3, "h": 3.8, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-07-08", "r": "COCO", "u": "ALQ COCO", "rt": "MGPB", "p": "BARRAGAN", "hi": 733.3, "hf": 735.5, "h": 2.2, "t": "STD", "rv": 1650.0}, {"d": "2025-07-09", "r": "COCO", "u": "ALQ COCO", "rt": "MSSS", "p": "FERNANDO", "hi": 735.5, "hf": 737.4, "h": 1.9, "t": "STD", "rv": 1425.0}, {"d": "2025-07-09", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "FERNANDO", "hi": 737.4, "hf": 738.4, "h": 1.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-07-09", "r": "COCO", "u": "ALQ COCO", "rt": "MSSS", "p": "FERNANDO", "hi": 738.4, "hf": 740.5, "h": 2.1, "t": "STD", "rv": 1575.0}, {"d": "2025-07-14", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "A. CASTILLO", "hi": 740.5, "hf": 742.0, "h": 1.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-07-19", "r": "SENSHI", "u": "SENSHI", "rt": "Prueba Mante", "p": "AEROMOTORES", "hi": 742.0, "hf": 742.7, "h": 0.7, "t": "MANTE", "rv": 0.0}, {"d": "2025-07-20", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "FERNANDO", "hi": 742.7, "hf": 744.9, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-07-21", "r": "COCO", "u": "ALQ COCO", "rt": "MGRT", "p": "FERNANDO", "hi": 744.9, "hf": 746.3, "h": 1.4, "t": "STD", "rv": 1050.0}, {"d": "2025-07-24", "r": "COCO", "u": "ALQ COCO", "rt": "MSSS", "p": "FERNANDO", "hi": 746.3, "hf": 748.3, "h": 2.0, "t": "STD", "rv": 1500.0}, {"d": "2025-07-24", "r": "CUCO", "u": "ALQ CUCO FF", "rt": "MGPB", "p": "FERNANDO", "hi": 748.3, "hf": 750.5, "h": 2.2, "t": "FF", "rv": 1430.0}, {"d": "2025-07-27", "r": "CUCO", "u": "ALQ CUCO FF", "rt": "MGPB", "p": "FERNANDO", "hi": 750.5, "hf": 752.8, "h": 2.3, "t": "FF", "rv": 1495.0}, {"d": "2025-07-27", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "FERNANDO", "hi": 752.8, "hf": 754.9, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-07-29", "r": "COCO", "u": "ALQ COCO", "rt": "MGPB", "p": "", "hi": 754.9, "hf": 757.3, "h": 2.4, "t": "STD", "rv": 1800.0}, {"d": "2025-08-01", "r": "CUCO", "u": "CUCO", "rt": "IZP", "p": "", "hi": 757.3, "hf": 758.5, "h": 1.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-08-03", "r": "CUCO", "u": "CUCO", "rt": "IZP", "p": "BARRAGAN", "hi": 758.5, "hf": 759.6, "h": 1.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-08-06", "r": "SENSHI", "u": "ALQ LICO", "rt": "SALAMA", "p": "BARRAGAN", "hi": 759.6, "hf": 760.5, "h": 0.9, "t": "STD", "rv": 750.0}, {"d": "2025-08-07", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "IZP", "p": "FERNANDO", "hi": 760.5, "hf": 761.5, "h": 1.0, "t": "STD", "rv": 750.0}, {"d": "2025-08-10", "r": "SENSHI", "u": "ALQ CUCO FF", "rt": "RIO", "p": "A. CASTILLO", "hi": 761.5, "hf": 763.6, "h": 2.1, "t": "FF", "rv": 1365.0}, {"d": "2025-08-11", "r": "COCO", "u": "COCO HRS ADAN", "rt": "ILOP-MESA-GT", "p": "A. CASTILLO", "hi": 763.6, "hf": 768.9, "h": 5.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-08-14", "r": "SENSHI", "u": "ALQ CUCO FF", "rt": "RIO", "p": "A. CASTILLO", "hi": 768.9, "hf": 770.9, "h": 2.0, "t": "FF", "rv": 1300.0}, {"d": "2025-08-17", "r": "COCO", "u": "COCO", "rt": "BARRIOS-REU", "p": "BARRAGAN", "hi": 770.9, "hf": 774.4, "h": 3.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-08-20", "r": "COCO", "u": "COCO", "rt": "REU", "p": "BARRAGAN", "hi": 774.4, "hf": 776.0, "h": 1.6, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-08-27", "r": "SENSHI", "u": "ALQ LICO", "rt": "TEGUS", "p": "BARRAGAN", "hi": 776.0, "hf": 778.2, "h": 2.2, "t": "STD", "rv": 1650.0}, {"d": "2025-08-28", "r": "SENSHI", "u": "ALQ LICO", "rt": "TGS-MAN", "p": "BARRAGAN", "hi": 778.2, "hf": 779.3, "h": 1.1, "t": "STD", "rv": 825.0}, {"d": "2025-08-28", "r": "SENSHI", "u": "ALQ LICO", "rt": "MAN-TGS", "p": "BARRAGAN", "hi": 779.3, "hf": 780.5, "h": 1.2, "t": "STD", "rv": 900.0}, {"d": "2025-08-28", "r": "SENSHI", "u": "ALQ LICO", "rt": "TGS-GUA", "p": "BARRAGAN", "hi": 780.5, "hf": 782.0, "h": 1.5, "t": "STD", "rv": 1125.0}, {"d": "2025-08-29", "r": "SENSHI", "u": "MANTE", "rt": "MANTENIMIENTO", "p": "AEROMOTORES", "hi": 782.0, "hf": 782.5, "h": 0.5, "t": "MANTE", "rv": 0.0}, {"d": "2025-09-04", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "IZP", "p": "FERNANDO", "hi": 782.5, "hf": 783.9, "h": 1.4, "t": "STD", "rv": 1050.0}, {"d": "2025-09-05", "r": "SENSHI", "u": "ALQ FER", "rt": "RIO", "p": "BARRAGAN", "hi": 783.9, "hf": 785.9, "h": 2.0, "t": "STD", "rv": 1500.0}, {"d": "2025-09-10", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "A. CASTILLO", "hi": 785.9, "hf": 787.0, "h": 1.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-09-13", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "BARRAGAN", "hi": 787.0, "hf": 789.5, "h": 2.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-09-15", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "BARRAGAN", "hi": 789.5, "hf": 792.0, "h": 2.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-09-20", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "IZP", "p": "BARRAGAN", "hi": 792.0, "hf": 793.0, "h": 1.0, "t": "STD", "rv": 750.0}, {"d": "2025-09-21", "r": "SENSHI", "u": "ALQ LICO", "rt": "SAP", "p": "FERNANDO", "hi": 793.0, "hf": 795.8, "h": 2.8, "t": "STD", "rv": 2100.0}, {"d": "2025-09-24", "r": "COCO", "u": "COCO", "rt": "YSV", "p": "FERNANDO", "hi": 795.8, "hf": 798.3, "h": 2.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-09-25", "r": "COCO", "u": "COCO HRS ADAN", "rt": "YSV", "p": "BARRAGAN", "hi": 798.3, "hf": 800.3, "h": 2.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-10-02", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "A. CASTILLO", "hi": 800.3, "hf": 802.4, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-10-03", "r": "CUCO", "u": "CUCO", "rt": "RIO", "p": "FERNANDO", "hi": 802.4, "hf": 804.8, "h": 2.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-10-05", "r": "CUCO", "u": "ALQ CUCO FF", "rt": "RIO", "p": "FERNANDO", "hi": 804.8, "hf": 806.7, "h": 1.9, "t": "FF", "rv": 1235.0}, {"d": "2025-10-08", "r": "SENSHI", "u": "ALQ FER", "rt": "BARRIOS-FLORES", "p": "FERNANDO", "hi": 806.7, "hf": 809.7, "h": 3.0, "t": "STD", "rv": 2250.0}, {"d": "2025-10-14", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "IZTAPA", "p": "OSCAR AREVALO", "hi": 809.7, "hf": 810.6, "h": 0.9, "t": "STD", "rv": 675.0}, {"d": "2025-10-15", "r": "CUCO", "u": "CUCO", "rt": "MSSS", "p": "BARRAGAN", "hi": 810.6, "hf": 812.8, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-10-15", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "IZTAPA", "p": "BARRAGAN", "hi": 812.8, "hf": 813.9, "h": 1.1, "t": "STD", "rv": 825.0}, {"d": "2025-10-16", "r": "CUCO", "u": "CUCO", "rt": "MSSS", "p": "BARRAGAN", "hi": 813.9, "hf": 816.0, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-10-17", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "FERNANDO", "hi": 816.0, "hf": 818.3, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-10-20", "r": "COCO", "u": "COCO", "rt": "IZTAPA", "p": "FERNANDO", "hi": 818.3, "hf": 819.4, "h": 1.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-10-20", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 819.4, "hf": 821.6, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-10-24", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "MSSS", "p": "", "hi": 821.6, "hf": 822.7, "h": 1.1, "t": "STD", "rv": 825.0}, {"d": "2025-10-24", "r": "COCO", "u": "COCO", "rt": "", "p": "", "hi": 822.7, "hf": 824.1, "h": 1.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-10-28", "r": "COCO", "u": "COCO", "rt": "IZP", "p": "", "hi": 824.1, "hf": 825.3, "h": 1.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-10-29", "r": "SENSHI", "u": "ALQ LICO", "rt": "SPS", "p": "", "hi": 825.3, "hf": 828.5, "h": 3.2, "t": "STD", "rv": 2400.0}, {"d": "2025-10-31", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 828.5, "hf": 830.8, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-11-02", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 830.8, "hf": 832.9, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-11-03", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 832.9, "hf": 834.9, "h": 2.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-11-06", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 834.9, "hf": 837.1, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-11-14", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 837.1, "hf": 839.3, "h": 2.2, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-11-16", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 839.3, "hf": 841.6, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-11-17", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "IZTAPA", "p": "", "hi": 841.6, "hf": 842.6, "h": 1.0, "t": "STD", "rv": 750.0}, {"d": "2025-11-21", "r": "COCO", "u": "ALQ LECLAIRE", "rt": "MSSS", "p": "", "hi": 842.6, "hf": 844.8, "h": 2.2, "t": "STD", "rv": 1650.0}, {"d": "2025-11-27", "r": "SENSHI", "u": "ALQ FER", "rt": "MSQZ", "p": "", "hi": 844.8, "hf": 845.9, "h": 1.1, "t": "STD", "rv": 825.0}, {"d": "2025-11-28", "r": "SENSHI", "u": "ALQ FER", "rt": "MSQZ", "p": "", "hi": 845.9, "hf": 847.1, "h": 1.2, "t": "STD", "rv": 900.0}, {"d": "2025-11-28", "r": "SENSHI", "u": "MANTE", "rt": "MANTE", "p": "", "hi": 847.1, "hf": 848.8, "h": 1.7, "t": "MANTE", "rv": 0.0}, {"d": "2025-11-28", "r": "SENSHI", "u": "MANTE", "rt": "MANTE", "p": "", "hi": 848.8, "hf": 849.4, "h": 0.6, "t": "MANTE", "rv": 0.0}, {"d": "2025-12-13", "r": "SENSHI", "u": "MANTE", "rt": "MANTE", "p": "", "hi": 849.4, "hf": 849.9, "h": 0.5, "t": "MANTE", "rv": 0.0}, {"d": "2025-12-16", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "IZTAPA", "p": "", "hi": 849.9, "hf": 850.8, "h": 0.9, "t": "STD", "rv": 675.0}, {"d": "2025-12-24", "r": "SENSHI", "u": "MANTE", "rt": "MANTE", "p": "", "hi": 850.8, "hf": 851.6, "h": 0.8, "t": "MANTE", "rv": 0.0}, {"d": "2025-12-25", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 851.6, "hf": 853.7, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2025-12-28", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 853.7, "hf": 855.8, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2026-01-03", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 855.8, "hf": 858.1, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2026-01-08", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "MGCQ", "p": "", "hi": 858.1, "hf": 859.4, "h": 1.3, "t": "STD", "rv": 975.0}, {"d": "2026-01-08", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "IZP", "p": "", "hi": 859.4, "hf": 860.4, "h": 1.0, "t": "STD", "rv": 750.0}, {"d": "2026-01-08", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "MGCQ", "p": "", "hi": 860.4, "hf": 861.8, "h": 1.4, "t": "STD", "rv": 1050.0}, {"d": "2026-01-08", "r": "SENSHI", "u": "ALQ LICO", "rt": "SPS", "p": "", "hi": 861.8, "hf": 864.9, "h": 3.1, "t": "STD", "rv": 2325.0}, {"d": "2026-01-09", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "IZP", "p": "", "hi": 864.9, "hf": 866.0, "h": 1.1, "t": "STD", "rv": 825.0}, {"d": "2026-01-11", "r": "SENSHI", "u": "ALQ LICO", "rt": "SPS", "p": "", "hi": 866.0, "hf": 868.9, "h": 2.9, "t": "STD", "rv": 2175.0}, {"d": "2026-01-12", "r": "SENSHI", "u": "ALQ CUCO FF", "rt": "RIO", "p": "", "hi": 868.9, "hf": 870.7, "h": 1.8, "t": "FF", "rv": 1170.0}, {"d": "2026-01-13", "r": "CUCO", "u": "CUCO HRS ADAN", "rt": "LMS", "p": "", "hi": 870.7, "hf": 873.5, "h": 2.8, "t": "PERSONAL", "rv": 0.0}, {"d": "2026-01-17", "r": "COCO", "u": "COCO", "rt": "TIKAL", "p": "", "hi": 873.5, "hf": 876.3, "h": 2.8, "t": "PERSONAL", "rv": 0.0}, {"d": "2026-01-18", "r": "COCO", "u": "COCO", "rt": "TIKAL", "p": "", "hi": 876.3, "hf": 878.9, "h": 2.6, "t": "PERSONAL", "rv": 0.0}, {"d": "2026-01-22", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "IZP", "p": "", "hi": 878.9, "hf": 880.4, "h": 1.5, "t": "STD", "rv": 1125.0}, {"d": "2026-01-27", "r": "SENSHI", "u": "ALQ COCO FF", "rt": "MGHT", "p": "", "hi": 880.4, "hf": 881.8, "h": 1.4, "t": "FF", "rv": 910.0}, {"d": "2026-01-29", "r": "SENSHI", "u": "ALQ COCO FF", "rt": "MGHT", "p": "", "hi": 881.8, "hf": 883.3, "h": 1.5, "t": "FF", "rv": 975.0}, {"d": "2026-01-30", "r": "CUCO", "u": "CUCO HRS ADAN", "rt": "ZACAPA", "p": "", "hi": 883.3, "hf": 885.4, "h": 2.1, "t": "PERSONAL", "rv": 0.0}, {"d": "2026-02-04", "r": "SENSHI", "u": "ALQ PREMISA", "rt": "IZP", "p": "", "hi": 885.4, "hf": 886.6, "h": 1.2, "t": "STD", "rv": 900.0}, {"d": "2026-02-26", "r": "SENSHI", "u": "ALQ LICO", "rt": "SPS", "p": "", "hi": 886.6, "hf": 889.9, "h": 3.3, "t": "STD", "rv": 2475.0}, {"d": "2026-03-03", "r": "COCO", "u": "COCO", "rt": "MZBZ", "p": "", "hi": 889.9, "hf": 893.4, "h": 3.5, "t": "PERSONAL", "rv": 0.0}, {"d": "2026-03-04", "r": "COCO", "u": "COCO", "rt": "MGRD", "p": "", "hi": 893.4, "hf": 895.4, "h": 2.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2026-03-24", "r": "COCO", "u": "COCO", "rt": "PB", "p": "", "hi": 895.4, "hf": 898.4, "h": 3.0, "t": "PERSONAL", "rv": 0.0}, {"d": "2026-03-25", "r": "COCO", "u": "COCO", "rt": "TNT", "p": "", "hi": 898.4, "hf": 902.1, "h": 3.7, "t": "PERSONAL", "rv": 0.0}, {"d": "2026-03-28", "r": "COCO", "u": "ALQ HRS PIVARAL COCO", "rt": "IZP", "p": "", "hi": 902.1, "hf": 903.0, "h": 0.9, "t": "STD", "rv": 675.0}, {"d": "2026-03-28", "r": "SENSHI", "u": "ALQ CUCO FF", "rt": "RIO", "p": "", "hi": 903.0, "hf": 904.8, "h": 1.8, "t": "FF", "rv": 1170.0}, {"d": "2026-03-29", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 904.8, "hf": 907.2, "h": 2.4, "t": "PERSONAL", "rv": 0.0}, {"d": "2026-03-31", "r": "SENSHI", "u": "ALQ COCO FF", "rt": "RIO", "p": "", "hi": 907.2, "hf": 909.1, "h": 1.9, "t": "FF", "rv": 1235.0}, {"d": "2026-04-03", "r": "SENSHI", "u": "ALQ COCO FF", "rt": "RIO", "p": "", "hi": 909.1, "hf": 910.9, "h": 1.8, "t": "FF", "rv": 1170.0}, {"d": "2026-04-04", "r": "COCO", "u": "ALQ HRS PIVARAL COCO", "rt": "EL ROSARIO", "p": "", "hi": 910.9, "hf": 911.8, "h": 0.9, "t": "STD", "rv": 675.0}, {"d": "2026-04-04", "r": "CUCO", "u": "CUCO", "rt": "MGPB", "p": "", "hi": 911.8, "hf": 914.1, "h": 2.3, "t": "PERSONAL", "rv": 0.0}, {"d": "2026-04-05", "r": "SENSHI", "u": "ALQ CUCO FF", "rt": "RIO", "p": "", "hi": 914.1, "hf": 916.0, "h": 1.9, "t": "FF", "rv": 1235.0}];
+const LAST_TACH = 916.0;
+const MO = ['','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
 
-const monthly2026 = {"1":{"coco":5.4,"cuco":7.2,"senshi":17.0,"total":29.6},"2":{"coco":0.0,"cuco":0.0,"senshi":4.5,"total":4.5},"3":{"coco":13.1,"cuco":2.4,"senshi":3.7,"total":19.2},"4":{"coco":0.9,"cuco":2.3,"senshi":3.7,"total":6.9}};
+let saved = JSON.parse(localStorage.getItem('tgs')||'[]');
+let curTach = LAST_TACH;
+let S = {piloto:'FERNANDO', resp:'COCO', tipo:'PERSONAL'};
 
-const MONTH_NAMES = ['','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-let lastTach = 916.0;
-let newEntries = JSON.parse(localStorage.getItem('tgshi_entries') || '[]');
-let currentFilter = 'ALL';
-let selectedPiloto = 'FERNANDO';
-let selectedResp = 'COCO';
-let selectedTipo = 'PERSONAL';
+function allF(){ return [...RAW, ...saved.map(e=>({d:e.d,r:e.r,u:e.u,rt:e.rt,p:e.p,hi:e.hi,hf:e.hf,h:e.h,t:e.t,rv:e.rv}))] }
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('tachDisplay').textContent = lastTach.toFixed(1);
-  setToday();
-  buildDashboard();
-  buildFlightList('ALL');
-  buildSavedList();
-  calcHrs();
-  ['f-hrm-ini','f-hrm-fin'].forEach(id => {
-    document.getElementById(id).addEventListener('input', calcHrs);
-  });
-});
+window.onload = function(){
+  document.getElementById('tachVal').textContent = curTach.toFixed(1);
+  setDate(); buildDash(); buildList('ALL'); buildSaved(); updUsu();
+};
 
-function setToday() {
-  const d = new Date(); const pad = n => String(n).padStart(2,'0');
-  document.getElementById('f-fecha').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+// ── TABS
+function show(id, el){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  el.classList.add('on');
 }
 
-// ── DASHBOARD ─────────────────────────────────────────────────────────────────
-function buildDashboard() {
-  const allFlights = [...flights, ...newEntries];
-
-  // 2026 totals
-  let coco26=0, cuco26=0, sen26=0;
-  allFlights.filter(f=>f.date.startsWith('2026')).forEach(f => {
-    if(f.resp==='COCO') coco26+=f.hrs;
-    else if(f.resp==='CUCO') cuco26+=f.hrs;
-    else sen26+=f.hrs;
+// ── DASHBOARD
+function buildDash(){
+  const all = allF();
+  let co=0,cu=0,se=0;
+  const mo={};
+  all.filter(f=>f.d.startsWith('2026')).forEach(f=>{
+    const m=parseInt(f.d.slice(5,7));
+    if(!mo[m]) mo[m]={co:0,cu:0,se:0};
+    if(f.r==='COCO'){co+=f.h;mo[m].co+=f.h;}
+    else if(f.r==='CUCO'){cu+=f.h;mo[m].cu+=f.h;}
+    else{se+=f.h;mo[m].se+=f.h;}
   });
-  document.getElementById('dash-coco-hrs').textContent = coco26.toFixed(1);
-  document.getElementById('dash-cuco-hrs').textContent = cuco26.toFixed(1);
-  document.getElementById('dash-senshi-hrs').textContent = sen26.toFixed(1);
+  document.getElementById('s-coco').textContent=co.toFixed(1);
+  document.getElementById('s-cuco').textContent=cu.toFixed(1);
+  document.getElementById('s-sen').textContent=se.toFixed(1);
 
-  // Month bars
-  const maxTotal = Math.max(...Object.values(monthly2026).map(m=>m.total), 1);
-  let barsHtml = '';
-  for(let m=1; m<=4; m++) {
-    const d = monthly2026[m] || {coco:0,cuco:0,senshi:0,total:0};
-    const scale = 100/maxTotal;
-    barsHtml += `<div class="month-row">
-      <div class="month-label">${MONTH_NAMES[m]}</div>
-      <div class="bar-track">
-        <div class="bar-seg bar-coco" style="width:${d.coco*scale}%"></div>
-        <div class="bar-seg bar-cuco" style="width:${d.cuco*scale}%"></div>
-        <div class="bar-seg bar-senshi" style="width:${d.senshi*scale}%"></div>
+  // bars
+  const maxM = Math.max(...Object.values(mo).map(m=>m.co+m.cu+m.se),1);
+  let bh='';
+  for(let m=1;m<=12;m++){
+    const d=mo[m]||{co:0,cu:0,se:0};
+    const tot=d.co+d.cu+d.se;
+    if(tot===0) continue;
+    const sc=100/maxM;
+    bh+=`<div class="mr"><div class="ml">${MO[m]}</div>
+      <div class="bt">
+        <div class="bs b1" style="width:${d.co*sc}%"></div>
+        <div class="bs b2" style="width:${d.cu*sc}%"></div>
+        <div class="bs b3" style="width:${d.se*sc}%"></div>
       </div>
-      <div class="month-total">${d.total.toFixed(1)}</div>
-    </div>`;
+      <div class="mh">${tot.toFixed(1)}</div></div>`;
   }
-  document.getElementById('monthBars').innerHTML = barsHtml;
+  document.getElementById('bars').innerHTML=bh||'<div class="empty">Sin datos 2026</div>';
 
-  // Recent flights (last 5)
-  const recent = [...allFlights].reverse().slice(0,5);
-  document.getElementById('recentFlights').innerHTML = recent.map(f => flightHTML(f)).join('');
+  // recent
+  const rec=[...all].reverse().slice(0,5);
+  document.getElementById('recent').innerHTML=rec.map(fRow).join('');
 
-  // Summary
-  const total26 = coco26+cuco26+sen26;
-  const pct = total26>0 ? t => `${((t/total26)*100).toFixed(0)}%` : ()=>'—';
-  document.getElementById('summary2026').innerHTML = `
-    <div class="qs-row"><div class="qs-label">Total horas 2026</div><div class="qs-val">${total26.toFixed(1)} hrs</div></div>
-    <div class="qs-row"><div class="qs-label">COCO</div><div class="qs-val qs-coco">${coco26.toFixed(1)} hrs (${pct(coco26)})</div></div>
-    <div class="qs-row"><div class="qs-label">CUCO</div><div class="qs-val qs-cuco">${cuco26.toFixed(1)} hrs (${pct(cuco26)})</div></div>
-    <div class="qs-row"><div class="qs-label">Charter/Shenshi</div><div class="qs-val qs-senshi">${sen26.toFixed(1)} hrs (${pct(sen26)})</div></div>
-    <div class="qs-row"><div class="qs-label">Tach actual</div><div class="qs-val">${lastTach.toFixed(1)}</div></div>
-    <div class="qs-row"><div class="qs-label">Vuelos registrados</div><div class="qs-val">${allFlights.length}</div></div>
-  `;
+  // summary
+  const tot=co+cu+se;
+  const pct=t=>tot>0?`(${((t/tot)*100).toFixed(0)}%)`:'';
+  document.getElementById('sum26').innerHTML=`
+    <div class="qr"><div class="ql">Total horas 2026</div><div class="qv">${tot.toFixed(1)} hrs</div></div>
+    <div class="qr"><div class="ql">COCO</div><div class="qv c1">${co.toFixed(1)} hrs ${pct(co)}</div></div>
+    <div class="qr"><div class="ql">CUCO</div><div class="qv c2">${cu.toFixed(1)} hrs ${pct(cu)}</div></div>
+    <div class="qr"><div class="ql">Charter/Shenshi</div><div class="qv c3">${se.toFixed(1)} hrs ${pct(se)}</div></div>
+    <div class="qr"><div class="ql">Tach actual</div><div class="qv">${curTach.toFixed(1)}</div></div>
+    <div class="qr"><div class="ql">Total vuelos</div><div class="qv">${all.length}</div></div>`;
 }
 
-// ── FLIGHT LIST ───────────────────────────────────────────────────────────────
-function flightHTML(f) {
-  const dotClass = f.resp==='COCO'?'dot-coco':f.resp==='CUCO'?'dot-cuco':'dot-senshi';
-  const badge = f.tipo==='STD'?'<span class="badge badge-std">STD</span>':
-                f.tipo==='FF'?'<span class="badge badge-ff">FF</span>':
-                f.tipo==='MANTE'?'<span class="badge badge-mante">MANTE</span>':
-                '<span class="badge badge-personal">Personal</span>';
-  const piloto = f.piloto ? `· ${f.piloto}` : '';
-  const rev = f.rev>0 ? `· <strong>$${f.rev.toLocaleString()}</strong>` : '';
-  return `<div class="flight-item">
-    <div class="flight-dot ${dotClass}"></div>
-    <div class="flight-main">
-      <div class="flight-route">${f.ruta||'—'} ${badge}</div>
-      <div class="flight-meta">
-        <span>${f.resp}</span><span>${f.usuario}</span>${piloto?`<span>${piloto}</span>`:''}${rev?`<span>${rev}</span>`:''}
-      </div>
+function fRow(f){
+  const dc=f.r==='COCO'?'c1':f.r==='CUCO'?'c2':'c3';
+  const bx=f.t==='STD'?'<span class="bx s">STD</span>':f.t==='FF'?'<span class="bx f">FF</span>':f.t==='MANTE'?'<span class="bx m">MANTE</span>':'<span class="bx p">Personal</span>';
+  const rv=f.rv>0?`<span>$${f.rv.toLocaleString()}</span>`:'';
+  const pi=f.p?`<span>${f.p}</span>`:'';
+  return `<div class="fi">
+    <div class="fd ${dc}"></div>
+    <div class="fm">
+      <div class="fr">${f.rt||'—'} ${bx}</div>
+      <div class="fm2"><span>${f.r}</span><span>${f.u}</span>${pi}${rv}</div>
     </div>
-    <div class="flight-right">
-      <div class="flight-hrs">${f.hrs.toFixed(1)}<span style="font-size:10px;color:var(--muted)">hr</span></div>
-      <div class="flight-date">${f.date.slice(5)}</div>
-    </div>
-  </div>`;
+    <div class="fright">
+      <div class="fh">${f.h.toFixed(1)}<small>hr</small></div>
+      <div class="fd2">${f.d.slice(5)}</div>
+    </div></div>`;
 }
 
-function buildFlightList(filter) {
-  const allFlights = [...flights, ...newEntries].reverse();
-  let filtered = allFlights;
-  if(filter==='COCO') filtered = allFlights.filter(f=>f.resp==='COCO');
-  else if(filter==='CUCO') filtered = allFlights.filter(f=>f.resp==='CUCO');
-  else if(filter==='SENSHI') filtered = allFlights.filter(f=>f.resp==='SENSHI');
-  else if(filter==='2026') filtered = allFlights.filter(f=>f.date.startsWith('2026'));
-  else if(filter==='2025') filtered = allFlights.filter(f=>f.date.startsWith('2025'));
-
-  if(filtered.length===0) {
-    document.getElementById('flightList').innerHTML = '<div class="empty-state"><div class="big">✈</div>Sin vuelos</div>';
-    return;
-  }
-  document.getElementById('flightList').innerHTML = filtered.slice(0,80).map(flightHTML).join('');
+// ── FLIGHT LIST
+function buildList(fl){
+  const all=[...allF()].reverse();
+  let out=all;
+  if(fl==='COCO') out=all.filter(f=>f.r==='COCO');
+  else if(fl==='CUCO') out=all.filter(f=>f.r==='CUCO');
+  else if(fl==='SENSHI') out=all.filter(f=>f.r==='SENSHI');
+  else if(fl==='2026') out=all.filter(f=>f.d.startsWith('2026'));
+  else if(fl==='2025') out=all.filter(f=>f.d.startsWith('2025'));
+  else if(fl==='2024') out=all.filter(f=>f.d.startsWith('2024'));
+  document.getElementById('flist').innerHTML=out.length?out.slice(0,100).map(fRow).join(''):'<div class="empty"><div class="big">✈</div>Sin vuelos</div>';
 }
 
-function filterFlights(filter, el) {
-  currentFilter = filter;
-  document.querySelectorAll('#filterRow .filter-pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  buildFlightList(filter);
+function filt(f,el){
+  document.querySelectorAll('#filters .fp').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on'); buildList(f);
 }
 
-// ── LOG FORM ──────────────────────────────────────────────────────────────────
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    const names = ['dashboard','flights','log'];
-    t.classList.toggle('active', names[i]===tab);
-  });
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-'+tab).classList.add('active');
+// ── FORM
+function setSeg(key,val,el){
+  S[key]=val;
+  el.closest('.sc').querySelectorAll('.sb').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  if(key==='piloto') document.getElementById('f-piloto-o').style.display=val==='OTRO'?'block':'none';
+  if(key==='resp'||key==='tipo') updUsu();
 }
 
-function setPiloto(val, el) {
-  selectedPiloto = val;
-  document.querySelectorAll('[onclick^="setPiloto"]').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('f-piloto-otro').style.display = val==='OTRO' ? 'block' : 'none';
+function setTipo(val,el){
+  S.tipo=val;
+  document.querySelectorAll('.tc').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  const isC=val==='STD'||val==='FF';
+  document.getElementById('rev-s').style.display=isC?'block':'none';
+  updUsu(); updRevHint();
 }
 
-function setResp(val, el) {
-  selectedResp = val;
-  document.querySelectorAll('[onclick^="setResp"]').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  updateUsuarioOptions();
+function updUsu(){
+  const sel=document.getElementById('f-u');
+  let opts=[];
+  if(S.tipo==='PERSONAL') opts=S.resp==='COCO'?['COCO']:S.resp==='CUCO'?['CUCO']:['SENSHI'];
+  else if(S.tipo==='MANTE') opts=['MANTE','SENSHI'];
+  else if(S.resp==='COCO') opts=['ALQ COCO','ALQ COCO FF','ALQ HRS PIVARAL COCO','ALQ LICO','ALQ PREMISA','ALQ FER'];
+  else if(S.resp==='CUCO') opts=['ALQ CUCO','ALQ CUCO FF','CUCO HRS ADAN','ALQ LICO','ALQ PREMISA','ALQ FER'];
+  else opts=['ALQ COCO','ALQ CUCO','ALQ LICO','ALQ PREMISA','ALQ FER'];
+  sel.innerHTML=opts.map(o=>`<option>${o}</option>`).join('');
 }
 
-function setTipo(val, el) {
-  selectedTipo = val;
-  document.querySelectorAll('.tipo-card').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  const isCharter = val==='STD'||val==='FF';
-  document.getElementById('revenueSection').style.display = isCharter ? 'block' : 'none';
-  if(isCharter) updateRevHint();
-  updateUsuarioOptions();
+function setDate(){
+  const d=new Date();const z=n=>String(n).padStart(2,'0');
+  document.getElementById('f-d').value=`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
 }
 
-function updateRevHint() {
-  const ini = parseFloat(document.getElementById('f-hrm-ini').value)||0;
-  const fin = parseFloat(document.getElementById('f-hrm-fin').value)||0;
-  const hrs = Math.max(0, fin-ini);
-  const rate = selectedTipo==='FF' ? 650 : 750;
-  if(hrs>0) document.getElementById('revHint').textContent = `Auto: ${hrs.toFixed(1)}hr × $${rate} = $${(hrs*rate).toFixed(2)}`;
+function calcH(){
+  const a=parseFloat(document.getElementById('f-hi').value);
+  const b=parseFloat(document.getElementById('f-hf').value);
+  const div=document.getElementById('hcalc');
+  if(!isNaN(a)&&!isNaN(b)&&b>a){
+    const h=(b-a).toFixed(1);
+    const bil=parseFloat(h)<1?'1.0 (roundup!)':h;
+    div.textContent=`${h}hrs voladas · facturadas: ${bil}`;
+    div.style.display='block';
+    updRevHint();
+  } else div.style.display='none';
 }
 
-function updateUsuarioOptions() {
-  const sel = document.getElementById('f-usuario');
-  const opts = {
-    personal: ['COCO','CUCO'],
-    charter_coco: ['ALQ COCO','ALQ COCO FF','ALQ HRS PIVARAL COCO'],
-    charter_cuco: ['ALQ CUCO','ALQ CUCO FF','CUCO HRS ADAN'],
-    charter_ext:  ['ALQ LICO','ALQ PREMISA','ALQ FER','ALQ LECLAIRE'],
-    mante: ['MANTE','SENSHI'],
-  };
-  let choices = [];
-  if(selectedTipo==='PERSONAL') choices = selectedResp==='COCO'?['COCO']:selectedResp==='CUCO'?['CUCO']:['SENSHI'];
-  else if(selectedTipo==='MANTE') choices = opts.mante;
-  else if(selectedResp==='COCO') choices = [...opts.charter_coco,...opts.charter_ext];
-  else if(selectedResp==='CUCO') choices = [...opts.charter_cuco,...opts.charter_ext];
-  else choices = [...opts.charter_coco,...opts.charter_cuco,...opts.charter_ext];
-
-  sel.innerHTML = choices.map(v=>`<option value="${v}">${v}</option>`).join('');
+function updRevHint(){
+  const a=parseFloat(document.getElementById('f-hi').value)||0;
+  const b=parseFloat(document.getElementById('f-hf').value)||0;
+  const h=Math.max(0,b-a);
+  const rate=S.tipo==='FF'?650:750;
+  if(h>0) document.getElementById('rev-hint').textContent=`Auto: ${h.toFixed(1)}hr × $${rate} = $${(h*rate).toFixed(2)}`;
 }
 
-function calcHrs() {
-  const ini = parseFloat(document.getElementById('f-hrm-ini').value);
-  const fin = parseFloat(document.getElementById('f-hrm-fin').value);
-  const div = document.getElementById('hrsCalc');
-  if(!isNaN(ini) && !isNaN(fin) && fin>ini) {
-    const hrs = (fin-ini).toFixed(1);
-    const billed = parseFloat(hrs)<1.0 ? '1.0 (roundup)' : hrs;
-    document.getElementById('hrsResult').textContent = `${hrs}hrs voladas · facturadas: ${billed}`;
-    div.style.display = 'block';
-    updateRevHint();
+function save(){
+  const d=document.getElementById('f-d').value;
+  const hi=parseFloat(document.getElementById('f-hi').value);
+  const hf=parseFloat(document.getElementById('f-hf').value);
+  const rt=document.getElementById('f-rt').value.toUpperCase().trim();
+  if(!d||!rt||isNaN(hi)||isNaN(hf)||hf<=hi){alert('Completa: Fecha, Ruta, HRM Inicio y HRM Fin');return;}
+  const h=parseFloat((hf-hi).toFixed(1));
+  const pi=S.piloto==='OTRO'?document.getElementById('f-piloto-o').value:S.piloto;
+  const u=document.getElementById('f-u').value;
+  const cb=parseFloat(document.getElementById('f-cb').value)||0;
+  const es=parseFloat(document.getElementById('f-es').value)||0;
+  const no=document.getElementById('f-no').value;
+  const rate=S.tipo==='FF'?650:S.tipo==='STD'?750:0;
+  const rv=document.getElementById('f-rv').value?parseFloat(document.getElementById('f-rv').value):(rate>0?parseFloat((h*rate).toFixed(2)):0);
+  const nd=new Date(d+'T12:00:00');
+  const per=nd.getFullYear()*12+(nd.getMonth()+1);
+  const days=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const dia=days[nd.getDay()];
+
+  const entry={d,r:S.resp,u,rt,p:pi,hi,hf,h,t:S.tipo,rv,cb,es,no,per};
+  saved.unshift(entry);
+  localStorage.setItem('tgs',JSON.stringify(saved));
+  curTach=Math.max(curTach,hf);
+  document.getElementById('tachVal').textContent=curTach.toFixed(1);
+
+  // Tab-separated row for Excel
+  const row=[
+    '',d,dia,pi,S.resp,u,rt,
+    hi,hf,h,
+    cb||'','','',
+    es||'','','',
+    S.tipo,rv||'',per
+  ].join('	');
+
+  document.getElementById('csv-out').textContent=row;
+  document.getElementById('csv-card').style.display='block';
+  const ok=document.getElementById('okbar');
+  ok.style.display='flex';setTimeout(()=>ok.style.display='none',3500);
+  buildDash(); buildSaved();
+  // Reset
+  document.getElementById('f-hi').value=hf;
+  document.getElementById('f-hf').value='';
+  document.getElementById('f-rt').value='';
+  document.getElementById('f-cb').value='';
+  document.getElementById('f-es').value='0';
+  document.getElementById('f-rv').value='';
+  document.getElementById('f-no').value='';
+  document.getElementById('hcalc').style.display='none';
+}
+
+function copyCSV(){
+  const t=document.getElementById('csv-out').textContent;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(t).then(()=>{
+      const b=event.target;b.textContent='✓ Copiado';setTimeout(()=>b.textContent='Copiar',2000);
+    });
   } else {
-    div.style.display = 'none';
+    const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+    ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    const b=event.target;b.textContent='✓ Copiado';setTimeout(()=>b.textContent='Copiar',2000);
   }
 }
 
-function saveEntry() {
-  const fecha = document.getElementById('f-fecha').value;
-  const piloto = selectedPiloto==='OTRO' ? document.getElementById('f-piloto-otro').value : selectedPiloto;
-  const resp = selectedResp;
-  const usuario = document.getElementById('f-usuario').value;
-  const ruta = document.getElementById('f-ruta').value.toUpperCase();
-  const hrm_ini = parseFloat(document.getElementById('f-hrm-ini').value);
-  const hrm_fin = parseFloat(document.getElementById('f-hrm-fin').value);
-  const comb = parseFloat(document.getElementById('f-comb').value)||0;
-  const espera = parseFloat(document.getElementById('f-espera').value)||0;
-  const notes = document.getElementById('f-notes').value;
-
-  if(!fecha||!ruta||isNaN(hrm_ini)||isNaN(hrm_fin)||hrm_fin<=hrm_ini) {
-    alert('Por favor completa: Fecha, Ruta, HRM Inicio y HRM Fin (fin > inicio)');
-    return;
-  }
-
-  const hrs = parseFloat((hrm_fin-hrm_ini).toFixed(1));
-  const rate = selectedTipo==='FF'?650:selectedTipo==='STD'?750:0;
-  const rev = document.getElementById('f-rev').value ?
-    parseFloat(document.getElementById('f-rev').value) :
-    (rate>0 ? parseFloat((hrs*rate).toFixed(2)) : 0);
-
-  // Period number for S column
-  const d = new Date(fecha);
-  const periodo = d.getFullYear()*12 + (d.getMonth()+1);
-
-  const entry = {fecha,piloto,resp,usuario,ruta,hrm_ini,hrm_fin,hrs,comb,espera,tipo:selectedTipo,rev,notes,periodo,
-    date:fecha  // for display
-  };
-
-  newEntries.unshift(entry);
-  localStorage.setItem('tgshi_entries', JSON.stringify(newEntries));
-
-  // Update tach
-  lastTach = Math.max(lastTach, hrm_fin);
-  document.getElementById('tachDisplay').textContent = lastTach.toFixed(1);
-
-  // Build CSV row for pasting into Excel
-  // Columns: # | FECHA | DÍA | PILOTO | RESPONSABLE | USUARIO | RUTA | HRM INI | HRM FIN | HRS VUELO | GAL | COSTO COMB | QTZ/GAL | ESPERA HRS | COSTO ESPERA | COSTO PILOTO | TIPO | INGRESOS $ | PERÍODO
-  const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  const dia = days[new Date(fecha+'T12:00:00').getDay()];
-  const row = [
-    '',fecha,dia,piloto,resp,usuario,ruta,
-    hrm_ini,hrm_fin,hrs,
-    comb||'','','',
-    espera||'','','',
-    selectedTipo,rev||'',periodo
-  ].join('\t');
-
-  document.getElementById('csvPreview').textContent = row;
-  document.getElementById('csvCard').style.display = 'block';
-
-  const sb = document.getElementById('successBar');
-  sb.style.display = 'flex';
-  setTimeout(()=>sb.style.display='none', 4000);
-
-  buildSavedList();
-  buildDashboard();
-
-  // Reset form (keep date and hrm_ini as last tach)
-  document.getElementById('f-hrm-ini').value = hrm_fin;
-  document.getElementById('f-hrm-fin').value = '';
-  document.getElementById('f-ruta').value = '';
-  document.getElementById('f-comb').value = '';
-  document.getElementById('f-espera').value = '0';
-  document.getElementById('f-rev').value = '';
-  document.getElementById('f-notes').value = '';
-  document.getElementById('hrsCalc').style.display = 'none';
-}
-
-function copyCSV() {
-  const text = document.getElementById('csvPreview').textContent;
-  navigator.clipboard.writeText(text).then(()=>{
-    const btn = event.target;
-    const orig = btn.textContent;
-    btn.textContent = '✓ Copiado';
-    setTimeout(()=>btn.textContent=orig, 2000);
-  }).catch(()=>alert('Selecciona el texto manualmente y copia'));
-}
-
-function buildSavedList() {
-  if(newEntries.length===0) { document.getElementById('savedList').innerHTML=''; return; }
-  document.getElementById('savedList').innerHTML = `
-    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">
-      Registrados esta sesión (${newEntries.length})
-      <button onclick="clearEntries()" style="float:right;font-size:10px;color:var(--red);background:none;border:none;cursor:pointer">Limpiar</button>
+function buildSaved(){
+  if(!saved.length){document.getElementById('saved-list').innerHTML='';return;}
+  document.getElementById('saved-list').innerHTML=`
+    <div style="font-size:10px;font-weight:700;color:#8892A4;text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px">
+      Esta sesión (${saved.length})
+      <button onclick="clearS()" style="float:right;font-size:10px;color:#8B1A1A;background:none;border:none;cursor:pointer">Limpiar</button>
     </div>
-    <div class="card">${newEntries.map(e=>flightHTML({...e,date:e.fecha,resp:e.resp})).join('')}</div>`;
+    <div class="card">${saved.map(e=>fRow({...e})).join('')}</div>`;
 }
 
-function clearEntries() {
-  if(!confirm('¿Borrar todos los registros de esta sesión?')) return;
-  newEntries = [];
-  localStorage.removeItem('tgshi_entries');
-  buildSavedList();
-  document.getElementById('csvCard').style.display='none';
+function clearS(){
+  if(!confirm('¿Borrar registros de esta sesión?'))return;
+  saved=[];localStorage.removeItem('tgs');
+  buildSaved();document.getElementById('csv-card').style.display='none';
 }
 </script>
 
