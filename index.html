@@ -460,12 +460,12 @@ font-size: 13px;
       <div class="tipo-card" onclick="setTipo('STD',this)">
         <div class="tipo-icon">💼</div>
         <div class="tipo-name">Charter STD</div>
-        <div class="tipo-desc">/hr</div>
+        <div class="tipo-desc">$750/hr</div>
       </div>
       <div class="tipo-card" onclick="setTipo('FF',this)">
         <div class="tipo-icon">👥</div>
         <div class="tipo-name">Charter FF</div>
-        <div class="tipo-desc">/hr</div>
+        <div class="tipo-desc">$650/hr</div>
       </div>
       <div class="tipo-card" onclick="setTipo('MANTE',this)">
         <div class="tipo-icon">🔧</div>
@@ -587,7 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function setToday() {
   const d = new Date(); const pad = n => String(n).padStart(2,'0');
-  document.getElementById('f-fecha').value = `--`;
+  document.getElementById('f-fecha').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
@@ -612,13 +612,13 @@ function buildDashboard() {
     const d = monthly2026[m] || {coco:0,cuco:0,senshi:0,total:0};
     const scale = 100/maxTotal;
     barsHtml += `<div class="month-row">
-      <div class="month-label"></div>
+      <div class="month-label">${MONTH_NAMES[m]}</div>
       <div class="bar-track">
-        <div class="bar-seg bar-coco" style="width:%"></div>
-        <div class="bar-seg bar-cuco" style="width:%"></div>
-        <div class="bar-seg bar-senshi" style="width:%"></div>
+        <div class="bar-seg bar-coco" style="width:${d.coco*scale}%"></div>
+        <div class="bar-seg bar-cuco" style="width:${d.cuco*scale}%"></div>
+        <div class="bar-seg bar-senshi" style="width:${d.senshi*scale}%"></div>
       </div>
-      <div class="month-total"></div>
+      <div class="month-total">${d.total.toFixed(1)}</div>
     </div>`;
   }
   document.getElementById('monthBars').innerHTML = barsHtml;
@@ -631,12 +631,12 @@ function buildDashboard() {
   const total26 = coco26+cuco26+sen26;
   const pct = total26>0 ? t => `${((t/total26)*100).toFixed(0)}%` : ()=>'—';
   document.getElementById('summary2026').innerHTML = `
-    <div class="qs-row"><div class="qs-label">Total horas 2026</div><div class="qs-val"> hrs</div></div>
-    <div class="qs-row"><div class="qs-label">COCO</div><div class="qs-val qs-coco"> hrs ()</div></div>
-    <div class="qs-row"><div class="qs-label">CUCO</div><div class="qs-val qs-cuco"> hrs ()</div></div>
-    <div class="qs-row"><div class="qs-label">Charter/Shenshi</div><div class="qs-val qs-senshi"> hrs ()</div></div>
-    <div class="qs-row"><div class="qs-label">Tach actual</div><div class="qs-val"></div></div>
-    <div class="qs-row"><div class="qs-label">Vuelos registrados</div><div class="qs-val"></div></div>
+    <div class="qs-row"><div class="qs-label">Total horas 2026</div><div class="qs-val">${total26.toFixed(1)} hrs</div></div>
+    <div class="qs-row"><div class="qs-label">COCO</div><div class="qs-val qs-coco">${coco26.toFixed(1)} hrs (${pct(coco26)})</div></div>
+    <div class="qs-row"><div class="qs-label">CUCO</div><div class="qs-val qs-cuco">${cuco26.toFixed(1)} hrs (${pct(cuco26)})</div></div>
+    <div class="qs-row"><div class="qs-label">Charter/Shenshi</div><div class="qs-val qs-senshi">${sen26.toFixed(1)} hrs (${pct(sen26)})</div></div>
+    <div class="qs-row"><div class="qs-label">Tach actual</div><div class="qs-val">${lastTach.toFixed(1)}</div></div>
+    <div class="qs-row"><div class="qs-label">Vuelos registrados</div><div class="qs-val">${allFlights.length}</div></div>
   `;
 }
 
@@ -647,19 +647,19 @@ function flightHTML(f) {
                 f.tipo==='FF'?'<span class="badge badge-ff">FF</span>':
                 f.tipo==='MANTE'?'<span class="badge badge-mante">MANTE</span>':
                 '<span class="badge badge-personal">Personal</span>';
-  const piloto = f.piloto ? `· ` : '';
-  const rev = f.rev>0 ? `· <strong>$</strong>` : '';
+  const piloto = f.piloto ? `· ${f.piloto}` : '';
+  const rev = f.rev>0 ? `· <strong>$${f.rev.toLocaleString()}</strong>` : '';
   return `<div class="flight-item">
-    <div class="flight-dot "></div>
+    <div class="flight-dot ${dotClass}"></div>
     <div class="flight-main">
-      <div class="flight-route"> </div>
+      <div class="flight-route">${f.ruta||'—'} ${badge}</div>
       <div class="flight-meta">
-        <span></span><span></span></span>`:''}</span>`:''}
+        <span>${f.resp}</span><span>${f.usuario}</span>${piloto?`<span>${piloto}</span>`:''}${rev?`<span>${rev}</span>`:''}
       </div>
     </div>
     <div class="flight-right">
-      <div class="flight-hrs"><span style="font-size:10px;color:var(--muted)">hr</span></div>
-      <div class="flight-date"></div>
+      <div class="flight-hrs">${f.hrs.toFixed(1)}<span style="font-size:10px;color:var(--muted)">hr</span></div>
+      <div class="flight-date">${f.date.slice(5)}</div>
     </div>
   </div>`;
 }
@@ -726,7 +726,7 @@ function updateRevHint() {
   const fin = parseFloat(document.getElementById('f-hrm-fin').value)||0;
   const hrs = Math.max(0, fin-ini);
   const rate = selectedTipo==='FF' ? 650 : 750;
-  if(hrs>0) document.getElementById('revHint').textContent = `Auto: hr × $ = $${(hrs*rate).toFixed(2)}`;
+  if(hrs>0) document.getElementById('revHint').textContent = `Auto: ${hrs.toFixed(1)}hr × $${rate} = $${(hrs*rate).toFixed(2)}`;
 }
 
 function updateUsuarioOptions() {
@@ -745,7 +745,7 @@ function updateUsuarioOptions() {
   else if(selectedResp==='CUCO') choices = [...opts.charter_cuco,...opts.charter_ext];
   else choices = [...opts.charter_coco,...opts.charter_cuco,...opts.charter_ext];
 
-  sel.innerHTML = choices.map(v=>`<option value=""></option>`).join('');
+  sel.innerHTML = choices.map(v=>`<option value="${v}">${v}</option>`).join('');
 }
 
 function calcHrs() {
@@ -755,7 +755,7 @@ function calcHrs() {
   if(!isNaN(ini) && !isNaN(fin) && fin>ini) {
     const hrs = (fin-ini).toFixed(1);
     const billed = parseFloat(hrs)<1.0 ? '1.0 (roundup)' : hrs;
-    document.getElementById('hrsResult').textContent = `hrs voladas · facturadas: `;
+    document.getElementById('hrsResult').textContent = `${hrs}hrs voladas · facturadas: ${billed}`;
     div.style.display = 'block';
     updateRevHint();
   } else {
@@ -848,10 +848,10 @@ function buildSavedList() {
   if(newEntries.length===0) { document.getElementById('savedList').innerHTML=''; return; }
   document.getElementById('savedList').innerHTML = `
     <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">
-      Registrados esta sesión ()
+      Registrados esta sesión (${newEntries.length})
       <button onclick="clearEntries()" style="float:right;font-size:10px;color:var(--red);background:none;border:none;cursor:pointer">Limpiar</button>
     </div>
-    <div class="card">e.fecha,resp:e.resp)).join('')}</div>`;
+    <div class="card">${newEntries.map(e=>flightHTML({...e,date:e.fecha,resp:e.resp})).join('')}</div>`;
 }
 
 function clearEntries() {
