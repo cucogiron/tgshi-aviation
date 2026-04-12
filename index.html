@@ -305,7 +305,7 @@ function nav(id,i){
   document.querySelectorAll('.bt')[i].classList.add('on');
   if(id==='vl')buildVL('ALL');
   if(id==='fuel')buildFuel();
-  if(id==='bil')initBil();
+  if(id==='bil'){initBil();setTimeout(calcBil,100);}
 }
 
 function render(){
@@ -408,10 +408,10 @@ function calcBil(){
   const esp={COCO:0,CUCO:0,SENSHI:0};
   let charterRev=0;
   fls.forEach(f=>{
-    const r=f.r;if(!hrs[r])return;
+    const r=f.r;if(hrs[r]===undefined)return;
     hrs[r]+=f.h;
     if(f.h>0&&f.h<1){sub[r].n++;sub[r].a+=f.h;}
-    esp[r]+=(f.eh||0)*rt.gw;
+    if(esp[r]!==undefined)esp[r]+=(f.eh||0)*rt.gw;
     if((f.rv||0)>0)charterRev+=f.rv;
   });
   let tfuel=0,acCO=0,acCU=0;
