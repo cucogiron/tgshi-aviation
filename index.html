@@ -104,7 +104,8 @@ input:focus,select:focus{border-color:var(--sk)}
 .hcalc{text-align:center;font-size:12px;color:var(--mu);margin:-8px 0 12px;display:none}
 .hint{font-size:11px;color:var(--mu);margin-top:4px}
 .stitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--mu);margin:14px 0 8px;padding:0 2px}
-.login-screen{position:fixed;inset:0;background:#1B2A4A;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;padding:32px}
+
+.login-screen{position:fixed;inset:0;top:0;left:0;right:0;bottom:0;background:#1B2A4A !important;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;padding:32px;isolation:isolate}
 .login-logo{font-size:48px;font-weight:900;color:#fff;letter-spacing:.06em;margin-bottom:4px}
 .login-sub{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.18em;text-transform:uppercase;margin-bottom:40px}
 .login-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:24px;width:100%;max-width:320px}
@@ -124,6 +125,7 @@ input:focus,select:focus{border-color:var(--sk)}
 .badge-pilot{background:#1A6B3A22;color:#2DA05A}
 .badge-viewer{background:#B8600A22;color:#E08B20}
 .pend-badge{background:#FEF3CD;color:#8B5E00;padding:2px 7px;border-radius:8px;font-size:9px;font-weight:700;margin-left:4px}
+.ver-badge{background:#E8F0FD;color:#1B4E8A;padding:2px 7px;border-radius:8px;font-size:9px;font-weight:700;margin-left:4px}
 .edit-btn{font-size:10px;font-weight:700;color:#4A9EE8;background:none;border:1px solid #4A9EE8;border-radius:6px;padding:2px 7px;cursor:pointer;margin-left:6px}
 .del-btn{font-size:10px;font-weight:700;color:#8B1A1A;background:none;border:1px solid #8B1A1A;border-radius:6px;padding:2px 7px;cursor:pointer;margin-left:4px}
 .pend-section{background:#FFF8E1;border:1px solid #FFE082;border-radius:11px;margin-bottom:12px;overflow:hidden}
@@ -141,6 +143,8 @@ input:focus,select:focus{border-color:var(--sk)}
 .modal-box{background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-height:80vh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:16px}
 .modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:#8892A4}
+
+
 .pw-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:flex-end;justify-content:center}
 .pw-box{background:#fff;border-radius:20px 20px 0 0;padding:28px 24px 40px;width:100%;max-width:480px}
 .pw-title{font-size:17px;font-weight:700;margin-bottom:4px}
@@ -161,10 +165,7 @@ input:focus,select:focus{border-color:var(--sk)}
 .pw-user-name{font-size:13px;font-weight:600}
 .pw-reset-btn{font-size:11px;font-weight:700;color:#8B1A1A;background:none;border:1px solid #8B1A1A;border-radius:6px;padding:3px 9px;cursor:pointer}
 .settings-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:5px 10px;font-size:11px;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;display:none;align-items:center;gap:4px}
-.token-banner{background:#FFF3CD;border:1px solid #FFE082;border-radius:11px;padding:14px;margin-bottom:12px;font-size:12px;color:#5D4037}
-.token-banner b{display:block;margin-bottom:6px;font-size:13px}
-.token-banner input{margin:6px 0;padding:10px;font-size:13px;border:1.5px solid #FFE082;border-radius:8px;background:#fff}
-.token-banner button{margin-top:6px;padding:9px 16px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+
 </style>
 </head>
 <body>
@@ -180,13 +181,10 @@ input:focus,select:focus{border-color:var(--sk)}
 <div class="top">
   <div class="top-r">
     <div><h1>TG-SHI</h1><div class="sub">Shenshi Aviation · v4</div></div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div class="tach"><div><div class="tach-lb">TACH</div><span id="tachVal">—</span></div><div class="dot" id="dot"></div></div>
-      <button class="settings-btn" id="settings-btn" onclick="openPwModal()">⚙️</button>
-    </div>
-  </div>
+    <div class="tach"><div><div class="tach-lb">TACH</div><span id="tachVal">916.0</span></div><div class="dot" id="dot"></div></div>
+  <button class="settings-btn" id="settings-btn" onclick="openPwModal()">⚙️</button>
 </div>
-
+</div>
 <div class="btabs">
   <button class="bt on" onclick="nav('dash',0)"><div class="bt-i">📊</div><div class="bt-l">Panel</div></button>
   <button class="bt" onclick="nav('vl',1)"><div class="bt-i">✈️</div><div class="bt-l">Vuelos</div></button>
@@ -197,7 +195,6 @@ input:focus,select:focus{border-color:var(--sk)}
 
 <!-- PANEL -->
 <div class="pg on" id="pg-dash">
-  <div id="token-banner-section"></div>
   <div id="pend-section" style="display:none"></div>
   <div class="sg">
     <div class="st c1"><div class="sl">COCO</div><div class="sv" id="d-co">—</div><div class="sd">hrs 2026</div></div>
@@ -293,14 +290,14 @@ input:focus,select:focus{border-color:var(--sk)}
       <div class="hcalc" id="hcalc"></div>
       <div class="row2">
         <div><label class="fl">Combustible (QTZ)</label><input type="number" id="ff-cb" placeholder="0.00" step="0.01" inputmode="decimal"></div>
-        <div><label class="fl">Espera en tierra (hrs · $15/hr)</label><input type="number" id="ff-es" value="0" step="0.5" inputmode="decimal"></div>
+        <div><label class="fl">Espera en tierra (hrs · $15/hr a Fernando)</label><input type="number" id="ff-es" value="0" step="0.5" inputmode="decimal"></div>
       </div>
       <div id="rev-sec" style="display:none" class="fs"><label class="fl">Ingreso charter ($)</label><input type="number" id="ff-rv" placeholder="auto" step="0.01" inputmode="decimal"><div class="hint" id="rev-hint"></div></div>
       <div class="fs"><label class="fl">Notas</label><input type="text" id="ff-no" placeholder="opcional"></div>
       <div id="fer-charter-note" style="display:none;background:#FFF8E1;border:1px solid #FFE082;border-radius:8px;padding:10px 12px;font-size:12px;color:#5D4037;margin-bottom:10px">
-        ⚠️ Los vuelos charter quedarán <b>pendientes de verificación por CUCO</b> antes de incluirse en el billing.
-      </div>
-      <button class="btn" onclick="saveF()">Guardar vuelo</button>
+    ⚠️ Los vuelos charter que registres quedarán <b>pendientes de verificación por CUCO</b> antes de incluirse en el billing.
+  </div>
+  <button class="btn" onclick="saveF()">Guardar vuelo</button>
     </div></div>
   </div>
   <div id="form-fuel" style="display:none">
@@ -328,7 +325,719 @@ input:focus,select:focus{border-color:var(--sk)}
   </div>
 </div>
 
-<!-- PASSWORD MODAL -->
+<script>
+
+const USERS={
+  CUCO:{pass:'shenshi2026',role:'admin',icon:'👨‍✈️'},
+  COCO:{pass:'coco2026',role:'viewer',icon:'👩‍✈️'},
+  FERNANDO:{pass:'fernando2026',role:'pilot',icon:'🧑‍✈️'}
+};
+let CURRENT_USER = sessionStorage.getItem('tgshi_user') || null;
+let CURRENT_ROLE = sessionStorage.getItem('tgshi_role') || null;
+let loginSel = 'CUCO';
+
+
+const REPO='cucogiron/tgshi-aviation';
+let TOKEN = localStorage.getItem('tgshi_token') || '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';
+const MO=['','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+let DB={flights:[],fuel:[],rates:[],meta:{last_tach:0,last_flight_id:0,last_fuel_id:0},passwords:{CUCO:'shenshi2026',COCO:'coco2026',FERNANDO:'fernando2026'}};
+let SHA='';
+let S={fp:'FERNANDO',fr:'COCO',ft:'PERSONAL',fup:'COCO'};
+
+window.onload_main=async()=>{
+  setDates(); updUsu();
+  setDot('sync');
+  // Always load from GitHub - raw URL works without token
+  await loadGH();
+  render(); buildPending();
+};
+
+function initApp(){
+  // Auto-login if session exists
+  if(CURRENT_USER&&USERS[CURRENT_USER]){
+    document.getElementById('login-screen').style.display='none';
+    const badge=CURRENT_ROLE==='admin'?'badge-admin':CURRENT_ROLE==='pilot'?'badge-pilot':'badge-viewer';
+    document.querySelector('.tach').insertAdjacentHTML('beforebegin',
+      `<span class="user-badge ${badge}">${USERS[CURRENT_USER].icon} ${CURRENT_USER}</span>`);
+    document.getElementById('settings-btn').style.display='block';
+    window.onload_main();
+  }
+  // else: login screen stays visible - ensure it's showing
+  else {
+    document.getElementById('login-screen').style.display='flex';
+  }
+}
+// Run on both events to be safe
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+
+async function loadGH(){
+  setDot('sync');
+  try{
+    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json?t='+Date.now(),
+      {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json(); SHA=j.sha;
+    const b64=j.content.replace(/[\r\n ]/g,'');
+    DB=JSON.parse(atob(b64));
+    // Update token from DB if CUCO saved a newer one
+    if(DB.token && DB.token!==TOKEN){
+      TOKEN=DB.token;
+      localStorage.setItem('tgshi_token',TOKEN);
+    }
+    // Sync passwords
+    if(DB.passwords){
+      Object.keys(DB.passwords).forEach(u=>{if(USERS[u])USERS[u].pass=DB.passwords[u];});
+    }
+    setDot('ok');
+  }catch(e){
+    console.error('loadGH failed:',e.message||e);
+    setDot('err');
+    // Show visible error on dashboard
+    const bars = document.getElementById('d-bars');
+    if(bars) bars.innerHTML = '<div style="padding:16px;color:#C0392B;font-size:12px;text-align:center">⚠️ Error cargando datos: '+( e.message||'sin conexión')+'<br><br><button onclick="loadGH().then(()=>{render();buildPending()})" style="padding:8px 16px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">🔄 Reintentar</button></div>';
+  }
+}
+
+async function saveGH(){
+  setDot('sync');
+  try{
+    // If we don't have the SHA yet, fetch it first
+    if(!SHA){
+      const sr=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
+        {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json'}});
+      if(sr.ok){const sj=await sr.json();SHA=sj.sha;}
+    }
+    // Robust base64 encoding for large JSON
+    const jsonStr=JSON.stringify(DB);
+    let content;
+    try{
+      content=btoa(unescape(encodeURIComponent(jsonStr)));
+    }catch(encErr){
+      // Fallback: manual UTF-8 to base64
+      const bytes=new TextEncoder().encode(jsonStr);
+      let bin='';
+      bytes.forEach(b=>bin+=String.fromCharCode(b));
+      content=btoa(bin);
+    }
+    const body={message:'update '+new Date().toISOString().slice(0,10),content};
+    if(SHA)body.sha=SHA;
+    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
+      {method:'PUT',headers:{Authorization:'token '+TOKEN,'Content-Type':'application/json',Accept:'application/vnd.github.v3+json'},body:JSON.stringify(body)});
+    if(!r.ok){
+      const errBody=await r.text();
+      console.error('GitHub PUT failed:',r.status,errBody);
+      window._lastSaveError=r.status+' '+errBody.slice(0,200);
+      throw new Error(r.status+': '+errBody.slice(0,100));
+    }
+    const j=await r.json(); SHA=j.content.sha;
+    setDot('ok'); return true;
+  }catch(e){
+    console.error('saveGH error:',e.message||e);
+    setDot('err');
+    // Store last error for display
+    window._lastSaveError = e.message||String(e);
+    return false;
+  }
+}
+
+function setDot(s){const d=document.getElementById('dot');d.className='dot'+(s==='sync'?' sync':s==='err'?' err':'');}
+
+function nav(id,i){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.bt').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  document.querySelectorAll('.bt')[i].classList.add('on');
+  if(id==='vl')buildVL('ALL');
+  if(id==='fuel')buildFuel();
+  if(id==='bil'){initBil();setTimeout(calcBil,100);}
+}
+
+function render(){
+  const t=Math.max(...DB.flights.map(f=>f.hf||0),0);
+  document.getElementById('tachVal').textContent=t.toFixed(1);
+  buildDash();
+}
+
+function getRateFD(ds){
+  let r=DB.rates[0];
+  for(const x of DB.rates)if(new Date(x.d)<=new Date(ds))r=x;
+  return r;
+}
+
+// DASHBOARD
+
+function selUser(u,el){
+  loginSel=u;
+  document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('login-pass').focus();
+}
+
+function doLogin(){
+  const pass=document.getElementById('login-pass').value;
+  const u=USERS[loginSel];
+  if(!u||pass!==u.pass){
+    document.getElementById('login-err').textContent='Contraseña incorrecta';
+    document.getElementById('login-pass').value='';
+    return;
+  }
+  CURRENT_USER=loginSel; CURRENT_ROLE=u.role;
+  sessionStorage.setItem('tgshi_user',CURRENT_USER);
+  sessionStorage.setItem('tgshi_role',CURRENT_ROLE);
+  document.getElementById('login-screen').style.display='none';
+  // Update topbar to show logged-in user
+  const badge=CURRENT_ROLE==='admin'?'badge-admin':CURRENT_ROLE==='pilot'?'badge-pilot':'badge-viewer';
+  document.querySelector('.tach').insertAdjacentHTML('beforebegin',
+    `<span class="user-badge ${badge}">${USERS[CURRENT_USER].icon} ${CURRENT_USER}</span>`);
+  document.getElementById('settings-btn').style.display='block';
+  window.onload_main();
+}
+
+function isAdmin(){return CURRENT_ROLE==='admin';}
+function isPilot(){return CURRENT_ROLE==='pilot';}
+
+// Pending verifications
+function buildPending(){
+  const pends=DB.flights.filter(f=>f.verified===false);
+  const sec=document.getElementById('pend-section');
+  if(!isAdmin()||pends.length===0){sec.style.display='none';return;}
+  sec.style.display='block';
+  sec.innerHTML=`<div class="pend-section">
+    <div class="pend-hd"><span class="pend-ht">✋ Verificaciones pendientes</span><span class="pend-count">${pends.length}</span></div>
+    ${pends.map(f=>`
+    <div class="pend-item">
+      <div>
+        <div class="pend-info"><b>${f.rt||'—'}</b> · ${f.r} · <span class="bx ${f.t==='FF'?'f':'s'}">${f.t}</span></div>
+        <div class="pend-meta">${f.d} · ${f.h.toFixed(1)}hr · Logueado por: ${f.logged_by}</div>
+      </div>
+      <div class="pend-actions">
+        <button class="ver-btn" onclick="verifyFlight('${f.id}','approve')">✓</button>
+        <button class="rej-btn" onclick="verifyFlight('${f.id}','reject')">✕</button>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+async function verifyFlight(id,action){
+  const f=DB.flights.find(x=>x.id==id);
+  if(!f)return;
+  if(action==='approve'){
+    f.verified=true; f.verified_by=CURRENT_USER;
+  } else {
+    // Reject = revert to personal
+    f.t='PERSONAL'; f.rv=0; f.verified=true; f.verified_by=CURRENT_USER;
+  }
+  render();
+  await saveGH();
+}
+
+// Edit flight modal (CUCO only)
+let editId=null;
+function openEdit(id){
+  if(!isAdmin())return;
+  const f=DB.flights.find(x=>x.id==id);
+  if(!f)return;
+  editId=id;
+  const tipos=['PERSONAL','STD','FF','MANTE'];
+  document.getElementById('edit-form-content').innerHTML=`
+    <div class="fs"><label class="fl">Fecha</label><input type="date" id="ed-d" value="${f.d}"></div>
+    <div class="fs"><label class="fl">Ruta</label><input type="text" id="ed-rt" value="${f.rt||''}" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="fs"><label class="fl">Responsable</label>
+      <select id="ed-r"><option ${f.r==='COCO'?'selected':''}>COCO</option><option ${f.r==='CUCO'?'selected':''}>CUCO</option><option ${f.r==='SENSHI'?'selected':''}>SENSHI</option></select></div>
+    <div class="fs"><label class="fl">Tipo</label>
+      <select id="ed-t">${tipos.map(t=>`<option ${f.t===t?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="row2">
+      <div><label class="fl">HRM Ini</label><input type="number" id="ed-hi" value="${f.hi}" step="0.1" inputmode="decimal"></div>
+      <div><label class="fl">HRM Fin</label><input type="number" id="ed-hf" value="${f.hf}" step="0.1" inputmode="decimal"></div>
+    </div>
+    <div class="row2">
+      <div><label class="fl">Hrs Espera</label><input type="number" id="ed-eh" value="${f.eh||0}" step="0.5" inputmode="decimal"></div>
+      <div><label class="fl">Ingreso $</label><input type="number" id="ed-rv" value="${f.rv||0}" step="0.01" inputmode="decimal"></div>
+    </div>
+    <div class="fs"><label class="fl">Notas</label><input type="text" id="ed-no" value="${f.no||''}"></div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn" onclick="saveEdit()">Guardar cambios</button>
+      <button class="btn" style="background:#8B1A1A" onclick="deleteFlight(${id})">Eliminar</button>
+    </div>`;
+  document.getElementById('edit-modal').style.display='flex';
+}
+
+function closeEdit(){document.getElementById('edit-modal').style.display='none';editId=null;}
+
+async function saveEdit(){
+  const f=DB.flights.find(x=>x.id==editId);
+  if(!f)return;
+  f.d=document.getElementById('ed-d').value;
+  f.rt=document.getElementById('ed-rt').value;
+  f.r=document.getElementById('ed-r').value;
+  f.t=document.getElementById('ed-t').value;
+  const hi=parseFloat(document.getElementById('ed-hi').value);
+  const hf=parseFloat(document.getElementById('ed-hf').value);
+  f.hi=hi; f.hf=hf; f.h=parseFloat((hf-hi).toFixed(1));
+  f.eh=parseFloat(document.getElementById('ed-eh').value)||0;
+  f.rv=parseFloat(document.getElementById('ed-rv').value)||0;
+  f.no=document.getElementById('ed-no').value;
+  f.verified=true; f.verified_by=CURRENT_USER;
+  closeEdit();
+  render(); buildPending(); buildVL('ALL');
+  await saveGH();
+}
+
+async function deleteFlight(id){
+  if(!confirm('¿Eliminar este vuelo?'))return;
+  DB.flights=DB.flights.filter(x=>x.id!=id);
+  closeEdit();
+  render(); buildPending(); buildVL('ALL');
+  await saveGH();
+}
+
+function buildDash(){
+  const f26=DB.flights.filter(f=>f.d.startsWith('2026'));
+  let co=0,cu=0,se=0; const mo={};
+  f26.forEach(f=>{
+    const m=+f.d.slice(5,7);
+    if(!mo[m])mo[m]={co:0,cu:0,se:0};
+    if(f.r==='COCO'){co+=f.h;mo[m].co+=f.h;}
+    else if(f.r==='CUCO'){cu+=f.h;mo[m].cu+=f.h;}
+    else{se+=f.h;mo[m].se+=f.h;}
+  });
+  document.getElementById('d-co').textContent=co.toFixed(1);
+  document.getElementById('d-cu').textContent=cu.toFixed(1);
+  document.getElementById('d-se').textContent=se.toFixed(1);
+  const mx=Math.max(...Object.values(mo).map(m=>m.co+m.cu+m.se),1);
+  let bh='';
+  for(let m=1;m<=12;m++){
+    const d=mo[m];if(!d||(d.co+d.cu+d.se)===0)continue;
+    const t=d.co+d.cu+d.se,sc=100/mx;
+    bh+=`<div class="mr"><div class="ml">${MO[m]}</div><div class="bt2"><div class="bs b1" style="width:${d.co*sc}%"></div><div class="bs b2" style="width:${d.cu*sc}%"></div><div class="bs b3" style="width:${d.se*sc}%"></div></div><div class="mh">${t.toFixed(1)}</div></div>`;
+  }
+  document.getElementById('d-bars').innerHTML=bh||'<div class="empty">Sin vuelos 2026</div>';
+  document.getElementById('d-rec').innerHTML=[...DB.flights].reverse().slice(0,6).map(fRow).join('');
+  const tot=co+cu+se,pct=t=>tot>0?` (${((t/tot)*100).toFixed(0)}%)`:'';
+  document.getElementById('d-sum').innerHTML=`
+    <div class="qr"><div class="ql">Total horas 2026</div><div class="qv">${tot.toFixed(1)} hrs</div></div>
+    <div class="qr"><div class="ql">COCO</div><div class="qv c1">${co.toFixed(1)} hrs${pct(co)}</div></div>
+    <div class="qr"><div class="ql">CUCO</div><div class="qv c2">${cu.toFixed(1)} hrs${pct(cu)}</div></div>
+    <div class="qr"><div class="ql">Charter/Shenshi</div><div class="qv c3">${se.toFixed(1)} hrs${pct(se)}</div></div>
+    <div class="qr"><div class="ql">Tach actual</div><div class="qv">${Math.max(...DB.flights.map(f=>f.hf||0),0).toFixed(1)}</div></div>
+    <div class="qr"><div class="ql">Total vuelos</div><div class="qv">${DB.flights.length}</div></div>
+    <div class="qr"><div class="ql">Cargas de combustible</div><div class="qv">${DB.fuel.length}</div></div>`;
+}
+
+function fRow(f){
+  const dc=f.r==='COCO'?'c1':f.r==='CUCO'?'c2':'c3';
+  const bx=f.t==='STD'?'<span class="bx s">STD</span>':f.t==='FF'?'<span class="bx f">FF</span>':f.t==='MANTE'?'<span class="bx m">MANTE</span>':'<span class="bx p">Personal</span>';
+  const rv=(f.rv||0)>0?`<span>$${f.rv.toLocaleString()}</span>`:'';
+  const pendTag=f.verified===false?'<span class="pend-badge">⏳ PENDIENTE</span>':'';
+  const editBtn=isAdmin()?`<button class="edit-btn" onclick="openEdit(${f.id})">editar</button>`:'';
+  return `<div class="fi"><div class="fdot ${dc}"></div><div class="fm"><div class="fr">${f.rt||'—'} ${bx}${pendTag}</div><div class="fme"><span>${f.r}</span><span>${f.u}</span>${f.p?`<span>${f.p}</span>`:''}${rv}${editBtn}</div></div><div class="frt"><div class="fh">${f.h.toFixed(1)}<small>hr</small></div><div class="fdt">${f.d.slice(5)}</div></div></div>`;
+}
+
+function buildVL(fil){
+  let out=[...DB.flights].reverse();
+  if(fil==='COCO')out=out.filter(f=>f.r==='COCO');
+  else if(fil==='CUCO')out=out.filter(f=>f.r==='CUCO');
+  else if(fil==='SENSHI')out=out.filter(f=>f.r==='SENSHI');
+  else if(['2026','2025','2024','2023'].includes(fil))out=out.filter(f=>f.d.startsWith(fil));
+  document.getElementById('vl-list').innerHTML=out.length?out.slice(0,120).map(fRow).join(''):'<div class="empty"><div class="big">✈️</div>Sin vuelos</div>';
+}
+
+function filtV(f,el){
+  document.querySelectorAll('#flt-row .fp').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');buildVL(f);
+}
+
+function buildFuel(){
+  const out=[...DB.fuel].reverse();
+  if(!out.length){document.getElementById('fuel-list').innerHTML='<div class="empty"><div class="big">⛽</div>Sin registros</div>';return;}
+  document.getElementById('fuel-list').innerHTML=out.slice(0,80).map(f=>{
+    const ants=[];
+    if((f.ac||0)>0)ants.push(`COCO Q${f.ac.toLocaleString()}`);
+    if((f.au||0)>0)ants.push(`CUCO Q${f.au.toLocaleString()}`);
+    if((f.as||0)>0)ants.push(`SENSHI Q${f.as.toLocaleString()}`);
+    return `<div class="fue"><div><div class="fue-l">Q${f.m.toLocaleString()} — ${f.py}</div><div class="fue-s">${ants.length?ants.join(' · '):'Sin anticipo'}${f.no?' · '+f.no:''}</div></div><div class="fue-r"><div class="fue-m">Q${f.m.toLocaleString()}</div><div class="fue-d">${f.d.slice(5)}</div></div></div>`;
+  }).join('');
+}
+
+function initBil(){
+  const n=new Date(),y=n.getFullYear(),m=n.getMonth()+1;
+  const pr=m===1?`${y-1}-12`:`${y}-${String(m-1).padStart(2,'0')}`;
+  document.getElementById('b-from').value=pr;
+  document.getElementById('b-to').value=pr;
+}
+
+function calcBil(){
+  const from=document.getElementById('b-from').value;
+  const to=document.getElementById('b-to').value;
+  const tc=parseFloat(document.getElementById('b-tc').value)||7.65;
+  if(!from||!to)return;
+  const fd=from+'-01',td=to+'-31';
+  const fls=DB.flights.filter(f=>f.d>=fd&&f.d<=td&&(f.verified!==false||(f.t!=='STD'&&f.t!=='FF')));
+  const fus=DB.fuel.filter(f=>f.d>=fd&&f.d<=td);
+  const rt=getRateFD(fd);
+  const hrs={COCO:0,CUCO:0,SENSHI:0};
+  const sub={COCO:{n:0,a:0},CUCO:{n:0,a:0},SENSHI:{n:0,a:0}};
+  const esp={COCO:0,CUCO:0,SENSHI:0};
+  const espHrs={COCO:0,CUCO:0,SENSHI:0};
+  let charterRev=0;
+  fls.forEach(f=>{
+    const r=f.r;if(hrs[r]===undefined)return;
+    hrs[r]+=f.h;
+    if(f.h>0&&f.h<1){sub[r].n++;sub[r].a+=f.h;}
+    if(espHrs[r]!==undefined){espHrs[r]+=(f.eh||0);esp[r]+=(f.eh||0)*rt.gw;}
+    if((f.rv||0)>0)charterRev+=f.rv;
+  });
+  let tfuel=0,acCO=0,acCU=0;
+  fus.forEach(f=>{tfuel+=f.m;acCO+=(f.ac||0);acCU+=(f.au||0);});
+  const th=hrs.COCO+hrs.CUCO+hrs.SENSHI;
+  const qph=th>0?tfuel/th:0;
+  const prCO=hrs.COCO*qph,prCU=hrs.CUCO*qph;
+  const bilH=r=>hrs[r]-sub[r].a+sub[r].n;
+  const pilFee=r=>bilH(r)*rt.pilot;
+  const ruAmt=r=>(sub[r].n-sub[r].a)*rt.pilot;
+  const resv=r=>hrs[r]*rt.res;
+  const fromParts=from.split('-'),toParts=to.split('-');
+  const numMonths=(+toParts[0]-+fromParts[0])*12+(+toParts[1]-+fromParts[1])+1;
+  const adminFee=rt.admin*numMonths;
+  const totFer=pilFee('COCO')+pilFee('CUCO')+pilFee('SENSHI')+esp.COCO+esp.CUCO+esp.SENSHI+adminFee;
+  const fQ=v=>`Q${Math.abs(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const fD=v=>`$${Math.abs(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const sg=v=>v<0?'neg':'';
+  const periodLbl=from===to?from:`${from} → ${to}`;
+  let h=`<div class="stitle">Período: ${periodLbl} · TC Q${tc}/USD · Tarifa piloto: $${rt.pilot}/hr · Admin: $${rt.admin}/mes</div>`;
+  // A
+  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">A — Horas</div></div><div class="bil-bd">
+    <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${hrs.COCO.toFixed(1)} hrs</div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${hrs.CUCO.toFixed(1)} hrs</div></div>
+    <div class="bil-row"><div class="bil-lbl">Charter/Shenshi</div><div class="bil-val">${hrs.SENSHI.toFixed(1)} hrs</div></div>
+    <div class="bil-row"><div class="bil-lbl"><b>Total</b></div><div class="bil-val"><b>${th.toFixed(1)} hrs</b></div></div>
+  </div></div>`;
+  // B
+  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">B — Combustible</div></div><div class="bil-bd">
+    <div class="bil-row"><div class="bil-lbl">Total QTZ</div><div class="bil-val">${fQ(tfuel)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">QTZ/hr promedio</div><div class="bil-val">${fQ(qph)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">COCO — prop. ${hrs.COCO.toFixed(1)}hr</div><div class="bil-val">${fQ(prCO)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">COCO — anticipo ya pagado</div><div class="bil-val">${fQ(acCO)}</div></div>
+    <div class="bil-row"><div class="bil-lbl"><b>COCO neto a cobrar</b></div><div class="bil-val ${sg(prCO-acCO)}"><b>${fQ(prCO-acCO)}</b></div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO — prop. ${hrs.CUCO.toFixed(1)}hr</div><div class="bil-val">${fQ(prCU)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO — anticipo ya pagado</div><div class="bil-val">${fQ(acCU)}</div></div>
+    <div class="bil-row"><div class="bil-lbl"><b>CUCO neto a cobrar</b></div><div class="bil-val ${sg(prCU-acCU)}"><b>${fQ(prCU-acCU)}</b></div></div>
+  </div></div>`;
+  // C
+  const ruCO=ruAmt('COCO'),ruCU=ruAmt('CUCO');
+  const espCO=esp.COCO,espCU=esp.CUCO,espSE=esp.SENSHI;
+  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">C — Pilotaje Fernando ($${rt.pilot}/hr · Espera $${rt.gw}/hr)</div></div><div class="bil-bd">
+    <div class="bil-row"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:10px;text-transform:uppercase;letter-spacing:.06em">COCO</div><div class="bil-val" style="font-size:10px;color:#8892A4">${bilH('COCO').toFixed(1)} hrs fact.</div></div>
+    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('COCO'))}</div></div>
+    ${ruCO>0?`<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A">↳ Roundup (${sub.COCO.n} vuelo(s) &lt;1hr)</div><div class="bil-val pos">incl. +${fD(ruCO)}</div></div>`:''}
+    ${espHrs.COCO>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.COCO.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espCO)}</div></div>`:``}
+    <div class="bil-row" style="border-top:1px solid #E2E6EE;margin-top:2px"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:10px;text-transform:uppercase;letter-spacing:.06em">CUCO</div><div class="bil-val" style="font-size:10px;color:#8892A4">${bilH('CUCO').toFixed(1)} hrs fact.</div></div>
+    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('CUCO'))}</div></div>
+    ${ruCU>0?`<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A">↳ Roundup (${sub.CUCO.n} vuelo(s) &lt;1hr)</div><div class="bil-val pos">incl. +${fD(ruCU)}</div></div>`:''}
+    ${espHrs.CUCO>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.CUCO.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espCU)}</div></div>`:``}
+    <div class="bil-row" style="border-top:1px solid #E2E6EE;margin-top:2px"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:10px;text-transform:uppercase;letter-spacing:.06em">SHENSHI</div><div class="bil-val" style="font-size:10px;color:#8892A4">${bilH('SENSHI').toFixed(1)} hrs</div></div>
+    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('SENSHI'))}</div></div>
+    ${espHrs.SENSHI>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.SENSHI.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espSE)}</div></div>`:``}
+    <div class="bil-row" style="border-top:2px solid #E2E6EE;margin-top:4px"><div class="bil-lbl">Admin fee Fernando (${numMonths} mes${numMonths>1?"es":""})</div><div class="bil-val">${fD(adminFee)}</div></div>
+    <div class="bil-row"><div class="bil-lbl"><b>TOTAL A PAGAR FERNANDO</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
+  </div></div>`;
+  // D
+  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">D — Reserva ($${rt.res}/hr)</div></div><div class="bil-bd">
+    <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${fD(resv('COCO'))}</div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${fD(resv('CUCO'))}</div></div>
+    <div class="bil-row"><div class="bil-lbl">Shenshi</div><div class="bil-val">${fD(resv('SENSHI'))}</div></div>
+    <div class="bil-row"><div class="bil-lbl"><b>Total reserva</b></div><div class="bil-val"><b>${fD(resv('COCO')+resv('CUCO')+resv('SENSHI'))}</b></div></div>
+  </div></div>`;
+  // QB
+  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">F — QuickBooks Summary</div></div><div class="bil-bd">
+    <div class="bil-row"><div class="bil-lbl">COCO — Comb. neto (QTZ)</div><div class="bil-val ${sg(prCO-acCO)}">${fQ(prCO-acCO)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">COCO — Pilotaje${espCO>0?' + espera':''}</div><div class="bil-val">${fD(pilFee('COCO')+espCO)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">COCO — Reserva mante</div><div class="bil-val">${fD(resv('COCO'))}</div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO — Comb. neto (QTZ)</div><div class="bil-val ${sg(prCU-acCU)}">${fQ(prCU-acCU)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO — Pilotaje${espCU>0?' + espera':''}</div><div class="bil-val">${fD(pilFee('CUCO')+espCU)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO — Reserva mante</div><div class="bil-val">${fD(resv('CUCO'))}</div></div>
+    <div class="bil-row"><div class="bil-lbl">Shenshi — Charter</div><div class="bil-val">${fD(charterRev)}</div></div>
+    <div class="bil-row"><div class="bil-lbl"><b>Total Fernando</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
+  </div></div>`;
+  const notes=[];
+  if(ruCO>0)notes.push(`COCO: Agregar ${fD(ruCO)} roundup (${sub.COCO.n} vuelo(s) &lt;1hr → 1hr)`);
+  if(ruCU>0)notes.push(`CUCO: Agregar ${fD(ruCU)} roundup (${sub.CUCO.n} vuelo(s) &lt;1hr → 1hr)`);
+  if(notes.length)h+=`<div class="qb-note">📋 Nota QB:<br>${notes.join('<br>')}</div>`;
+  document.getElementById('bil-out').innerHTML=h;
+}
+
+// FORM
+function fTab(t,el){
+  document.querySelectorAll('[id^="form-"]').forEach(d=>d.style.display='none');
+  document.getElementById('form-'+t).style.display='block';
+  el.closest('.sc').querySelectorAll('.sb').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+}
+function seg(k,v,el){
+  S[k]=v;
+  el.closest('.sc').querySelectorAll('.sb').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  if(k==='fp')document.getElementById('ff-po').style.display=v==='OTRO'?'block':'none';
+  if(k==='fr'||k==='ft')updUsu();
+}
+function tipo(v,el){
+  S.ft=v;
+  document.querySelectorAll('.tc').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('rev-sec').style.display=(v==='STD'||v==='FF')?'block':'none';
+  const noteEl=document.getElementById('fer-charter-note');
+  if(noteEl) noteEl.style.display=(!isAdmin()&&(v==='STD'||v==='FF'))?'block':'none';
+  updUsu();updRevH();
+}
+function updUsu(){
+  const sel=document.getElementById('ff-u');if(!sel)return;
+  let opts=[];
+  if(S.ft==='PERSONAL')opts=[S.fr==='COCO'?'COCO':S.fr==='CUCO'?'CUCO':'SENSHI'];
+  else if(S.ft==='MANTE')opts=['MANTE','SENSHI'];
+  else if(S.fr==='COCO')opts=['ALQ COCO','ALQ COCO FF','ALQ HRS PIVARAL COCO','ALQ LICO','ALQ PREMISA','ALQ FER'];
+  else if(S.fr==='CUCO')opts=['ALQ CUCO','ALQ CUCO FF','CUCO HRS ADAN','ALQ LICO','ALQ PREMISA'];
+  else opts=['ALQ COCO','ALQ CUCO','ALQ LICO','ALQ PREMISA','ALQ FER'];
+  sel.innerHTML=opts.map(o=>`<option>${o}</option>`).join('');
+}
+function setDates(){
+  const d=new Date(),z=n=>String(n).padStart(2,'0');
+  const ds=`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+  ['ff-d','fu-d'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=ds;});
+  const lt=Math.max(...DB.flights.map(f=>f.hf||0),0);
+  const e=document.getElementById('ff-hi');
+  if(e&&lt>0){
+    e.value=lt.toFixed(1);  // pre-fill with actual value, not just placeholder
+    e.placeholder=lt.toFixed(1);
+  }
+}
+function calcH(){
+  const a=parseFloat(document.getElementById('ff-hi').value);
+  const b=parseFloat(document.getElementById('ff-hf').value);
+  const div=document.getElementById('hcalc');
+  if(!isNaN(a)&&!isNaN(b)&&b>a){
+    const h=(b-a).toFixed(1);
+    const bil=parseFloat(h)<1?`1.0 (roundup!)`:h;
+    div.textContent=`${h}hrs voladas · facturadas: ${bil}`;
+    div.style.display='block';updRevH();
+  }else div.style.display='none';
+}
+function updRevH(){
+  const a=parseFloat(document.getElementById('ff-hi').value)||0;
+  const b=parseFloat(document.getElementById('ff-hf').value)||0;
+  const h=Math.max(0,b-a),rate=S.ft==='FF'?650:750;
+  const el=document.getElementById('rev-hint');
+  if(el&&h>0)el.textContent=`Auto: ${h.toFixed(1)}hr × $${rate} = $${(h*rate).toFixed(2)}`;
+}
+async function saveF(){
+  const d=document.getElementById('ff-d').value;
+  const hi=parseFloat(document.getElementById('ff-hi').value);
+  const hf=parseFloat(document.getElementById('ff-hf').value);
+  const rt=document.getElementById('ff-rt').value.toUpperCase().trim();
+  if(!d||!rt||isNaN(hi)||isNaN(hf)||hf<=hi){alert('Completa: Fecha, Ruta, HRM Inicio y HRM Fin');return;}
+  const h=parseFloat((hf-hi).toFixed(1));
+  const pi=S.fp==='OTRO'?document.getElementById('ff-po').value:S.fp;
+  const u=document.getElementById('ff-u').value;
+  const cb=parseFloat(document.getElementById('ff-cb').value)||0;
+  const es=parseFloat(document.getElementById('ff-es').value)||0;
+  const no=document.getElementById('ff-no').value;
+  const rate=S.ft==='FF'?650:S.ft==='STD'?750:0;
+  const rv=document.getElementById('ff-rv').value?parseFloat(document.getElementById('ff-rv').value):(rate>0?parseFloat((h*rate).toFixed(2)):0);
+  const nd=new Date(d+'T12:00:00');
+  const per=nd.getFullYear()*12+(nd.getMonth()+1);
+  const mid=(DB.meta&&DB.meta.last_flight_id?DB.meta.last_flight_id:Math.max(...DB.flights.map(f=>f.id||0),0))+1;
+  const needsVerify = !isAdmin() && (S.ft==='STD'||S.ft==='FF');
+  DB.flights.push({id:mid,d,r:S.fr,u,rt,p:pi,hi,hf,h,t:S.ft,rv,eh:es,no,per,
+    logged_by:CURRENT_USER,
+    verified: needsVerify ? false : true,
+    verified_by: needsVerify ? null : CURRENT_USER
+  });
+  if(!DB.meta) DB.meta={};
+  DB.meta.last_flight_id = mid;
+  DB.meta.last_tach = hf;
+  if(cb>0){
+    const fid=Math.max(...DB.fuel.map(f=>f.id||0),0)+1;
+    DB.fuel.push({id:fid,d,py:S.fr,m:cb,ac:S.fr==='COCO'?cb:0,au:S.fr==='CUCO'?cb:0,as:S.fr==='SENSHI'?cb:0,no:''});
+  }
+  render();
+  const ok=await saveGH();
+  document.getElementById('ok-f').style.display=ok?'flex':'none';
+  document.getElementById('err-f').textContent=ok?'':'Error guardando. Verifica conexión.';
+  document.getElementById('err-f').style.display=ok?'none':'block';
+  if(ok)setTimeout(()=>document.getElementById('ok-f').style.display='none',3000);
+  document.getElementById('ff-hf').value='';document.getElementById('ff-rt').value='';
+  document.getElementById('ff-cb').value='';document.getElementById('ff-es').value='0';
+  document.getElementById('ff-rv').value='';document.getElementById('ff-no').value='';
+  document.getElementById('hcalc').style.display='none';
+  document.getElementById('ff-hi').value=hf;
+}
+async function saveFu(){
+  const d=document.getElementById('fu-d').value;
+  const m=parseFloat(document.getElementById('fu-m').value);
+  if(!d||isNaN(m)||m<=0){alert('Completa: Fecha y Monto');return;}
+  const ac=parseFloat(document.getElementById('fu-ac').value)||0;
+  const au=parseFloat(document.getElementById('fu-au').value)||0;
+  const as_=parseFloat(document.getElementById('fu-as').value)||0;
+  const no=document.getElementById('fu-no').value;
+  const fid=Math.max(...DB.fuel.map(f=>f.id||0),0)+1;
+  DB.fuel.push({id:fid,d,py:S.fup,m,ac,au,as:as_,no});
+  if(!DB.meta) DB.meta={};
+  DB.meta.last_fuel_id = fid;
+  const ok=await saveGH();
+  document.getElementById('ok-fu').style.display=ok?'flex':'none';
+  document.getElementById('err-fu').textContent=ok?'':'Error guardando.';
+  document.getElementById('err-fu').style.display=ok?'none':'block';
+  if(ok){setTimeout(()=>document.getElementById('ok-fu').style.display='none',3000);
+    ['fu-m','fu-ac','fu-au','fu-as','fu-no'].forEach(id=>{const e=document.getElementById(id);if(e){e.value=id.includes('fu-m')||id.includes('fu-no')?'':'0';}});}
+}
+
+// PASSWORD MANAGEMENT
+function openPwModal(){
+  document.getElementById('pw-err').textContent='';
+  document.getElementById('pw-ok').textContent='';
+  document.getElementById('pw-old').value='';
+  document.getElementById('pw-new').value='';
+  document.getElementById('pw-confirm').value='';
+  if(isAdmin()){
+    document.getElementById('pw-admin-section').style.display='block';
+    document.getElementById('pw-user-section').style.display='none';
+    document.getElementById('pw-admin-old').value='';
+    document.getElementById('pw-admin-new').value='';
+    document.getElementById('pw-admin-confirm').value='';
+    document.getElementById('pw-admin-err').textContent='';
+    document.getElementById('pw-admin-ok').textContent='';
+    loadTokenInput();
+    document.getElementById('token-status').textContent = TOKEN ? '✓ Token cargado ('+TOKEN.slice(0,8)+'...)' : '⚠️ Sin token — guarda uno para activar sincronización';
+  } else {
+    document.getElementById('pw-user-section').style.display='block';
+    document.getElementById('pw-admin-section').style.display='none';
+    document.getElementById('pw-sub-text').textContent='Cambia tu contraseña — usuario: '+CURRENT_USER;
+  }
+  document.getElementById('pw-modal').style.display='flex';
+}
+
+function closePwModal(){
+  document.getElementById('pw-modal').style.display='none';
+}
+
+document.addEventListener('click',e=>{if(e.target===document.getElementById('pw-modal'))closePwModal();});
+
+async function savePw(){
+  const op=document.getElementById('pw-old').value;
+  const np=document.getElementById('pw-new').value.trim();
+  const cp=document.getElementById('pw-confirm').value.trim();
+  const err=document.getElementById('pw-err');
+  const ok=document.getElementById('pw-ok');
+  err.textContent='';ok.textContent='';
+  if(op!==USERS[CURRENT_USER].pass){err.textContent='Contraseña actual incorrecta.';return;}
+  if(np.length<4){err.textContent='Mínimo 4 caracteres.';return;}
+  if(np!==cp){err.textContent='Las contraseñas no coinciden.';return;}
+  ok.textContent='Guardando…';
+  const res=await updatePwInFile(CURRENT_USER,np);
+  if(res){ok.textContent='✓ Contraseña actualizada.';err.textContent='';setTimeout(closePwModal,2000);}
+  else{err.textContent='Error guardando. Intenta de nuevo.';ok.textContent='';}
+}
+
+async function saveAdminPw(){
+  const op=document.getElementById('pw-admin-old').value;
+  const np=document.getElementById('pw-admin-new').value.trim();
+  const cp=document.getElementById('pw-admin-confirm').value.trim();
+  const err=document.getElementById('pw-admin-err');
+  const ok=document.getElementById('pw-admin-ok');
+  err.textContent='';ok.textContent='';
+  if(op!==USERS['CUCO'].pass){err.textContent='Contraseña de CUCO incorrecta.';return;}
+  if(np===''){ok.textContent='Sin cambios en tu contraseña.';return;}
+  if(np.length<4){err.textContent='Mínimo 4 caracteres.';return;}
+  if(np!==cp){err.textContent='Las contraseñas no coinciden.';return;}
+  ok.textContent='Guardando…';
+  const res=await updatePwInFile('CUCO',np);
+  if(res){ok.textContent='✓ Contraseña de CUCO actualizada.';setTimeout(()=>ok.textContent='',3000);}
+  else{err.textContent='Error guardando.';ok.textContent='';}
+}
+
+async function resetUserPw(user){
+  const defPw=user.toLowerCase();
+  if(!confirm('¿Resetear contraseña de '+user+' a "'+defPw+'"?'))return;
+  const ap=document.getElementById('pw-admin-old').value;
+  if(ap!==USERS['CUCO'].pass){document.getElementById('pw-admin-err').textContent='Ingresa tu contraseña actual primero.';return;}
+  const res=await updatePwInFile(user,defPw);
+  if(res){document.getElementById('pw-admin-ok').textContent='✓ '+user+' reseteado a "'+defPw+'"';document.getElementById('pw-admin-err').textContent='';setTimeout(()=>document.getElementById('pw-admin-ok').textContent='',4000);}
+  else{document.getElementById('pw-admin-err').textContent='Error guardando.';document.getElementById('pw-admin-ok').textContent='';}
+}
+
+async function updatePwInFile(user,newPw){
+  // Save password to data.json via saveGH() - same mechanism as flights/fuel
+  if(!DB.passwords) DB.passwords={};
+  DB.passwords[user] = newPw;
+  const ok = await saveGH();
+  if(ok) USERS[user].pass = newPw;
+  else delete DB.passwords[user]; // rollback
+  return ok;
+}
+
+
+
+// debug wrapper removed
+
+
+
+async function saveToken(){
+  const t = document.getElementById('gh-token-input').value.trim();
+  if(!t){document.getElementById('token-status').textContent='Ingresa un token válido';return;}
+  localStorage.setItem('tgshi_token', t);
+  TOKEN = t;
+  document.getElementById('token-status').textContent='Guardando para todos los usuarios...';
+  // Save token into data.json so all devices get it automatically
+  DB.token = t;
+  const ok = await saveGH();
+  if(ok){
+    document.getElementById('token-status').textContent='✓ Token guardado — todos los usuarios lo recibirán automáticamente';
+  } else {
+    document.getElementById('token-status').textContent='✓ Guardado en este dispositivo (sin sync)';
+  }
+  setTimeout(()=>document.getElementById('token-status').textContent=TOKEN?'✓ Token activo ('+TOKEN.slice(0,8)+'...)':'',3000);
+}
+
+function loadTokenInput(){
+  const el = document.getElementById('gh-token-input');
+  if(el && TOKEN) el.value = TOKEN;
+}
+
+function logout(){
+  sessionStorage.removeItem('tgshi_user');
+  sessionStorage.removeItem('tgshi_role');
+  location.reload();
+}
+
+async function testSave(){
+  // Minimal test: just save a tiny JSON to confirm token works
+  setDot('sync');
+  try{
+    // First get current SHA
+    const r1=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
+      {headers:{'Authorization':'token '+TOKEN,'Accept':'application/vnd.github.v3+json'}});
+    const j1=await r1.json();
+    console.log('GET status:',r1.status,'SHA:',j1.sha);
+    if(!r1.ok){alert('GET failed: '+r1.status+' '+JSON.stringify(j1));setDot('err');return;}
+    
+    // Try PUT with same content (no-op)
+    const r2=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',{
+      method:'PUT',
+      headers:{'Authorization':'token '+TOKEN,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+      body:JSON.stringify({message:'test',content:j1.content.replace(/\n/g,''),sha:j1.sha})
+    });
+    const j2=await r2.json();
+    console.log('PUT status:',r2.status,j2.message||'ok');
+    if(r2.ok){alert('✓ Token funciona correctamente');setDot('ok');}
+    else{alert('PUT failed '+r2.status+': '+JSON.stringify(j2));setDot('err');}
+  }catch(e){alert('Error: '+e.message);setDot('err');}
+}
+
+</script>
+
 <div id="pw-modal" class="pw-modal" style="display:none">
   <div class="pw-box">
     <div id="pw-user-section">
@@ -348,10 +1057,10 @@ input:focus,select:focus{border-color:var(--sk)}
       </div>
     </div>
     <div id="pw-admin-section" style="display:none">
-      <div class="pw-title">⚙️ Administrar</div>
-      <div class="pw-sub">Admin: gestiona contraseñas y token de GitHub</div>
-      <div class="pw-field"><label>Tu contraseña actual (CUCO)</label><input type="password" id="pw-admin-old" placeholder="••••••••"></div>
-      <div class="pw-field"><label>Nueva contraseña para CUCO (opcional)</label><input type="password" id="pw-admin-new" placeholder="dejar vacío si no cambias"></div>
+      <div class="pw-title">⚙️ Administrar contraseñas</div>
+      <div class="pw-sub">Como admin puedes resetear contraseñas de cualquier usuario</div>
+      <div class="pw-field"><label>Tu contraseña actual</label><input type="password" id="pw-admin-old" placeholder="••••••••"></div>
+      <div class="pw-field"><label>Tu nueva contraseña (opcional)</label><input type="password" id="pw-admin-new" placeholder="dejar vacío si no cambias"></div>
       <div class="pw-field"><label>Confirmar nueva contraseña</label><input type="password" id="pw-admin-confirm" placeholder=""></div>
       <div class="pw-err" id="pw-admin-err"></div>
       <div class="pw-ok" id="pw-admin-ok"></div>
@@ -363,15 +1072,15 @@ input:focus,select:focus{border-color:var(--sk)}
         <button onclick="logout()" style="width:100%;padding:12px;background:#F0F2F6;color:#8B1A1A;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">🚪 Cerrar sesión</button>
       </div>
       <div class="pw-reset-section">
-        <div class="pw-field" style="margin-bottom:8px">
-          <label style="display:block;font-size:10px;font-weight:700;color:#8892A4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">GitHub Token (Personal Access Token)</label>
-          <input type="password" id="gh-token-input" placeholder="ghp_..." style="width:100%;padding:11px 13px;border:1.5px solid #E2E6EE;border-radius:10px;font-size:13px;font-family:inherit;outline:none">
-          <div style="display:flex;gap:8px;margin-top:6px">
-            <button onclick="saveToken()" style="flex:1;padding:9px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Guardar token</button>
-            <button onclick="testToken()" style="flex:1;padding:9px;background:#E8F0FD;color:#1B4E8A;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">🔧 Probar</button>
-          </div>
-          <div id="token-status" style="font-size:11px;color:#8892A4;margin-top:5px"></div>
+        <div class="pw-field" style="margin-bottom:16px">
+        <label style="display:block;font-size:10px;font-weight:700;color:#8892A4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">GitHub Token (solo CUCO)</label>
+        <input type="password" id="gh-token-input" placeholder="ghp_..." style="width:100%;padding:11px 13px;border:1.5px solid #E2E6EE;border-radius:10px;font-size:13px;font-family:inherit;outline:none">
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button onclick="saveToken()" style="flex:1;padding:9px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Guardar token</button>
+          <button onclick="testSave()" style="flex:1;padding:9px;background:#E8F0FD;color:#1B4E8A;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">🔧 Probar</button>
         </div>
+        <div id="token-status" style="font-size:11px;color:#8892A4;margin-top:5px"></div>
+      </div>
         <div class="pw-reset-title">Resetear contraseña de otro usuario</div>
         <div class="pw-user-row">
           <div><div class="pw-user-name">👩‍✈️ COCO</div></div>
@@ -381,21 +1090,26 @@ input:focus,select:focus{border-color:var(--sk)}
           <div><div class="pw-user-name">🧑‍✈️ FERNANDO</div></div>
           <button class="pw-reset-btn" onclick="resetUserPw('FERNANDO')">Resetear</button>
         </div>
-        <div style="font-size:11px;color:#8892A4;margin-top:10px">Al resetear, la nueva contraseña será el nombre en minúsculas (ej: "coco", "fernando")</div>
+        <div style="font-size:11px;color:#8892A4;margin-top:10px">Al resetear, la nueva contraseña será el nombre del usuario en minúsculas (ej: "coco", "fernando")</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- LOGIN SCREEN -->
 <div id="login-screen" class="login-screen">
   <div class="login-logo">TG-SHI</div>
   <div class="login-sub">Shenshi Aviation</div>
   <div class="login-card">
     <div class="login-users">
-      <button class="user-btn sel" onclick="selUser('CUCO',this)"><span class="user-ic">👨‍✈️</span>CUCO</button>
-      <button class="user-btn" onclick="selUser('COCO',this)"><span class="user-ic">👩‍✈️</span>COCO</button>
-      <button class="user-btn" onclick="selUser('FERNANDO',this)"><span class="user-ic">🧑‍✈️</span>FERNANDO</button>
+      <button class="user-btn sel" onclick="selUser('CUCO',this)">
+        <span class="user-ic">👨‍✈️</span>CUCO
+      </button>
+      <button class="user-btn" onclick="selUser('COCO',this)">
+        <span class="user-ic">👩‍✈️</span>COCO
+      </button>
+      <button class="user-btn" onclick="selUser('FERNANDO',this)">
+        <span class="user-ic">🧑‍✈️</span>FERNANDO
+      </button>
     </div>
     <div class="login-pass-wrap">
       <input type="password" class="login-pass" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
@@ -405,794 +1119,5 @@ input:focus,select:focus{border-color:var(--sk)}
   </div>
 </div>
 
-<script>
-// ─── CONFIG ──────────────────────────────────────────────────────────────────
-const REPO = 'cucogiron/tgshi-aviation';
-const MO = ['','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-
-// ─── STATE ────────────────────────────────────────────────────────────────────
-let TOKEN = localStorage.getItem('tgshi_token') || '';
-let SHA = '';
-let DB = {flights:[],fuel:[],rates:[{d:'2023-03-01',pilot:110,gw:15,std:750,ff:650,admin:300,res:2}],meta:{},passwords:{CUCO:'shenshi2026',COCO:'coco2026',FERNANDO:'fernando2026'}};
-let S = {fp:'FERNANDO',fr:'COCO',ft:'PERSONAL',fup:'COCO'};
-
-// Users — passwords may be updated from DB after load
-const USERS = {
-  CUCO: {pass:'shenshi2026', role:'admin',   icon:'👨‍✈️'},
-  COCO: {pass:'coco2026',    role:'viewer',  icon:'👩‍✈️'},
-  FERNANDO: {pass:'fernando2026', role:'pilot', icon:'🧑‍✈️'}
-};
-
-let CURRENT_USER = sessionStorage.getItem('tgshi_user') || null;
-let CURRENT_ROLE = sessionStorage.getItem('tgshi_role') || null;
-let loginSel = 'CUCO';
-
-// ─── INIT ────────────────────────────────────────────────────────────────────
-// Single entry point, called after DOM is ready
-function initApp() {
-  if (CURRENT_USER && USERS[CURRENT_USER]) {
-    // Already logged in — hide login screen immediately
-    document.getElementById('login-screen').style.display = 'none';
-    showUserBadge();
-    startApp();
-  }
-  // else: login screen is visible by default (display:flex in CSS)
-}
-
-function showUserBadge() {
-  // Avoid duplicate badges
-  if (document.querySelector('.user-badge')) return;
-  const u = USERS[CURRENT_USER];
-  const badge = CURRENT_ROLE === 'admin' ? 'badge-admin' : CURRENT_ROLE === 'pilot' ? 'badge-pilot' : 'badge-viewer';
-  document.querySelector('.tach').insertAdjacentHTML('beforebegin',
-    `<span class="user-badge ${badge}">${u.icon} ${CURRENT_USER}</span>`);
-  document.getElementById('settings-btn').style.display = 'flex';
-}
-
-async function startApp() {
-  setFormDates();
-  updUsu();
-
-  if (!TOKEN) {
-    // No token — show banner and load nothing
-    showTokenBanner();
-    setDot('err');
-    return;
-  }
-
-  setDot('sync');
-  const ok = await loadGH();
-  if (ok) {
-    render();
-    buildPending();
-  } else {
-    // loadGH already showed error in the UI
-    showTokenBanner('error');
-  }
-}
-
-// ─── TOKEN BANNER ─────────────────────────────────────────────────────────────
-function showTokenBanner(mode) {
-  const sec = document.getElementById('token-banner-section');
-  if (!isAdmin()) {
-    sec.innerHTML = `<div class="token-banner"><b>⚠️ Sin conexión a datos</b>Contacta a CUCO para configurar el token de GitHub.</div>`;
-    return;
-  }
-  const msg = mode === 'error'
-    ? '❌ El token guardado no funciona (puede haber expirado o sido revocado por GitHub). Genera uno nuevo en <b>github.com → Settings → Developer settings → Personal access tokens → Fine-grained</b> con permiso de escritura en el repo <code>cucogiron/tgshi-aviation</code>.'
-    : '🔑 No hay token de GitHub configurado. Genera uno en <b>github.com → Settings → Developer settings → Personal access tokens</b> con acceso de escritura al repo <code>cucogiron/tgshi-aviation</code>.';
-  sec.innerHTML = `<div class="token-banner">
-    <b>Sin token de sincronización</b>
-    <span>${msg}</span>
-    <input type="password" id="inline-token-input" placeholder="ghp_..." style="width:100%;padding:10px;font-size:13px;border:1.5px solid #FFE082;border-radius:8px;background:#fff;margin-top:8px;font-family:inherit;outline:none">
-    <button onclick="saveInlineToken()">Guardar token y cargar datos</button>
-  </div>`;
-}
-
-async function saveInlineToken() {
-  const t = document.getElementById('inline-token-input').value.trim();
-  if (!t || !t.startsWith('ghp_')) {
-    alert('Ingresa un token válido (debe comenzar con ghp_)');
-    return;
-  }
-  TOKEN = t;
-  localStorage.setItem('tgshi_token', t);
-  document.getElementById('token-banner-section').innerHTML = '<div class="token-banner"><b>⏳ Cargando datos...</b></div>';
-  setDot('sync');
-  const ok = await loadGH();
-  if (ok) {
-    document.getElementById('token-banner-section').innerHTML = '';
-    render();
-    buildPending();
-  } else {
-    showTokenBanner('error');
-  }
-}
-
-// ─── GITHUB I/O ───────────────────────────────────────────────────────────────
-async function loadGH() {
-  try {
-    const url = `https://api.github.com/repos/${REPO}/contents/data.json`;
-    const r = await fetch(url + '?t=' + Date.now(), {
-      headers: {
-        Authorization: 'token ' + TOKEN,
-        Accept: 'application/vnd.github.v3+json',
-        'Cache-Control': 'no-cache'
-      }
-    });
-
-    if (r.status === 401 || r.status === 403) {
-      console.error('GitHub auth failed:', r.status);
-      setDot('err');
-      return false;
-    }
-    if (!r.ok) {
-      console.error('GitHub load failed:', r.status);
-      setDot('err');
-      return false;
-    }
-
-    const j = await r.json();
-    SHA = j.sha;
-    const raw = j.content.replace(/[\r\n ]/g, '');
-    DB = JSON.parse(atob(raw));
-
-    // Sync passwords into USERS object
-    if (DB.passwords) {
-      Object.keys(DB.passwords).forEach(u => {
-        if (USERS[u]) USERS[u].pass = DB.passwords[u];
-      });
-    }
-    // Store token from DB if present (allows sharing token via data.json)
-    if (DB.token && DB.token !== TOKEN) {
-      TOKEN = DB.token;
-      localStorage.setItem('tgshi_token', TOKEN);
-    }
-    // Remove token from DB object (don't keep it in memory as a write target)
-    // We store it only in localStorage
-
-    setDot('ok');
-    return true;
-  } catch (e) {
-    console.error('loadGH exception:', e);
-    setDot('err');
-    return false;
-  }
-}
-
-async function saveGH() {
-  if (!TOKEN) { setDot('err'); return false; }
-  setDot('sync');
-  try {
-    // Fetch fresh SHA if we don't have one
-    if (!SHA) {
-      const sr = await fetch(`https://api.github.com/repos/${REPO}/contents/data.json`, {
-        headers: { Authorization: 'token ' + TOKEN, Accept: 'application/vnd.github.v3+json' }
-      });
-      if (sr.ok) { const sj = await sr.json(); SHA = sj.sha; }
-    }
-
-    // Encode — handle Unicode safely
-    const jsonStr = JSON.stringify(DB);
-    const bytes = new TextEncoder().encode(jsonStr);
-    let bin = '';
-    bytes.forEach(b => bin += String.fromCharCode(b));
-    const content = btoa(bin);
-
-    const body = { message: 'update ' + new Date().toISOString().slice(0, 10), content };
-    if (SHA) body.sha = SHA;
-
-    const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data.json`, {
-      method: 'PUT',
-      headers: {
-        Authorization: 'token ' + TOKEN,
-        'Content-Type': 'application/json',
-        Accept: 'application/vnd.github.v3+json'
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!r.ok) {
-      const errBody = await r.text();
-      console.error('GitHub PUT failed:', r.status, errBody.slice(0, 200));
-      // If 409 conflict, re-fetch SHA and retry once
-      if (r.status === 409) {
-        SHA = '';
-        return saveGH();
-      }
-      setDot('err');
-      return false;
-    }
-
-    const j = await r.json();
-    SHA = j.content.sha;
-    setDot('ok');
-    return true;
-  } catch (e) {
-    console.error('saveGH exception:', e);
-    setDot('err');
-    return false;
-  }
-}
-
-function setDot(s) {
-  const d = document.getElementById('dot');
-  d.className = 'dot' + (s === 'sync' ? ' sync' : s === 'err' ? ' err' : '');
-}
-
-// ─── LOGIN ────────────────────────────────────────────────────────────────────
-function selUser(u, el) {
-  loginSel = u;
-  document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('sel'));
-  el.classList.add('sel');
-  document.getElementById('login-pass').focus();
-}
-
-function doLogin() {
-  // Re-sync passwords from DB (in case they were updated)
-  if (DB.passwords) {
-    Object.keys(DB.passwords).forEach(u => { if (USERS[u]) USERS[u].pass = DB.passwords[u]; });
-  }
-  const pass = document.getElementById('login-pass').value;
-  const u = USERS[loginSel];
-  if (!u || pass !== u.pass) {
-    document.getElementById('login-err').textContent = 'Contraseña incorrecta';
-    document.getElementById('login-pass').value = '';
-    return;
-  }
-  CURRENT_USER = loginSel;
-  CURRENT_ROLE = u.role;
-  sessionStorage.setItem('tgshi_user', CURRENT_USER);
-  sessionStorage.setItem('tgshi_role', CURRENT_ROLE);
-  document.getElementById('login-screen').style.display = 'none';
-  showUserBadge();
-  startApp();
-}
-
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-function isAdmin() { return CURRENT_ROLE === 'admin'; }
-function isPilot() { return CURRENT_ROLE === 'pilot'; }
-
-function getRateFD(ds) {
-  let r = DB.rates[0];
-  for (const x of DB.rates) if (new Date(x.d) <= new Date(ds)) r = x;
-  return r;
-}
-
-// ─── NAVIGATION ───────────────────────────────────────────────────────────────
-function nav(id, i) {
-  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.bt').forEach(b => b.classList.remove('on'));
-  document.getElementById('pg-' + id).classList.add('on');
-  document.querySelectorAll('.bt')[i].classList.add('on');
-  if (id === 'vl') buildVL('ALL');
-  if (id === 'fuel') buildFuel();
-  if (id === 'bil') { initBil(); setTimeout(calcBil, 100); }
-}
-
-function render() {
-  const t = DB.flights.length ? Math.max(...DB.flights.map(f => f.hf || 0)) : 0;
-  document.getElementById('tachVal').textContent = t > 0 ? t.toFixed(1) : '—';
-  buildDash();
-}
-
-// ─── DASHBOARD ───────────────────────────────────────────────────────────────
-function buildDash() {
-  const f26 = DB.flights.filter(f => f.d && f.d.startsWith('2026'));
-  let co = 0, cu = 0, se = 0;
-  const mo = {};
-  f26.forEach(f => {
-    const m = +f.d.slice(5, 7);
-    if (!mo[m]) mo[m] = {co:0, cu:0, se:0};
-    if (f.r === 'COCO')   { co += f.h; mo[m].co += f.h; }
-    else if (f.r === 'CUCO') { cu += f.h; mo[m].cu += f.h; }
-    else                  { se += f.h; mo[m].se += f.h; }
-  });
-  document.getElementById('d-co').textContent = co.toFixed(1);
-  document.getElementById('d-cu').textContent = cu.toFixed(1);
-  document.getElementById('d-se').textContent = se.toFixed(1);
-  const mx = Math.max(...Object.values(mo).map(m => m.co + m.cu + m.se), 1);
-  let bh = '';
-  for (let m = 1; m <= 12; m++) {
-    const d = mo[m]; if (!d || (d.co + d.cu + d.se) === 0) continue;
-    const t = d.co + d.cu + d.se, sc = 100 / mx;
-    bh += `<div class="mr"><div class="ml">${MO[m]}</div><div class="bt2"><div class="bs b1" style="width:${d.co*sc}%"></div><div class="bs b2" style="width:${d.cu*sc}%"></div><div class="bs b3" style="width:${d.se*sc}%"></div></div><div class="mh">${t.toFixed(1)}</div></div>`;
-  }
-  document.getElementById('d-bars').innerHTML = bh || '<div class="empty">Sin vuelos 2026</div>';
-  document.getElementById('d-rec').innerHTML = [...DB.flights].reverse().slice(0, 6).map(fRow).join('');
-  const tot = co + cu + se, pct = t => tot > 0 ? ` (${((t/tot)*100).toFixed(0)}%)` : '';
-  const allT = DB.flights.length ? Math.max(...DB.flights.map(f => f.hf || 0)) : 0;
-  document.getElementById('d-sum').innerHTML = `
-    <div class="qr"><div class="ql">Total horas 2026</div><div class="qv">${tot.toFixed(1)} hrs</div></div>
-    <div class="qr"><div class="ql">COCO</div><div class="qv c1">${co.toFixed(1)} hrs${pct(co)}</div></div>
-    <div class="qr"><div class="ql">CUCO</div><div class="qv c2">${cu.toFixed(1)} hrs${pct(cu)}</div></div>
-    <div class="qr"><div class="ql">Charter/Shenshi</div><div class="qv c3">${se.toFixed(1)} hrs${pct(se)}</div></div>
-    <div class="qr"><div class="ql">Tach actual</div><div class="qv">${allT.toFixed(1)}</div></div>
-    <div class="qr"><div class="ql">Total vuelos</div><div class="qv">${DB.flights.length}</div></div>
-    <div class="qr"><div class="ql">Cargas de combustible</div><div class="qv">${DB.fuel.length}</div></div>`;
-}
-
-function fRow(f) {
-  const dc = f.r === 'COCO' ? 'c1' : f.r === 'CUCO' ? 'c2' : 'c3';
-  const bx = f.t==='STD' ? '<span class="bx s">STD</span>' : f.t==='FF' ? '<span class="bx f">FF</span>' : f.t==='MANTE' ? '<span class="bx m">MANTE</span>' : '<span class="bx p">Personal</span>';
-  const rv = (f.rv||0) > 0 ? `<span>$${f.rv.toLocaleString()}</span>` : '';
-  const pendTag = f.verified === false ? '<span class="pend-badge">⏳ PENDIENTE</span>' : '';
-  const editBtn = isAdmin() ? `<button class="edit-btn" onclick="openEdit(${f.id})">editar</button>` : '';
-  return `<div class="fi"><div class="fdot ${dc}"></div><div class="fm"><div class="fr">${f.rt||'—'} ${bx}${pendTag}</div><div class="fme"><span>${f.r}</span><span>${f.u||''}</span>${f.p?`<span>${f.p}</span>`:''}${rv}${editBtn}</div></div><div class="frt"><div class="fh">${f.h.toFixed(1)}<small>hr</small></div><div class="fdt">${f.d.slice(5)}</div></div></div>`;
-}
-
-// ─── PENDING ──────────────────────────────────────────────────────────────────
-function buildPending() {
-  const pends = DB.flights.filter(f => f.verified === false);
-  const sec = document.getElementById('pend-section');
-  if (!isAdmin() || pends.length === 0) { sec.style.display = 'none'; return; }
-  sec.style.display = 'block';
-  sec.innerHTML = `<div class="pend-section">
-    <div class="pend-hd"><span class="pend-ht">✋ Verificaciones pendientes</span><span class="pend-count">${pends.length}</span></div>
-    ${pends.map(f => `
-    <div class="pend-item">
-      <div>
-        <div class="pend-info"><b>${f.rt||'—'}</b> · ${f.r} · <span class="bx ${f.t==='FF'?'f':'s'}">${f.t}</span></div>
-        <div class="pend-meta">${f.d} · ${f.h.toFixed(1)}hr · ${f.logged_by||''}</div>
-      </div>
-      <div class="pend-actions">
-        <button class="ver-btn" onclick="verifyFlight(${f.id},'approve')">✓</button>
-        <button class="rej-btn" onclick="verifyFlight(${f.id},'reject')">✕</button>
-      </div>
-    </div>`).join('')}
-  </div>`;
-}
-
-async function verifyFlight(id, action) {
-  const f = DB.flights.find(x => x.id == id);
-  if (!f) return;
-  if (action === 'approve') { f.verified = true; f.verified_by = CURRENT_USER; }
-  else { f.t = 'PERSONAL'; f.rv = 0; f.verified = true; f.verified_by = CURRENT_USER; }
-  render(); buildPending();
-  await saveGH();
-}
-
-// ─── EDIT MODAL ───────────────────────────────────────────────────────────────
-let editId = null;
-function openEdit(id) {
-  if (!isAdmin()) return;
-  const f = DB.flights.find(x => x.id == id);
-  if (!f) return;
-  editId = id;
-  document.getElementById('edit-form-content').innerHTML = `
-    <div class="fs"><label class="fl">Fecha</label><input type="date" id="ed-d" value="${f.d}"></div>
-    <div class="fs"><label class="fl">Ruta</label><input type="text" id="ed-rt" value="${f.rt||''}" oninput="this.value=this.value.toUpperCase()"></div>
-    <div class="fs"><label class="fl">Responsable</label>
-      <select id="ed-r"><option ${f.r==='COCO'?'selected':''}>COCO</option><option ${f.r==='CUCO'?'selected':''}>CUCO</option><option ${f.r==='SENSHI'?'selected':''}>SENSHI</option></select></div>
-    <div class="fs"><label class="fl">Tipo</label>
-      <select id="ed-t">${['PERSONAL','STD','FF','MANTE'].map(t=>`<option ${f.t===t?'selected':''}>${t}</option>`).join('')}</select></div>
-    <div class="row2">
-      <div><label class="fl">HRM Ini</label><input type="number" id="ed-hi" value="${f.hi}" step="0.1" inputmode="decimal"></div>
-      <div><label class="fl">HRM Fin</label><input type="number" id="ed-hf" value="${f.hf}" step="0.1" inputmode="decimal"></div>
-    </div>
-    <div class="row2">
-      <div><label class="fl">Hrs Espera</label><input type="number" id="ed-eh" value="${f.eh||0}" step="0.5" inputmode="decimal"></div>
-      <div><label class="fl">Ingreso $</label><input type="number" id="ed-rv" value="${f.rv||0}" step="0.01" inputmode="decimal"></div>
-    </div>
-    <div class="fs"><label class="fl">Notas</label><input type="text" id="ed-no" value="${f.no||''}"></div>
-    <div style="display:flex;gap:10px;margin-top:4px">
-      <button class="btn" onclick="saveEdit()">Guardar</button>
-      <button class="btn" style="background:#8B1A1A" onclick="deleteFlight(${id})">Eliminar</button>
-    </div>`;
-  document.getElementById('edit-modal').style.display = 'flex';
-}
-function closeEdit() { document.getElementById('edit-modal').style.display = 'none'; editId = null; }
-
-async function saveEdit() {
-  const f = DB.flights.find(x => x.id == editId);
-  if (!f) return;
-  f.d = document.getElementById('ed-d').value;
-  f.rt = document.getElementById('ed-rt').value;
-  f.r = document.getElementById('ed-r').value;
-  f.t = document.getElementById('ed-t').value;
-  const hi = parseFloat(document.getElementById('ed-hi').value);
-  const hf = parseFloat(document.getElementById('ed-hf').value);
-  f.hi = hi; f.hf = hf; f.h = parseFloat((hf - hi).toFixed(1));
-  f.eh = parseFloat(document.getElementById('ed-eh').value) || 0;
-  f.rv = parseFloat(document.getElementById('ed-rv').value) || 0;
-  f.no = document.getElementById('ed-no').value;
-  f.verified = true; f.verified_by = CURRENT_USER;
-  closeEdit();
-  render(); buildPending(); buildVL('ALL');
-  await saveGH();
-}
-
-async function deleteFlight(id) {
-  if (!confirm('¿Eliminar este vuelo?')) return;
-  DB.flights = DB.flights.filter(x => x.id != id);
-  closeEdit();
-  render(); buildPending(); buildVL('ALL');
-  await saveGH();
-}
-
-// ─── FLIGHTS LIST ─────────────────────────────────────────────────────────────
-function buildVL(fil) {
-  let out = [...DB.flights].reverse();
-  if (fil === 'COCO') out = out.filter(f => f.r === 'COCO');
-  else if (fil === 'CUCO') out = out.filter(f => f.r === 'CUCO');
-  else if (fil === 'SENSHI') out = out.filter(f => f.r === 'SENSHI');
-  else if (['2026','2025','2024','2023'].includes(fil)) out = out.filter(f => f.d.startsWith(fil));
-  document.getElementById('vl-list').innerHTML = out.length
-    ? out.slice(0, 120).map(fRow).join('')
-    : '<div class="empty"><div class="big">✈️</div>Sin vuelos</div>';
-}
-function filtV(f, el) {
-  document.querySelectorAll('#flt-row .fp').forEach(p => p.classList.remove('on'));
-  el.classList.add('on'); buildVL(f);
-}
-
-// ─── FUEL LIST ────────────────────────────────────────────────────────────────
-function buildFuel() {
-  const out = [...DB.fuel].reverse();
-  if (!out.length) { document.getElementById('fuel-list').innerHTML = '<div class="empty"><div class="big">⛽</div>Sin registros</div>'; return; }
-  document.getElementById('fuel-list').innerHTML = out.slice(0, 80).map(f => {
-    const ants = [];
-    if ((f.ac||0)>0) ants.push(`COCO Q${f.ac.toLocaleString()}`);
-    if ((f.au||0)>0) ants.push(`CUCO Q${f.au.toLocaleString()}`);
-    if ((f.as||0)>0) ants.push(`SENSHI Q${f.as.toLocaleString()}`);
-    return `<div class="fue"><div><div class="fue-l">Q${f.m.toLocaleString()} — ${f.py}</div><div class="fue-s">${ants.length?ants.join(' · '):'Sin anticipo'}${f.no?' · '+f.no:''}</div></div><div class="fue-r"><div class="fue-m">Q${f.m.toLocaleString()}</div><div class="fue-d">${f.d.slice(5)}</div></div></div>`;
-  }).join('');
-}
-
-// ─── BILLING ─────────────────────────────────────────────────────────────────
-function initBil() {
-  const n = new Date(), y = n.getFullYear(), m = n.getMonth() + 1;
-  const pr = m === 1 ? `${y-1}-12` : `${y}-${String(m-1).padStart(2,'0')}`;
-  document.getElementById('b-from').value = pr;
-  document.getElementById('b-to').value = pr;
-}
-
-function calcBil() {
-  const from = document.getElementById('b-from').value;
-  const to = document.getElementById('b-to').value;
-  const tc = parseFloat(document.getElementById('b-tc').value) || 7.65;
-  if (!from || !to) return;
-  const fd = from + '-01', td = to + '-31';
-  const fls = DB.flights.filter(f => f.d >= fd && f.d <= td && f.verified !== false);
-  const fus = DB.fuel.filter(f => f.d >= fd && f.d <= td);
-  const rt = getRateFD(fd);
-  const hrs = {COCO:0,CUCO:0,SENSHI:0};
-  const sub = {COCO:{n:0,a:0},CUCO:{n:0,a:0},SENSHI:{n:0,a:0}};
-  const espHrs = {COCO:0,CUCO:0,SENSHI:0};
-  let charterRev = 0;
-  fls.forEach(f => {
-    const r = f.r; if (hrs[r] === undefined) return;
-    hrs[r] += f.h;
-    if (f.h > 0 && f.h < 1) { sub[r].n++; sub[r].a += f.h; }
-    espHrs[r] += (f.eh || 0);
-    if ((f.rv||0) > 0) charterRev += f.rv;
-  });
-  let tfuel = 0, acCO = 0, acCU = 0;
-  fus.forEach(f => { tfuel += f.m; acCO += (f.ac||0); acCU += (f.au||0); });
-  const th = hrs.COCO + hrs.CUCO + hrs.SENSHI;
-  const qph = th > 0 ? tfuel / th : 0;
-  const prCO = hrs.COCO * qph, prCU = hrs.CUCO * qph;
-  const bilH = r => hrs[r] - sub[r].a + sub[r].n;
-  const pilFee = r => bilH(r) * rt.pilot;
-  const ruAmt = r => (sub[r].n - sub[r].a) * rt.pilot;
-  const espAmt = r => espHrs[r] * rt.gw;
-  const resv = r => hrs[r] * rt.res;
-  const fromParts = from.split('-'), toParts = to.split('-');
-  const numMonths = (+toParts[0] - +fromParts[0]) * 12 + (+toParts[1] - +fromParts[1]) + 1;
-  const adminFee = rt.admin * numMonths;
-  const totFer = pilFee('COCO') + pilFee('CUCO') + pilFee('SENSHI') + espAmt('COCO') + espAmt('CUCO') + espAmt('SENSHI') + adminFee;
-  const fQ = v => `Q${Math.abs(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-  const fD = v => `$${Math.abs(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-  const sg = v => v < 0 ? 'neg' : '';
-  const periodLbl = from === to ? from : `${from} → ${to}`;
-  let h = `<div class="stitle">Período: ${periodLbl} · TC Q${tc}/USD · Piloto: $${rt.pilot}/hr · Admin: $${rt.admin}/mes</div>`;
-  h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">A — Horas</div></div><div class="bil-bd">
-    <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${hrs.COCO.toFixed(1)} hrs</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${hrs.CUCO.toFixed(1)} hrs</div></div>
-    <div class="bil-row"><div class="bil-lbl">Charter/Shenshi</div><div class="bil-val">${hrs.SENSHI.toFixed(1)} hrs</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>Total</b></div><div class="bil-val"><b>${th.toFixed(1)} hrs</b></div></div>
-  </div></div>`;
-  h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">B — Combustible</div></div><div class="bil-bd">
-    <div class="bil-row"><div class="bil-lbl">Total QTZ</div><div class="bil-val">${fQ(tfuel)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">QTZ/hr promedio</div><div class="bil-val">${fQ(qph)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">COCO — prop. ${hrs.COCO.toFixed(1)}hr</div><div class="bil-val">${fQ(prCO)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">COCO — anticipo</div><div class="bil-val">${fQ(acCO)}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>COCO neto</b></div><div class="bil-val ${sg(prCO-acCO)}"><b>${fQ(prCO-acCO)}</b></div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO — prop. ${hrs.CUCO.toFixed(1)}hr</div><div class="bil-val">${fQ(prCU)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO — anticipo</div><div class="bil-val">${fQ(acCU)}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>CUCO neto</b></div><div class="bil-val ${sg(prCU-acCU)}"><b>${fQ(prCU-acCU)}</b></div></div>
-  </div></div>`;
-  h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">C — Pilotaje Fernando ($${rt.pilot}/hr · Espera $${rt.gw}/hr)</div></div><div class="bil-bd">
-    ${['COCO','CUCO','SENSHI'].map(r => `
-    <div class="bil-row" style="border-top:${r!=='COCO'?'1px solid #E2E6EE':'none'};margin-top:${r!=='COCO'?'4px':'0'}">
-      <div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:10px;text-transform:uppercase;letter-spacing:.06em">${r}</div>
-      <div class="bil-val" style="font-size:10px;color:#8892A4">${bilH(r).toFixed(1)} hrs</div>
-    </div>
-    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee(r))}</div></div>
-    ${ruAmt(r)>0?`<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A">↳ Roundup (${sub[r].n} vuelo(s) &lt;1hr)</div><div class="bil-val pos">incl. +${fD(ruAmt(r))}</div></div>`:''}
-    ${espHrs[r]>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera (${espHrs[r].toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espAmt(r))}</div></div>`:''}`).join('')}
-    <div class="bil-row" style="border-top:2px solid #E2E6EE;margin-top:4px"><div class="bil-lbl">Admin fee (${numMonths} mes${numMonths>1?'es':''})</div><div class="bil-val">${fD(adminFee)}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>TOTAL FERNANDO</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
-  </div></div>`;
-  h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">D — Reserva ($${rt.res}/hr)</div></div><div class="bil-bd">
-    ${['COCO','CUCO','SENSHI'].map(r=>`<div class="bil-row"><div class="bil-lbl">${r}</div><div class="bil-val">${fD(resv(r))}</div></div>`).join('')}
-    <div class="bil-row"><div class="bil-lbl"><b>Total reserva</b></div><div class="bil-val"><b>${fD(resv('COCO')+resv('CUCO')+resv('SENSHI'))}</b></div></div>
-  </div></div>`;
-  const notes = [];
-  if (ruAmt('COCO')>0) notes.push(`COCO: +${fD(ruAmt('COCO'))} roundup (${sub.COCO.n} vuelo(s) <1hr)`);
-  if (ruAmt('CUCO')>0) notes.push(`CUCO: +${fD(ruAmt('CUCO'))} roundup (${sub.CUCO.n} vuelo(s) <1hr)`);
-  if (notes.length) h += `<div class="qb-note">📋 Nota QB:<br>${notes.join('<br>')}</div>`;
-  document.getElementById('bil-out').innerHTML = h;
-}
-
-// ─── FORM HELPERS ─────────────────────────────────────────────────────────────
-function fTab(t, el) {
-  document.querySelectorAll('[id^="form-"]').forEach(d => d.style.display = 'none');
-  document.getElementById('form-' + t).style.display = 'block';
-  el.closest('.sc').querySelectorAll('.sb').forEach(b => b.classList.remove('on'));
-  el.classList.add('on');
-}
-function seg(k, v, el) {
-  S[k] = v;
-  el.closest('.sc').querySelectorAll('.sb').forEach(b => b.classList.remove('on'));
-  el.classList.add('on');
-  if (k === 'fp') document.getElementById('ff-po').style.display = v === 'OTRO' ? 'block' : 'none';
-  if (k === 'fr' || k === 'ft') updUsu();
-}
-function tipo(v, el) {
-  S.ft = v;
-  document.querySelectorAll('.tc').forEach(c => c.classList.remove('on'));
-  el.classList.add('on');
-  document.getElementById('rev-sec').style.display = (v === 'STD' || v === 'FF') ? 'block' : 'none';
-  const noteEl = document.getElementById('fer-charter-note');
-  if (noteEl) noteEl.style.display = (!isAdmin() && (v === 'STD' || v === 'FF')) ? 'block' : 'none';
-  updUsu(); updRevH();
-}
-function updUsu() {
-  const sel = document.getElementById('ff-u'); if (!sel) return;
-  let opts = [];
-  if (S.ft === 'PERSONAL') opts = [S.fr === 'COCO' ? 'COCO' : S.fr === 'CUCO' ? 'CUCO' : 'SENSHI'];
-  else if (S.ft === 'MANTE') opts = ['MANTE','SENSHI'];
-  else if (S.fr === 'COCO') opts = ['ALQ COCO','ALQ COCO FF','ALQ HRS PIVARAL COCO','ALQ LICO','ALQ PREMISA','ALQ FER'];
-  else if (S.fr === 'CUCO') opts = ['ALQ CUCO','ALQ CUCO FF','CUCO HRS ADAN','ALQ LICO','ALQ PREMISA'];
-  else opts = ['ALQ COCO','ALQ CUCO','ALQ LICO','ALQ PREMISA','ALQ FER'];
-  sel.innerHTML = opts.map(o => `<option>${o}</option>`).join('');
-}
-function setFormDates() {
-  const d = new Date(), z = n => String(n).padStart(2, '0');
-  const ds = `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
-  ['ff-d','fu-d'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ds; });
-  // Pre-fill HRM start from last known tach
-  const lt = DB.flights.length ? Math.max(...DB.flights.map(f => f.hf || 0)) : 0;
-  const e = document.getElementById('ff-hi');
-  if (e && lt > 0) { e.value = lt.toFixed(1); e.placeholder = lt.toFixed(1); }
-}
-function calcH() {
-  const a = parseFloat(document.getElementById('ff-hi').value);
-  const b = parseFloat(document.getElementById('ff-hf').value);
-  const div = document.getElementById('hcalc');
-  if (!isNaN(a) && !isNaN(b) && b > a) {
-    const h = (b - a).toFixed(1);
-    const bil = parseFloat(h) < 1 ? '1.0 (roundup!)' : h;
-    div.textContent = `${h}hrs voladas · facturadas: ${bil}`;
-    div.style.display = 'block'; updRevH();
-  } else div.style.display = 'none';
-}
-function updRevH() {
-  const a = parseFloat(document.getElementById('ff-hi').value) || 0;
-  const b = parseFloat(document.getElementById('ff-hf').value) || 0;
-  const h = Math.max(0, b - a), rate = S.ft === 'FF' ? 650 : 750;
-  const el = document.getElementById('rev-hint');
-  if (el && h > 0) el.textContent = `Auto: ${h.toFixed(1)}hr × $${rate} = $${(h*rate).toFixed(2)}`;
-}
-
-// ─── SAVE FLIGHT ──────────────────────────────────────────────────────────────
-async function saveF() {
-  const d = document.getElementById('ff-d').value;
-  const hi = parseFloat(document.getElementById('ff-hi').value);
-  const hf = parseFloat(document.getElementById('ff-hf').value);
-  const rt_val = document.getElementById('ff-rt').value.toUpperCase().trim();
-  if (!d || !rt_val || isNaN(hi) || isNaN(hf) || hf <= hi) {
-    alert('Completa: Fecha, Ruta, HRM Inicio y HRM Fin'); return;
-  }
-  const h = parseFloat((hf - hi).toFixed(1));
-  const pi = S.fp === 'OTRO' ? document.getElementById('ff-po').value : S.fp;
-  const u = document.getElementById('ff-u').value;
-  const cb = parseFloat(document.getElementById('ff-cb').value) || 0;
-  const es = parseFloat(document.getElementById('ff-es').value) || 0;
-  const no = document.getElementById('ff-no').value;
-  const rate = S.ft === 'FF' ? 650 : S.ft === 'STD' ? 750 : 0;
-  const rv = document.getElementById('ff-rv').value
-    ? parseFloat(document.getElementById('ff-rv').value)
-    : (rate > 0 ? parseFloat((h * rate).toFixed(2)) : 0);
-  const nd = new Date(d + 'T12:00:00');
-  const per = nd.getFullYear() * 12 + (nd.getMonth() + 1);
-  const mid = Math.max(...DB.flights.map(f => f.id || 0), 0) + 1;
-  const needsVerify = !isAdmin() && (S.ft === 'STD' || S.ft === 'FF');
-  DB.flights.push({
-    id:mid, d, r:S.fr, u, rt:rt_val, p:pi, hi, hf, h, t:S.ft, rv, eh:es, no, per,
-    logged_by: CURRENT_USER,
-    verified: !needsVerify,
-    verified_by: needsVerify ? null : CURRENT_USER
-  });
-  if (!DB.meta) DB.meta = {};
-  DB.meta.last_flight_id = mid;
-  DB.meta.last_tach = hf;
-  if (cb > 0) {
-    const fid = Math.max(...DB.fuel.map(f => f.id || 0), 0) + 1;
-    DB.fuel.push({id:fid, d, py:S.fr, m:cb, ac:S.fr==='COCO'?cb:0, au:S.fr==='CUCO'?cb:0, as:S.fr==='SENSHI'?cb:0, no:''});
-  }
-  render();
-  const ok = await saveGH();
-  document.getElementById('ok-f').style.display = ok ? 'flex' : 'none';
-  document.getElementById('err-f').textContent = ok ? '' : 'Error guardando. Verifica conexión y token.';
-  document.getElementById('err-f').style.display = ok ? 'none' : 'block';
-  if (ok) setTimeout(() => document.getElementById('ok-f').style.display = 'none', 3000);
-  document.getElementById('ff-hf').value = '';
-  document.getElementById('ff-rt').value = '';
-  document.getElementById('ff-cb').value = '';
-  document.getElementById('ff-es').value = '0';
-  document.getElementById('ff-rv').value = '';
-  document.getElementById('ff-no').value = '';
-  document.getElementById('hcalc').style.display = 'none';
-  document.getElementById('ff-hi').value = hf.toFixed(1);
-}
-
-// ─── SAVE FUEL ────────────────────────────────────────────────────────────────
-async function saveFu() {
-  const d = document.getElementById('fu-d').value;
-  const m = parseFloat(document.getElementById('fu-m').value);
-  if (!d || isNaN(m) || m <= 0) { alert('Completa: Fecha y Monto'); return; }
-  const ac = parseFloat(document.getElementById('fu-ac').value) || 0;
-  const au = parseFloat(document.getElementById('fu-au').value) || 0;
-  const as_ = parseFloat(document.getElementById('fu-as').value) || 0;
-  const no = document.getElementById('fu-no').value;
-  const fid = Math.max(...DB.fuel.map(f => f.id || 0), 0) + 1;
-  DB.fuel.push({id:fid, d, py:S.fup, m, ac, au, as:as_, no});
-  if (!DB.meta) DB.meta = {};
-  DB.meta.last_fuel_id = fid;
-  const ok = await saveGH();
-  document.getElementById('ok-fu').style.display = ok ? 'flex' : 'none';
-  document.getElementById('err-fu').textContent = ok ? '' : 'Error guardando.';
-  document.getElementById('err-fu').style.display = ok ? 'none' : 'block';
-  if (ok) {
-    setTimeout(() => document.getElementById('ok-fu').style.display = 'none', 3000);
-    ['fu-m','fu-no'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
-    ['fu-ac','fu-au','fu-as'].forEach(id => { const e = document.getElementById(id); if (e) e.value = '0'; });
-  }
-}
-
-// ─── PASSWORD MANAGEMENT ─────────────────────────────────────────────────────
-function openPwModal() {
-  document.getElementById('pw-err').textContent = '';
-  document.getElementById('pw-ok').textContent = '';
-  document.getElementById('pw-old').value = '';
-  document.getElementById('pw-new').value = '';
-  document.getElementById('pw-confirm').value = '';
-  if (isAdmin()) {
-    document.getElementById('pw-admin-section').style.display = 'block';
-    document.getElementById('pw-user-section').style.display = 'none';
-    document.getElementById('pw-admin-old').value = '';
-    document.getElementById('pw-admin-new').value = '';
-    document.getElementById('pw-admin-confirm').value = '';
-    document.getElementById('pw-admin-err').textContent = '';
-    document.getElementById('pw-admin-ok').textContent = '';
-    const ti = document.getElementById('gh-token-input');
-    if (ti && TOKEN) ti.value = TOKEN;
-    document.getElementById('token-status').textContent = TOKEN
-      ? '✓ Token cargado (' + TOKEN.slice(0,8) + '...)'
-      : '⚠️ Sin token — la app no puede sincronizar datos';
-  } else {
-    document.getElementById('pw-user-section').style.display = 'block';
-    document.getElementById('pw-admin-section').style.display = 'none';
-    document.getElementById('pw-sub-text').textContent = 'Cambia tu contraseña — usuario: ' + CURRENT_USER;
-  }
-  document.getElementById('pw-modal').style.display = 'flex';
-}
-function closePwModal() { document.getElementById('pw-modal').style.display = 'none'; }
-document.addEventListener('click', e => { if (e.target === document.getElementById('pw-modal')) closePwModal(); });
-
-async function savePw() {
-  const op = document.getElementById('pw-old').value;
-  const np = document.getElementById('pw-new').value.trim();
-  const cp = document.getElementById('pw-confirm').value.trim();
-  const err = document.getElementById('pw-err'), ok = document.getElementById('pw-ok');
-  err.textContent = ''; ok.textContent = '';
-  if (op !== USERS[CURRENT_USER].pass) { err.textContent = 'Contraseña actual incorrecta.'; return; }
-  if (np.length < 4) { err.textContent = 'Mínimo 4 caracteres.'; return; }
-  if (np !== cp) { err.textContent = 'Las contraseñas no coinciden.'; return; }
-  ok.textContent = 'Guardando…';
-  const res = await updatePwInDB(CURRENT_USER, np);
-  if (res) { ok.textContent = '✓ Contraseña actualizada.'; setTimeout(closePwModal, 2000); }
-  else { err.textContent = 'Error guardando. Intenta de nuevo.'; ok.textContent = ''; }
-}
-
-async function saveAdminPw() {
-  const op = document.getElementById('pw-admin-old').value;
-  const np = document.getElementById('pw-admin-new').value.trim();
-  const cp = document.getElementById('pw-admin-confirm').value.trim();
-  const err = document.getElementById('pw-admin-err'), ok = document.getElementById('pw-admin-ok');
-  err.textContent = ''; ok.textContent = '';
-  if (op !== USERS['CUCO'].pass) { err.textContent = 'Contraseña de CUCO incorrecta.'; return; }
-  if (np === '') { ok.textContent = 'Sin cambios en tu contraseña.'; return; }
-  if (np.length < 4) { err.textContent = 'Mínimo 4 caracteres.'; return; }
-  if (np !== cp) { err.textContent = 'Las contraseñas no coinciden.'; return; }
-  ok.textContent = 'Guardando…';
-  const res = await updatePwInDB('CUCO', np);
-  if (res) { ok.textContent = '✓ Contraseña de CUCO actualizada.'; setTimeout(() => ok.textContent = '', 3000); }
-  else { err.textContent = 'Error guardando.'; ok.textContent = ''; }
-}
-
-async function resetUserPw(user) {
-  const defPw = user.toLowerCase();
-  if (!confirm('¿Resetear contraseña de ' + user + ' a "' + defPw + '"?')) return;
-  const ap = document.getElementById('pw-admin-old').value;
-  if (ap !== USERS['CUCO'].pass) { document.getElementById('pw-admin-err').textContent = 'Ingresa tu contraseña actual primero.'; return; }
-  const res = await updatePwInDB(user, defPw);
-  if (res) { document.getElementById('pw-admin-ok').textContent = '✓ ' + user + ' reseteado a "' + defPw + '"'; setTimeout(() => document.getElementById('pw-admin-ok').textContent = '', 4000); }
-  else { document.getElementById('pw-admin-err').textContent = 'Error guardando.'; }
-}
-
-async function updatePwInDB(user, newPw) {
-  if (!DB.passwords) DB.passwords = {};
-  const old = DB.passwords[user];
-  DB.passwords[user] = newPw;
-  const ok = await saveGH();
-  if (ok) { USERS[user].pass = newPw; }
-  else { DB.passwords[user] = old; }
-  return ok;
-}
-
-// ─── TOKEN MANAGEMENT ────────────────────────────────────────────────────────
-async function saveToken() {
-  const t = document.getElementById('gh-token-input').value.trim();
-  if (!t) { document.getElementById('token-status').textContent = 'Ingresa un token válido'; return; }
-  TOKEN = t;
-  localStorage.setItem('tgshi_token', t);
-  document.getElementById('token-status').textContent = 'Probando token…';
-  // Test it by loading data
-  setDot('sync');
-  const ok = await loadGH();
-  if (ok) {
-    document.getElementById('token-status').textContent = '✓ Token válido y datos cargados';
-    render(); buildPending();
-    document.getElementById('token-banner-section').innerHTML = '';
-  } else {
-    document.getElementById('token-status').textContent = '❌ Token inválido o sin permisos de escritura en el repo';
-  }
-}
-
-async function testToken() {
-  const t = document.getElementById('gh-token-input').value.trim() || TOKEN;
-  if (!t) { document.getElementById('token-status').textContent = 'Sin token para probar'; return; }
-  document.getElementById('token-status').textContent = 'Probando…';
-  try {
-    const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data.json`, {
-      headers: { Authorization: 'token ' + t, Accept: 'application/vnd.github.v3+json' }
-    });
-    const j = await r.json();
-    if (r.ok) {
-      document.getElementById('token-status').textContent = `✓ Token válido — SHA: ${j.sha.slice(0,8)}`;
-    } else {
-      document.getElementById('token-status').textContent = `❌ Fallo ${r.status}: ${j.message}`;
-    }
-  } catch (e) {
-    document.getElementById('token-status').textContent = '❌ Error de red: ' + e.message;
-  }
-}
-
-function logout() {
-  sessionStorage.removeItem('tgshi_user');
-  sessionStorage.removeItem('tgshi_role');
-  location.reload();
-}
-
-// ─── BOOT ────────────────────────────────────────────────────────────────────
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
-}
-</script>
 </body>
 </html>
