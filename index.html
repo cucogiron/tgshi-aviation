@@ -399,8 +399,11 @@ async function loadGH(){
     }
     setDot('ok');
   }catch(e){
-    console.error('loadGH failed:',e.message);
+    console.error('loadGH failed:',e.message||e);
     setDot('err');
+    // Show visible error on dashboard
+    const bars = document.getElementById('d-bars');
+    if(bars) bars.innerHTML = '<div style="padding:16px;color:#C0392B;font-size:12px;text-align:center">⚠️ Error cargando datos: '+( e.message||'sin conexión')+'<br><br><button onclick="loadGH().then(()=>{render();buildPending()})" style="padding:8px 16px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">🔄 Reintentar</button></div>';
   }
 }
 
