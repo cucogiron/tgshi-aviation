@@ -387,28 +387,43 @@ if(document.readyState==='loading'){
 async function loadGH(){
   setDot('sync');
   try{
-    // Fetch data.json without auth - public repo readable by anyone
-    // Token is stored inside data.json (DB.token) for writes
-    const headers={Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'};
-    if(TOKEN) headers['Authorization']='token '+TOKEN;
-    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json?t='+Date.now(),{headers});
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const j=await r.json(); SHA=j.sha;
-    const b64=j.content.replace(/[\r\n ]/g,'');
-    DB=JSON.parse(atob(b64));
-    // Bootstrap token from DB.token (set once by CUCO, shared to all)
+    // Try API with token first, fallback to raw URL
+    let j, SHA_new;
+    if(TOKEN){
+      const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json?t='+Date.now(),
+        {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
+      if(r.ok){
+        j=await r.json(); SHA_new=j.sha;
+        const b64=j.content.replace(/[\r\n ]/g,'');
+        DB=JSON.parse(atob(b64));
+      } else {
+        throw new Error('API '+r.status);
+      }
+    } else {
+      // No token yet - fetch raw (public repo, no auth needed)
+      const raw=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/data.json?t='+Date.now(),
+        {'Cache-Control':'no-cache'});
+      if(!raw.ok) throw new Error('RAW '+raw.status);
+      DB=await raw.json();
+      SHA_new=''; // Will fetch SHA on first save
+    }
+    if(SHA_new) SHA=SHA_new;
+    // Bootstrap token from DB.token
     if(DB.token){
       TOKEN=DB.token;
       localStorage.setItem('tgshi_token', TOKEN);
     }
-    // Sync passwords from data.json into USERS
+    // Sync passwords
     if(DB.passwords){
       Object.keys(DB.passwords).forEach(u=>{if(USERS[u])USERS[u].pass=DB.passwords[u];});
     }
     setDot('ok');
   }catch(e){
-    console.error('loadGH failed:',e);
+    console.error('loadGH failed:',e.message);
     setDot('err');
+    // Show error on dashboard
+    const el=document.getElementById('tachVal');
+    if(el) el.title='Error: '+e.message;
   }
 }
 
