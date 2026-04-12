@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="TG-SHI">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TG-SHI · Shenshi</title>
+<title>TG-SHI · Shenshi v4</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{--nv:#1B2A4A;--md:#2E4272;--sk:#4A9EE8;--gr:#1A6B3A;--am:#B8600A;--rd:#8B1A1A;--bg:#F1F3F7;--bd:#E2E6EE;--wh:#fff;--tx:#1A1F2E;--mu:#8892A4}
@@ -180,7 +180,7 @@ input:focus,select:focus{border-color:var(--sk)}
 
 <div class="top">
   <div class="top-r">
-    <div><h1>TG-SHI</h1><div class="sub">Shenshi Aviation</div></div>
+    <div><h1>TG-SHI</h1><div class="sub">Shenshi Aviation · v4</div></div>
     <div class="tach"><div><div class="tach-lb">TACH</div><span id="tachVal">916.0</span></div><div class="dot" id="dot"></div></div>
   <button class="settings-btn" id="settings-btn" onclick="openPwModal()">⚙️</button>
 </div>
@@ -420,7 +420,12 @@ async function saveGH(){
     if(SHA)body.sha=SHA;
     const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
       {method:'PUT',headers:{Authorization:'token '+TOKEN,'Content-Type':'application/json',Accept:'application/vnd.github.v3+json'},body:JSON.stringify(body)});
-    if(!r.ok)throw new Error(await r.text());
+    if(!r.ok){
+      const errBody=await r.text();
+      console.error('GitHub PUT failed:',r.status,errBody);
+      window._lastSaveError=r.status+' '+errBody.slice(0,200);
+      throw new Error(r.status+': '+errBody.slice(0,100));
+    }
     const j=await r.json(); SHA=j.content.sha;
     setDot('ok'); return true;
   }catch(e){
