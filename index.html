@@ -290,7 +290,8 @@ textarea{resize:vertical;min-height:60px}
   <button class="bt" onclick="nav('sched',1)"><div class="bt-i">📅</div><div class="bt-l">Agenda</div></button>
   <button class="bt" onclick="nav('vl',2)"><div class="bt-i">✈️</div><div class="bt-l">Vuelos</div></button>
   <button class="bt" onclick="nav('fuel',3)"><div class="bt-i">⛽</div><div class="bt-l">Comb.</div></button>
-  <button class="bt" onclick="nav('new',4)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
+  <button class="bt" onclick="nav('bil',4)"><div class="bt-i">🧾</div><div class="bt-l">Billing</div></button>
+  <button class="bt" onclick="nav('new',5)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
 </div>
 
 <!-- ===== DASHBOARD ===== -->
@@ -689,6 +690,7 @@ function nav(id,i){
   document.querySelectorAll('.bt')[i].classList.add('on');
   if(id==='vl') buildVL('ALL');
   if(id==='fuel') buildFuel();
+  if(id==='bil'){ initBil(); setTimeout(calcBil,100); }
   if(id==='sched') buildCalendar();
   if(id==='new' && isAdmin()) buildAdminPanel();
 }
