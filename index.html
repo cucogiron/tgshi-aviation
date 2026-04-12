@@ -391,8 +391,8 @@ if(document.readyState==='loading'){
 async function loadGH(){
   setDot('sync');
   try{
-    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json?t='+Date.now()+'&access_token='+TOKEN,
-      {headers:{Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
+    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json?t='+Date.now(),
+      {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
     if(!r.ok)throw new Error();
     const j=await r.json(); SHA=j.sha;
     const b64=j.content.replace(/[\r\n ]/g,'');
@@ -406,8 +406,8 @@ async function saveGH(){
   try{
     // If we don't have the SHA yet, fetch it first
     if(!SHA){
-      const sr=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json?access_token='+TOKEN,
-        {headers:{Accept:'application/vnd.github.v3+json'}});
+      const sr=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
+        {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json'}});
       if(sr.ok){const sj=await sr.json();SHA=sj.sha;}
     }
     // Robust base64 encoding for large JSON
@@ -424,8 +424,8 @@ async function saveGH(){
     }
     const body={message:'update '+new Date().toISOString().slice(0,10),content};
     if(SHA)body.sha=SHA;
-    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json?access_token='+TOKEN,
-      {method:'PUT',headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json',Accept:'application/vnd.github.v3+json'},body:JSON.stringify(body)});
+    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
+      {method:'PUT',headers:{Authorization:'token '+TOKEN,'Content-Type':'application/json',Accept:'application/vnd.github.v3+json'},body:JSON.stringify(body)});
     if(!r.ok){
       const errBody=await r.text();
       console.error('GitHub PUT failed:',r.status,errBody);
