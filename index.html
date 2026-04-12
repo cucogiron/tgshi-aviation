@@ -407,6 +407,12 @@ async function loadGH(){
 async function saveGH(){
   setDot('sync');
   try{
+    // If we don't have the SHA yet, fetch it first
+    if(!SHA){
+      const sr=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
+        {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json'}});
+      if(sr.ok){const sj=await sr.json();SHA=sj.sha;}
+    }
     const content=btoa(unescape(encodeURIComponent(JSON.stringify(DB))));
     const body={message:'update '+new Date().toISOString().slice(0,10),content};
     if(SHA)body.sha=SHA;
@@ -415,7 +421,7 @@ async function saveGH(){
     if(!r.ok)throw new Error(await r.text());
     const j=await r.json(); SHA=j.content.sha;
     setDot('ok'); return true;
-  }catch(e){setDot('err');return false;}
+  }catch(e){console.error('saveGH error:',e);setDot('err');return false;}
 }
 
 function setDot(s){const d=document.getElementById('dot');d.className='dot'+(s==='sync'?' sync':s==='err'?' err':'');}
