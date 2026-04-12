@@ -352,14 +352,9 @@ let S={fp:'FERNANDO',fr:'COCO',ft:'PERSONAL',fup:'COCO'};
 window.onload_main=async()=>{
   setDates(); updUsu();
   setDot('sync');
-  if(!TOKEN){
-    setDot('err');
-    render(); buildPending();
-    console.warn('No GitHub token set.');
-  } else {
-    await loadGH();
-    render(); buildPending();
-  }
+  // Always load from GitHub - raw URL works without token
+  await loadGH();
+  render(); buildPending();
 };
 
 function initApp(){
