@@ -1370,41 +1370,103 @@ function initBil(){
   document.getElementById('b-from').value=pr;document.getElementById('b-to').value=pr;
 }
 function calcBil(){
-  const from=document.getElementById('b-from').value,to=document.getElementById('b-to').value;
+  const from=document.getElementById('b-from').value;
+  const to=document.getElementById('b-to').value;
   const tc=parseFloat(document.getElementById('b-tc').value)||7.65;
   if(!from||!to)return;
   const fd=from+'-01',td=to+'-31';
   const fls=DB.flights.filter(f=>f.d>=fd&&f.d<=td&&(f.verified!==false||(f.t!=='STD'&&f.t!=='FF')));
   const fus=DB.fuel.filter(f=>f.d>=fd&&f.d<=td);
   const rt=getRateFD(fd);
-  const hrs={COCO:0,CUCO:0,SENSHI:0},sub={COCO:{n:0,a:0},CUCO:{n:0,a:0},SENSHI:{n:0,a:0}};
-  const esp={COCO:0,CUCO:0,SENSHI:0},espH={COCO:0,CUCO:0,SENSHI:0};
-  let chartR=0;
-  fls.forEach(f=>{const r=f.r;if(hrs[r]===undefined)return;hrs[r]+=f.h;if(f.h>0&&f.h<1){sub[r].n++;sub[r].a+=f.h;}espH[r]+=(f.eh||0);esp[r]+=(f.eh||0)*rt.gw;if((f.rv||0)>0)chartR+=f.rv;});
-  let tf=0,acCO=0,acCU=0;fus.forEach(f=>{tf+=f.m;acCO+=(f.ac||0);acCU+=(f.au||0);});
-  const th=hrs.COCO+hrs.CUCO+hrs.SENSHI,qph=th>0?tf/th:0;
+  const hrs={COCO:0,CUCO:0,SENSHI:0};
+  const sub={COCO:{n:0,a:0},CUCO:{n:0,a:0},SENSHI:{n:0,a:0}};
+  const esp={COCO:0,CUCO:0,SENSHI:0};
+  const espHrs={COCO:0,CUCO:0,SENSHI:0};
+  let charterRev=0;
+  fls.forEach(f=>{
+    const r=f.r;if(hrs[r]===undefined)return;
+    hrs[r]+=f.h;
+    if(f.h>0&&f.h<1){sub[r].n++;sub[r].a+=f.h;}
+    if(espHrs[r]!==undefined){espHrs[r]+=(f.eh||0);esp[r]+=(f.eh||0)*rt.gw;}
+    if((f.rv||0)>0)charterRev+=f.rv;
+  });
+  let tfuel=0,acCO=0,acCU=0;
+  fus.forEach(f=>{tfuel+=f.m;acCO+=(f.ac||0);acCU+=(f.au||0);});
+  const th=hrs.COCO+hrs.CUCO+hrs.SENSHI;
+  const qph=th>0?tfuel/th:0;
   const prCO=hrs.COCO*qph,prCU=hrs.CUCO*qph;
   const bilH=r=>hrs[r]-sub[r].a+sub[r].n;
   const pilFee=r=>bilH(r)*rt.pilot;
+  const ruAmt=r=>(sub[r].n-sub[r].a)*rt.pilot;
   const resv=r=>hrs[r]*rt.res;
-  const fp=from.split('-'),tp=to.split('-');
-  const nm=(+tp[0]-+fp[0])*12+(+tp[1]-+fp[1])+1;
-  const admin=rt.admin*nm;
-  const totF=pilFee('COCO')+pilFee('CUCO')+pilFee('SENSHI')+esp.COCO+esp.CUCO+esp.SENSHI+admin;
+  const fromParts=from.split('-'),toParts=to.split('-');
+  const numMonths=(+toParts[0]-+fromParts[0])*12+(+toParts[1]-+fromParts[1])+1;
+  const adminFee=rt.admin*numMonths;
+  const totFer=pilFee('COCO')+pilFee('CUCO')+pilFee('SENSHI')+esp.COCO+esp.CUCO+esp.SENSHI+adminFee;
   const fQ=v=>`Q${Math.abs(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
   const fD=v=>`$${Math.abs(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-  document.getElementById('bil-out').innerHTML=`
-    <div class="bil-sec"><div class="bil-hd"><div class="bil-ht">Resumen ${from===to?from:from+' → '+to}</div></div><div class="bil-bd">
-      <div class="bil-row"><div class="bil-lbl">Total horas</div><div class="bil-val">${th.toFixed(1)} hrs</div></div>
-      <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${hrs.COCO.toFixed(1)}</div></div>
-      <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${hrs.CUCO.toFixed(1)}</div></div>
-      <div class="bil-row"><div class="bil-lbl">Charter</div><div class="bil-val">${hrs.SENSHI.toFixed(1)}</div></div>
-      <div class="bil-row"><div class="bil-lbl">Combustible total</div><div class="bil-val">${fQ(tf)}</div></div>
-      <div class="bil-row"><div class="bil-lbl">COCO comb. neto</div><div class="bil-val">${fQ(prCO-acCO)}</div></div>
-      <div class="bil-row"><div class="bil-lbl">CUCO comb. neto</div><div class="bil-val">${fQ(prCU-acCU)}</div></div>
-      <div class="bil-row"><div class="bil-lbl"><b>Total Fernando</b></div><div class="bil-val"><b>${fD(totF)}</b></div></div>
-      <div class="bil-row"><div class="bil-lbl">Charter revenue</div><div class="bil-val">${fD(chartR)}</div></div>
-    </div></div>`;
+  const sg=v=>v<0?'neg':'';
+  const periodLbl=from===to?from:`${from} → ${to}`;
+  const ruCO=ruAmt('COCO'),ruCU=ruAmt('CUCO');
+  const espCO=esp.COCO,espCU=esp.CUCO,espSE=esp.SENSHI;
+  let h=`<div class="stitle">Período: ${periodLbl} · TC Q${tc}/USD · Piloto: $${rt.pilot}/hr · Admin: $${rt.admin}/mes</div>`;
+  // A — Hours
+  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">A — Horas</div></div><div class="bil-bd">
+    <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${hrs.COCO.toFixed(1)} hrs</div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${hrs.CUCO.toFixed(1)} hrs</div></div>
+    <div class="bil-row"><div class="bil-lbl">Charter/Shenshi</div><div class="bil-val">${hrs.SENSHI.toFixed(1)} hrs</div></div>
+    <div class="bil-row"><div class="bil-lbl"><b>Total</b></div><div class="bil-val"><b>${th.toFixed(1)} hrs</b></div></div>
+  </div></div>`;
+  // B — Fuel
+  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">B — Combustible</div></div><div class="bil-bd">
+    <div class="bil-row"><div class="bil-lbl">Total QTZ</div><div class="bil-val">${fQ(tfuel)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">QTZ/hr promedio</div><div class="bil-val">${fQ(qph)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">COCO — prop. ${hrs.COCO.toFixed(1)}hr</div><div class="bil-val">${fQ(prCO)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">COCO — anticipo ya pagado</div><div class="bil-val">${fQ(acCO)}</div></div>
+    <div class="bil-row"><div class="bil-lbl"><b>COCO neto a cobrar</b></div><div class="bil-val ${sg(prCO-acCO)}"><b>${fQ(prCO-acCO)}</b></div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO — prop. ${hrs.CUCO.toFixed(1)}hr</div><div class="bil-val">${fQ(prCU)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO — anticipo ya pagado</div><div class="bil-val">${fQ(acCU)}</div></div>
+    <div class="bil-row"><div class="bil-lbl"><b>CUCO neto a cobrar</b></div><div class="bil-val ${sg(prCU-acCU)}"><b>${fQ(prCU-acCU)}</b></div></div>
+  </div></div>`;
+  // C — Pilotaje Fernando
+  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">C — Pilotaje Fernando ($${rt.pilot}/hr · Espera $${rt.gw}/hr)</div></div><div class="bil-bd">
+    <div class="bil-row"><div class="bil-lbl" style="font-weight:600;color:var(--mu);font-size:9px;text-transform:uppercase;letter-spacing:.06em">COCO</div><div class="bil-val" style="font-size:9px;color:var(--mu)">${bilH('COCO').toFixed(1)} hrs fact.</div></div>
+    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('COCO'))}</div></div>
+    ${ruCO>0?`<div class="bil-row"><div class="bil-lbl" style="color:var(--rd)">↳ Roundup (${sub.COCO.n} vuelo(s) &lt;1hr)</div><div class="bil-val pos">incl. +${fD(ruCO)}</div></div>`:''}
+    ${espHrs.COCO>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.COCO.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espCO)}</div></div>`:''}
+    <div class="bil-row" style="border-top:1px solid var(--bd);margin-top:2px"><div class="bil-lbl" style="font-weight:600;color:var(--mu);font-size:9px;text-transform:uppercase;letter-spacing:.06em">CUCO</div><div class="bil-val" style="font-size:9px;color:var(--mu)">${bilH('CUCO').toFixed(1)} hrs fact.</div></div>
+    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('CUCO'))}</div></div>
+    ${ruCU>0?`<div class="bil-row"><div class="bil-lbl" style="color:var(--rd)">↳ Roundup (${sub.CUCO.n} vuelo(s) &lt;1hr)</div><div class="bil-val pos">incl. +${fD(ruCU)}</div></div>`:''}
+    ${espHrs.CUCO>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.CUCO.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espCU)}</div></div>`:''}
+    <div class="bil-row" style="border-top:1px solid var(--bd);margin-top:2px"><div class="bil-lbl" style="font-weight:600;color:var(--mu);font-size:9px;text-transform:uppercase;letter-spacing:.06em">SHENSHI</div><div class="bil-val" style="font-size:9px;color:var(--mu)">${bilH('SENSHI').toFixed(1)} hrs</div></div>
+    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('SENSHI'))}</div></div>
+    ${espHrs.SENSHI>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.SENSHI.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espSE)}</div></div>`:''}
+    <div class="bil-row" style="border-top:2px solid var(--bd);margin-top:4px"><div class="bil-lbl">Admin fee Fernando (${numMonths} mes${numMonths>1?'es':''})</div><div class="bil-val">${fD(adminFee)}</div></div>
+    <div class="bil-row"><div class="bil-lbl"><b>TOTAL A PAGAR FERNANDO</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
+  </div></div>`;
+  // D — Reserva
+  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">D — Reserva ($${rt.res}/hr)</div></div><div class="bil-bd">
+    <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${fD(resv('COCO'))}</div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${fD(resv('CUCO'))}</div></div>
+    <div class="bil-row"><div class="bil-lbl">Shenshi</div><div class="bil-val">${fD(resv('SENSHI'))}</div></div>
+    <div class="bil-row"><div class="bil-lbl"><b>Total reserva</b></div><div class="bil-val"><b>${fD(resv('COCO')+resv('CUCO')+resv('SENSHI'))}</b></div></div>
+  </div></div>`;
+  // F — QuickBooks Summary
+  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">F — QuickBooks Summary</div></div><div class="bil-bd">
+    <div class="bil-row"><div class="bil-lbl">COCO — Comb. neto (QTZ)</div><div class="bil-val ${sg(prCO-acCO)}">${fQ(prCO-acCO)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">COCO — Pilotaje${espCO>0?' + espera':''}</div><div class="bil-val">${fD(pilFee('COCO')+espCO)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">COCO — Reserva mante</div><div class="bil-val">${fD(resv('COCO'))}</div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO — Comb. neto (QTZ)</div><div class="bil-val ${sg(prCU-acCU)}">${fQ(prCU-acCU)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO — Pilotaje${espCU>0?' + espera':''}</div><div class="bil-val">${fD(pilFee('CUCO')+espCU)}</div></div>
+    <div class="bil-row"><div class="bil-lbl">CUCO — Reserva mante</div><div class="bil-val">${fD(resv('CUCO'))}</div></div>
+    <div class="bil-row"><div class="bil-lbl">Shenshi — Charter</div><div class="bil-val">${fD(charterRev)}</div></div>
+    <div class="bil-row"><div class="bil-lbl"><b>Total Fernando</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
+  </div></div>`;
+  const notes=[];
+  if(ruCO>0)notes.push(`COCO: Agregar ${fD(ruCO)} roundup (${sub.COCO.n} vuelo(s) &lt;1hr → 1hr)`);
+  if(ruCU>0)notes.push(`CUCO: Agregar ${fD(ruCU)} roundup (${sub.CUCO.n} vuelo(s) &lt;1hr → 1hr)`);
+  if(notes.length)h+=`<div class="qb-note">📋 Nota QB:<br>${notes.join('<br>')}</div>`;
+  document.getElementById('bil-out').innerHTML=h;
 }
 
 </script>
