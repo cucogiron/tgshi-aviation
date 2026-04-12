@@ -144,6 +144,28 @@ input:focus,select:focus{border-color:var(--sk)}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:16px}
 .modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:#8892A4}
 
+
+.pw-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:flex-end;justify-content:center}
+.pw-box{background:#fff;border-radius:20px 20px 0 0;padding:28px 24px 40px;width:100%;max-width:480px}
+.pw-title{font-size:17px;font-weight:700;margin-bottom:4px}
+.pw-sub{font-size:12px;color:#8892A4;margin-bottom:20px}
+.pw-field{margin-bottom:14px}
+.pw-field label{display:block;font-size:10px;font-weight:700;color:#8892A4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.pw-field input{width:100%;padding:12px 14px;border:1.5px solid #E2E6EE;border-radius:10px;font-size:15px;font-family:inherit;outline:none}
+.pw-field input:focus{border-color:#4A9EE8}
+.pw-err{font-size:12px;color:#C0392B;margin-bottom:12px;min-height:16px}
+.pw-ok{font-size:12px;color:#1A6B3A;margin-bottom:12px;min-height:16px;font-weight:600}
+.pw-btns{display:flex;gap:10px}
+.pw-save{flex:1;padding:13px;background:#1B2A4A;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.pw-cancel{padding:13px 18px;background:#F0F2F6;color:#1A1F2E;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.pw-reset-section{margin-top:20px;padding-top:16px;border-top:1px solid #F0F2F6}
+.pw-reset-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8892A4;margin-bottom:10px}
+.pw-user-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F5F6F8}
+.pw-user-row:last-child{border:none}
+.pw-user-name{font-size:13px;font-weight:600}
+.pw-reset-btn{font-size:11px;font-weight:700;color:#8B1A1A;background:none;border:1px solid #8B1A1A;border-radius:6px;padding:3px 9px;cursor:pointer}
+.settings-btn{position:fixed;top:58px;right:16px;z-index:98;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:5px 10px;font-size:11px;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;display:none}
+
 </style>
 </head>
 <body>
@@ -171,6 +193,7 @@ input:focus,select:focus{border-color:var(--sk)}
   </div>
 </div>
 
+<button class="settings-btn" id="settings-btn" onclick="openPwModal()">⚙️ Cuenta</button>
 <div id="edit-modal" class="modal-overlay" style="display:none">
   <div class="modal-box">
     <button class="modal-close" onclick="closeEdit()">✕</button>
@@ -355,6 +378,7 @@ window.onload=()=>{
     const badge=CURRENT_ROLE==='admin'?'badge-admin':CURRENT_ROLE==='pilot'?'badge-pilot':'badge-viewer';
     document.querySelector('.tach').insertAdjacentHTML('beforebegin',
       `<span class="user-badge ${badge}">${USERS[CURRENT_USER].icon} ${CURRENT_USER}</span>`);
+    document.getElementById('settings-btn').style.display='block';
     window.onload_main();
   }
   // else: login screen stays visible
@@ -437,6 +461,7 @@ function doLogin(){
   const badge=CURRENT_ROLE==='admin'?'badge-admin':CURRENT_ROLE==='pilot'?'badge-pilot':'badge-viewer';
   document.querySelector('.tach').insertAdjacentHTML('beforebegin',
     `<span class="user-badge ${badge}">${USERS[CURRENT_USER].icon} ${CURRENT_USER}</span>`);
+  document.getElementById('settings-btn').style.display='block';
   window.onload_main();
 }
 
@@ -827,6 +852,148 @@ async function saveFu(){
   if(ok){setTimeout(()=>document.getElementById('ok-fu').style.display='none',3000);
     ['fu-m','fu-ac','fu-au','fu-as','fu-no'].forEach(id=>{const e=document.getElementById(id);if(e){e.value=id.includes('fu-m')||id.includes('fu-no')?'':'0';}});}
 }
+
+// PASSWORD MANAGEMENT
+function openPwModal(){
+  document.getElementById('pw-err').textContent='';
+  document.getElementById('pw-ok').textContent='';
+  document.getElementById('pw-old').value='';
+  document.getElementById('pw-new').value='';
+  document.getElementById('pw-confirm').value='';
+  if(isAdmin()){
+    document.getElementById('pw-admin-section').style.display='block';
+    document.getElementById('pw-user-section').style.display='none';
+    document.getElementById('pw-admin-old').value='';
+    document.getElementById('pw-admin-new').value='';
+    document.getElementById('pw-admin-confirm').value='';
+    document.getElementById('pw-admin-err').textContent='';
+    document.getElementById('pw-admin-ok').textContent='';
+  } else {
+    document.getElementById('pw-user-section').style.display='block';
+    document.getElementById('pw-admin-section').style.display='none';
+    document.getElementById('pw-sub-text').textContent='Cambia tu contraseña — usuario: '+CURRENT_USER;
+  }
+  document.getElementById('pw-modal').style.display='flex';
+}
+
+function closePwModal(){
+  document.getElementById('pw-modal').style.display='none';
+}
+
+document.addEventListener('click',e=>{if(e.target===document.getElementById('pw-modal'))closePwModal();});
+
+async function savePw(){
+  const op=document.getElementById('pw-old').value;
+  const np=document.getElementById('pw-new').value.trim();
+  const cp=document.getElementById('pw-confirm').value.trim();
+  const err=document.getElementById('pw-err');
+  const ok=document.getElementById('pw-ok');
+  err.textContent='';ok.textContent='';
+  if(op!==USERS[CURRENT_USER].pass){err.textContent='Contraseña actual incorrecta.';return;}
+  if(np.length<4){err.textContent='Mínimo 4 caracteres.';return;}
+  if(np!==cp){err.textContent='Las contraseñas no coinciden.';return;}
+  ok.textContent='Guardando…';
+  const res=await updatePwInFile(CURRENT_USER,np);
+  if(res){USERS[CURRENT_USER].pass=np;ok.textContent='✓ Contraseña actualizada.';err.textContent='';setTimeout(closePwModal,2000);}
+  else{err.textContent='Error guardando en GitHub.';ok.textContent='';}
+}
+
+async function saveAdminPw(){
+  const op=document.getElementById('pw-admin-old').value;
+  const np=document.getElementById('pw-admin-new').value.trim();
+  const cp=document.getElementById('pw-admin-confirm').value.trim();
+  const err=document.getElementById('pw-admin-err');
+  const ok=document.getElementById('pw-admin-ok');
+  err.textContent='';ok.textContent='';
+  if(op!==USERS['CUCO'].pass){err.textContent='Contraseña de CUCO incorrecta.';return;}
+  if(np===''){ok.textContent='Sin cambios en tu contraseña.';return;}
+  if(np.length<4){err.textContent='Mínimo 4 caracteres.';return;}
+  if(np!==cp){err.textContent='Las contraseñas no coinciden.';return;}
+  ok.textContent='Guardando…';
+  const res=await updatePwInFile('CUCO',np);
+  if(res){USERS['CUCO'].pass=np;ok.textContent='✓ Contraseña de CUCO actualizada.';setTimeout(()=>ok.textContent='',3000);}
+  else{err.textContent='Error guardando.';ok.textContent='';}
+}
+
+async function resetUserPw(user){
+  const defPw=user.toLowerCase();
+  if(!confirm('¿Resetear contraseña de '+user+' a "'+defPw+'"?'))return;
+  const ap=document.getElementById('pw-admin-old').value;
+  if(ap!==USERS['CUCO'].pass){document.getElementById('pw-admin-err').textContent='Ingresa tu contraseña actual primero.';return;}
+  document.getElementById('pw-admin-ok').textContent='Reseteando…';
+  const res=await updatePwInFile(user,defPw);
+  if(res){USERS[user].pass=defPw;document.getElementById('pw-admin-ok').textContent='✓ '+user+' reseteado a "'+defPw+'"';document.getElementById('pw-admin-err').textContent='';setTimeout(()=>document.getElementById('pw-admin-ok').textContent='',4000);}
+  else{document.getElementById('pw-admin-err').textContent='Error guardando.';document.getElementById('pw-admin-ok').textContent='';}
+}
+
+async function updatePwInFile(user,newPw){
+  setDot('sync');
+  try{
+    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/index.html?t='+Date.now(),
+      {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
+    if(!r.ok)throw new Error();
+    const j=await r.json();
+    const hSHA=j.sha;
+    const curHtml=atob(j.content.replace(/[\r\n ]/g,''));
+    // Find and replace: USER:{pass:'oldpass', -> USER:{pass:'newpass',
+    const oldPw=USERS[user].pass;
+    const searchStr=user+":{pass:'"+oldPw+"',";
+    const replaceStr=user+":{pass:'"+newPw+"',";
+    if(!curHtml.includes(searchStr))throw new Error('pattern not found: '+searchStr);
+    const newHtml=curHtml.replace(searchStr,replaceStr);
+    const content=btoa(unescape(encodeURIComponent(newHtml)));
+    const r2=await fetch('https://api.github.com/repos/'+REPO+'/contents/index.html',
+      {method:'PUT',headers:{Authorization:'token '+TOKEN,'Content-Type':'application/json',Accept:'application/vnd.github.v3+json'},
+       body:JSON.stringify({message:'Update '+user+' password',content,sha:hSHA})});
+    if(!r2.ok)throw new Error(await r2.text());
+    setDot('ok');return true;
+  }catch(e){console.error(e);setDot('err');return false;}
+}
+
 </script>
+
+<div id="pw-modal" class="pw-modal" style="display:none">
+  <div class="pw-box">
+    <div id="pw-user-section">
+      <div class="pw-title">Cambiar contraseña</div>
+      <div class="pw-sub" id="pw-sub-text">Cambia tu contraseña de acceso</div>
+      <div class="pw-field"><label>Contraseña actual</label><input type="password" id="pw-old" placeholder="••••••••"></div>
+      <div class="pw-field"><label>Nueva contraseña</label><input type="password" id="pw-new" placeholder="••••••••"></div>
+      <div class="pw-field"><label>Confirmar nueva contraseña</label><input type="password" id="pw-confirm" placeholder="••••••••"></div>
+      <div class="pw-err" id="pw-err"></div>
+      <div class="pw-ok" id="pw-ok"></div>
+      <div class="pw-btns">
+        <button class="pw-save" onclick="savePw()">Guardar</button>
+        <button class="pw-cancel" onclick="closePwModal()">Cancelar</button>
+      </div>
+    </div>
+    <div id="pw-admin-section" style="display:none">
+      <div class="pw-title">⚙️ Administrar contraseñas</div>
+      <div class="pw-sub">Como admin puedes resetear contraseñas de cualquier usuario</div>
+      <div class="pw-field"><label>Tu contraseña actual</label><input type="password" id="pw-admin-old" placeholder="••••••••"></div>
+      <div class="pw-field"><label>Tu nueva contraseña (opcional)</label><input type="password" id="pw-admin-new" placeholder="dejar vacío si no cambias"></div>
+      <div class="pw-field"><label>Confirmar nueva contraseña</label><input type="password" id="pw-admin-confirm" placeholder=""></div>
+      <div class="pw-err" id="pw-admin-err"></div>
+      <div class="pw-ok" id="pw-admin-ok"></div>
+      <div class="pw-btns" style="margin-bottom:0">
+        <button class="pw-save" onclick="saveAdminPw()">Guardar mis cambios</button>
+        <button class="pw-cancel" onclick="closePwModal()">Cerrar</button>
+      </div>
+      <div class="pw-reset-section">
+        <div class="pw-reset-title">Resetear contraseña de otro usuario</div>
+        <div class="pw-user-row">
+          <div><div class="pw-user-name">👩‍✈️ COCO</div></div>
+          <button class="pw-reset-btn" onclick="resetUserPw('COCO')">Resetear</button>
+        </div>
+        <div class="pw-user-row">
+          <div><div class="pw-user-name">🧑‍✈️ FERNANDO</div></div>
+          <button class="pw-reset-btn" onclick="resetUserPw('FERNANDO')">Resetear</button>
+        </div>
+        <div style="font-size:11px;color:#8892A4;margin-top:10px">Al resetear, la nueva contraseña será el nombre del usuario en minúsculas (ej: "coco", "fernando")</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
