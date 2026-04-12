@@ -144,7 +144,6 @@ input:focus,select:focus{border-color:var(--sk)}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:16px}
 .modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:#8892A4}
 
-
 .pw-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:flex-end;justify-content:center}
 .pw-box{background:#fff;border-radius:20px 20px 0 0;padding:28px 24px 40px;width:100%;max-width:480px}
 .pw-title{font-size:17px;font-weight:700;margin-bottom:4px}
@@ -166,6 +165,12 @@ input:focus,select:focus{border-color:var(--sk)}
 .pw-reset-btn{font-size:11px;font-weight:700;color:#8B1A1A;background:none;border:1px solid #8B1A1A;border-radius:6px;padding:3px 9px;cursor:pointer}
 .settings-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:5px 10px;font-size:11px;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;display:none;align-items:center;gap:4px}
 
+.token-setup{background:#FFF8E1;border:1px solid #FFE082;border-radius:13px;padding:18px;margin-bottom:14px;text-align:center}
+.token-setup h3{font-size:14px;color:#5D4037;margin-bottom:8px}
+.token-setup p{font-size:12px;color:#8D6E63;margin-bottom:12px}
+.token-setup input{max-width:300px;margin:0 auto 10px;display:block;font-size:13px;padding:10px 12px}
+.token-setup button{padding:10px 20px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.readonly-bar{background:#E8F0FD;color:#1B4E8A;padding:8px 14px;border-radius:8px;font-size:11px;font-weight:600;margin-bottom:12px;display:none;text-align:center}
 </style>
 </head>
 <body>
@@ -181,7 +186,7 @@ input:focus,select:focus{border-color:var(--sk)}
 <div class="top">
   <div class="top-r">
     <div><h1>TG-SHI</h1><div class="sub">Shenshi Aviation · v4</div></div>
-    <div class="tach"><div><div class="tach-lb">TACH</div><span id="tachVal">916.0</span></div><div class="dot" id="dot"></div></div>
+    <div class="tach"><div><div class="tach-lb">TACH</div><span id="tachVal">—</span></div><div class="dot" id="dot"></div></div>
   <button class="settings-btn" id="settings-btn" onclick="openPwModal()">⚙️</button>
 </div>
 </div>
@@ -195,6 +200,8 @@ input:focus,select:focus{border-color:var(--sk)}
 
 <!-- PANEL -->
 <div class="pg on" id="pg-dash">
+  <div class="readonly-bar" id="readonly-bar">📖 Modo lectura — sin token de GitHub no se pueden guardar cambios</div>
+  <div id="token-setup-area"></div>
   <div id="pend-section" style="display:none"></div>
   <div class="sg">
     <div class="st c1"><div class="sl">COCO</div><div class="sv" id="d-co">—</div><div class="sd">hrs 2026</div></div>
@@ -336,24 +343,26 @@ let CURRENT_USER = sessionStorage.getItem('tgshi_user') || null;
 let CURRENT_ROLE = sessionStorage.getItem('tgshi_role') || null;
 let loginSel = 'CUCO';
 
-
 const REPO='cucogiron/tgshi-aviation';
-let TOKEN = localStorage.getItem('tgshi_token') || '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';
+const BRANCH='main'; // adjust if your default branch differs
+
+// ===== FIX: NO hardcoded token. Token comes ONLY from localStorage or from data.json =====
+let TOKEN = localStorage.getItem('tgshi_token') || '';
+let READ_ONLY = false; // true if we loaded data but have no working write token
+
 const MO=['','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-let DB={flights:[],fuel:[],rates:[],meta:{last_tach:0,last_flight_id:0,last_fuel_id:0},passwords:{CUCO:'shenshi2026',COCO:'coco2026',FERNANDO:'fernando2026'}};
+let DB={flights:[],fuel:[],rates:[],meta:{last_tach:0,last_flight_id:0,last_fuel_id:0},passwords:{}};
 let SHA='';
 let S={fp:'FERNANDO',fr:'COCO',ft:'PERSONAL',fup:'COCO'};
 
 window.onload_main=async()=>{
   setDates(); updUsu();
   setDot('sync');
-  // Always load from GitHub - raw URL works without token
   await loadGH();
   render(); buildPending();
 };
 
 function initApp(){
-  // Auto-login if session exists
   if(CURRENT_USER&&USERS[CURRENT_USER]){
     document.getElementById('login-screen').style.display='none';
     const badge=CURRENT_ROLE==='admin'?'badge-admin':CURRENT_ROLE==='pilot'?'badge-pilot':'badge-viewer';
@@ -361,63 +370,184 @@ function initApp(){
       `<span class="user-badge ${badge}">${USERS[CURRENT_USER].icon} ${CURRENT_USER}</span>`);
     document.getElementById('settings-btn').style.display='block';
     window.onload_main();
-  }
-  // else: login screen stays visible - ensure it's showing
-  else {
+  } else {
     document.getElementById('login-screen').style.display='flex';
   }
 }
-// Run on both events to be safe
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded', initApp);
 } else {
   initApp();
 }
 
+// ===== FIX: Rewritten loadGH with 3-tier fallback =====
+// Tier 1: raw.githubusercontent.com (no token needed for public repos, fast CDN)
+// Tier 2: GitHub API with token (needed for private repos and to get SHA for writes)
+// Tier 3: Keep whatever DB already has (offline/fallback)
 async function loadGH(){
   setDot('sync');
-  try{
-    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json?t='+Date.now(),
-      {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const j=await r.json(); SHA=j.sha;
-    const b64=j.content.replace(/[\r\n ]/g,'');
-    DB=JSON.parse(atob(b64));
-    // Update token from DB if CUCO saved a newer one
-    if(DB.token && DB.token!==TOKEN){
-      TOKEN=DB.token;
-      localStorage.setItem('tgshi_token',TOKEN);
+  let loaded = false;
+
+  // --- TIER 1: Try raw.githubusercontent.com (works for public repos, no token needed) ---
+  try {
+    const rawUrl = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/data.json?t=${Date.now()}`;
+    const r = await fetch(rawUrl, {cache:'no-store'});
+    if(r.ok){
+      const parsed = await r.json();
+      if(parsed && parsed.flights && parsed.flights.length > 0){
+        DB = parsed;
+        loaded = true;
+        console.log('[loadGH] Tier 1 OK: raw.githubusercontent.com, '+DB.flights.length+' flights');
+      }
+    } else {
+      console.warn('[loadGH] Tier 1 failed: HTTP '+r.status);
     }
-    // Sync passwords
+  } catch(e){
+    console.warn('[loadGH] Tier 1 error:', e.message);
+  }
+
+  // --- TIER 2: GitHub API (gets SHA needed for saves, uses token) ---
+  if(TOKEN){
+    try {
+      const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data.json?t=${Date.now()}`,
+        {headers:{Authorization:'token '+TOKEN, Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
+      if(r.ok){
+        const j = await r.json();
+        SHA = j.sha;
+        if(!loaded){
+          // Only parse content if Tier 1 didn't already load
+          const b64 = j.content.replace(/[\r\n ]/g,'');
+          const parsed = JSON.parse(atob(b64));
+          if(parsed && parsed.flights && parsed.flights.length > 0){
+            DB = parsed;
+            loaded = true;
+            console.log('[loadGH] Tier 2 OK: API, '+DB.flights.length+' flights');
+          }
+        }
+        READ_ONLY = false;
+      } else if(r.status === 401 || r.status === 403){
+        console.warn('[loadGH] Tier 2: Token invalid/expired ('+r.status+')');
+        // Token is bad — clear it so we don't keep using it
+        // But DON'T clear localStorage yet, user might fix it in settings
+        READ_ONLY = true;
+      } else {
+        console.warn('[loadGH] Tier 2 failed: HTTP '+r.status);
+      }
+    } catch(e){
+      console.warn('[loadGH] Tier 2 error:', e.message);
+    }
+  } else {
+    // No token at all
+    READ_ONLY = true;
+  }
+
+  // --- Post-load: sync passwords and token from loaded DB ---
+  if(loaded){
+    if(DB.token && DB.token !== TOKEN){
+      TOKEN = DB.token;
+      localStorage.setItem('tgshi_token', TOKEN);
+      console.log('[loadGH] Token updated from data.json');
+      // If we just got a token and didn't have SHA yet, fetch SHA now
+      if(!SHA){
+        try {
+          const r2 = await fetch(`https://api.github.com/repos/${REPO}/contents/data.json`,
+            {headers:{Authorization:'token '+TOKEN, Accept:'application/vnd.github.v3+json'}});
+          if(r2.ok){
+            const j2 = await r2.json();
+            SHA = j2.sha;
+            READ_ONLY = false;
+            console.log('[loadGH] Got SHA with new token');
+          }
+        } catch(e){ /* non-critical */ }
+      }
+    }
     if(DB.passwords){
       Object.keys(DB.passwords).forEach(u=>{if(USERS[u])USERS[u].pass=DB.passwords[u];});
     }
     setDot('ok');
-  }catch(e){
-    console.error('loadGH failed:',e.message||e);
+  } else {
+    // Nothing loaded — show error
     setDot('err');
-    // Show visible error on dashboard
     const bars = document.getElementById('d-bars');
-    if(bars) bars.innerHTML = '<div style="padding:16px;color:#C0392B;font-size:12px;text-align:center">⚠️ Error cargando datos: '+( e.message||'sin conexión')+'<br><br><button onclick="loadGH().then(()=>{render();buildPending()})" style="padding:8px 16px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">🔄 Reintentar</button></div>';
+    if(bars) bars.innerHTML = `<div style="padding:16px;color:#C0392B;font-size:12px;text-align:center">
+      ⚠️ No se pudieron cargar datos${!TOKEN?' — falta token de GitHub':''}
+      <br><br><button onclick="loadGH().then(()=>{render();buildPending()})" style="padding:8px 16px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">🔄 Reintentar</button>
+    </div>`;
+  }
+
+  // Show read-only indicator
+  updateReadOnlyUI();
+}
+
+function updateReadOnlyUI(){
+  const bar = document.getElementById('readonly-bar');
+  if(bar) bar.style.display = (READ_ONLY && DB.flights.length > 0) ? 'block' : 'none';
+
+  // Show token setup prompt if no token and user is admin
+  const area = document.getElementById('token-setup-area');
+  if(area && !TOKEN && isAdmin()){
+    area.innerHTML = `<div class="token-setup">
+      <h3>🔑 Configurar Token de GitHub</h3>
+      <p>Para guardar vuelos y combustible necesitas un token de GitHub con permisos de escritura al repo.</p>
+      <input type="password" id="inline-token" placeholder="ghp_..." style="font-size:13px">
+      <br><button onclick="saveInlineToken()">Guardar token</button>
+      <div id="inline-token-msg" style="font-size:11px;color:#8892A4;margin-top:8px"></div>
+    </div>`;
+  } else if(area){
+    area.innerHTML = '';
+  }
+}
+
+async function saveInlineToken(){
+  const t = document.getElementById('inline-token').value.trim();
+  const msg = document.getElementById('inline-token-msg');
+  if(!t){msg.textContent='Ingresa un token válido';return;}
+  TOKEN = t;
+  localStorage.setItem('tgshi_token', TOKEN);
+  msg.textContent='Verificando...';
+  // Test with a read
+  try {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data.json`,
+      {headers:{Authorization:'token '+TOKEN, Accept:'application/vnd.github.v3+json'}});
+    if(r.ok){
+      const j = await r.json();
+      SHA = j.sha;
+      READ_ONLY = false;
+      // Save token into data.json for other users
+      DB.token = TOKEN;
+      await saveGH();
+      msg.textContent='✓ Token válido y guardado para todos los usuarios';
+      msg.style.color='#1A6B3A';
+      setTimeout(()=>{ document.getElementById('token-setup-area').innerHTML=''; updateReadOnlyUI(); }, 2000);
+    } else {
+      msg.textContent='Token inválido (HTTP '+r.status+')';
+      msg.style.color='#C0392B';
+      TOKEN='';
+      localStorage.removeItem('tgshi_token');
+    }
+  } catch(e){
+    msg.textContent='Error: '+e.message;
+    msg.style.color='#C0392B';
   }
 }
 
 async function saveGH(){
+  if(READ_ONLY || !TOKEN){
+    alert('No hay token de GitHub configurado. Pide a CUCO que configure uno en ⚙️ Ajustes.');
+    return false;
+  }
   setDot('sync');
   try{
-    // If we don't have the SHA yet, fetch it first
     if(!SHA){
       const sr=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
         {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json'}});
       if(sr.ok){const sj=await sr.json();SHA=sj.sha;}
     }
-    // Robust base64 encoding for large JSON
     const jsonStr=JSON.stringify(DB);
     let content;
     try{
       content=btoa(unescape(encodeURIComponent(jsonStr)));
     }catch(encErr){
-      // Fallback: manual UTF-8 to base64
       const bytes=new TextEncoder().encode(jsonStr);
       let bin='';
       bytes.forEach(b=>bin+=String.fromCharCode(b));
@@ -430,7 +560,11 @@ async function saveGH(){
     if(!r.ok){
       const errBody=await r.text();
       console.error('GitHub PUT failed:',r.status,errBody);
-      window._lastSaveError=r.status+' '+errBody.slice(0,200);
+      if(r.status===401||r.status===403){
+        READ_ONLY=true;
+        updateReadOnlyUI();
+        alert('Token expirado o sin permisos. Pide a CUCO que actualice el token en ⚙️ Ajustes.');
+      }
       throw new Error(r.status+': '+errBody.slice(0,100));
     }
     const j=await r.json(); SHA=j.content.sha;
@@ -438,7 +572,6 @@ async function saveGH(){
   }catch(e){
     console.error('saveGH error:',e.message||e);
     setDot('err');
-    // Store last error for display
     window._lastSaveError = e.message||String(e);
     return false;
   }
@@ -468,8 +601,6 @@ function getRateFD(ds){
   return r;
 }
 
-// DASHBOARD
-
 function selUser(u,el){
   loginSel=u;
   document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('sel'));
@@ -489,7 +620,6 @@ function doLogin(){
   sessionStorage.setItem('tgshi_user',CURRENT_USER);
   sessionStorage.setItem('tgshi_role',CURRENT_ROLE);
   document.getElementById('login-screen').style.display='none';
-  // Update topbar to show logged-in user
   const badge=CURRENT_ROLE==='admin'?'badge-admin':CURRENT_ROLE==='pilot'?'badge-pilot':'badge-viewer';
   document.querySelector('.tach').insertAdjacentHTML('beforebegin',
     `<span class="user-badge ${badge}">${USERS[CURRENT_USER].icon} ${CURRENT_USER}</span>`);
@@ -500,7 +630,6 @@ function doLogin(){
 function isAdmin(){return CURRENT_ROLE==='admin';}
 function isPilot(){return CURRENT_ROLE==='pilot';}
 
-// Pending verifications
 function buildPending(){
   const pends=DB.flights.filter(f=>f.verified===false);
   const sec=document.getElementById('pend-section');
@@ -528,14 +657,12 @@ async function verifyFlight(id,action){
   if(action==='approve'){
     f.verified=true; f.verified_by=CURRENT_USER;
   } else {
-    // Reject = revert to personal
     f.t='PERSONAL'; f.rv=0; f.verified=true; f.verified_by=CURRENT_USER;
   }
-  render();
+  render(); buildPending();
   await saveGH();
 }
 
-// Edit flight modal (CUCO only)
 let editId=null;
 function openEdit(id){
   if(!isAdmin())return;
@@ -709,14 +836,12 @@ function calcBil(){
   const sg=v=>v<0?'neg':'';
   const periodLbl=from===to?from:`${from} → ${to}`;
   let h=`<div class="stitle">Período: ${periodLbl} · TC Q${tc}/USD · Tarifa piloto: $${rt.pilot}/hr · Admin: $${rt.admin}/mes</div>`;
-  // A
   h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">A — Horas</div></div><div class="bil-bd">
     <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${hrs.COCO.toFixed(1)} hrs</div></div>
     <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${hrs.CUCO.toFixed(1)} hrs</div></div>
     <div class="bil-row"><div class="bil-lbl">Charter/Shenshi</div><div class="bil-val">${hrs.SENSHI.toFixed(1)} hrs</div></div>
     <div class="bil-row"><div class="bil-lbl"><b>Total</b></div><div class="bil-val"><b>${th.toFixed(1)} hrs</b></div></div>
   </div></div>`;
-  // B
   h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">B — Combustible</div></div><div class="bil-bd">
     <div class="bil-row"><div class="bil-lbl">Total QTZ</div><div class="bil-val">${fQ(tfuel)}</div></div>
     <div class="bil-row"><div class="bil-lbl">QTZ/hr promedio</div><div class="bil-val">${fQ(qph)}</div></div>
@@ -727,7 +852,6 @@ function calcBil(){
     <div class="bil-row"><div class="bil-lbl">CUCO — anticipo ya pagado</div><div class="bil-val">${fQ(acCU)}</div></div>
     <div class="bil-row"><div class="bil-lbl"><b>CUCO neto a cobrar</b></div><div class="bil-val ${sg(prCU-acCU)}"><b>${fQ(prCU-acCU)}</b></div></div>
   </div></div>`;
-  // C
   const ruCO=ruAmt('COCO'),ruCU=ruAmt('CUCO');
   const espCO=esp.COCO,espCU=esp.CUCO,espSE=esp.SENSHI;
   h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">C — Pilotaje Fernando ($${rt.pilot}/hr · Espera $${rt.gw}/hr)</div></div><div class="bil-bd">
@@ -745,14 +869,12 @@ function calcBil(){
     <div class="bil-row" style="border-top:2px solid #E2E6EE;margin-top:4px"><div class="bil-lbl">Admin fee Fernando (${numMonths} mes${numMonths>1?"es":""})</div><div class="bil-val">${fD(adminFee)}</div></div>
     <div class="bil-row"><div class="bil-lbl"><b>TOTAL A PAGAR FERNANDO</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
   </div></div>`;
-  // D
   h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">D — Reserva ($${rt.res}/hr)</div></div><div class="bil-bd">
     <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${fD(resv('COCO'))}</div></div>
     <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${fD(resv('CUCO'))}</div></div>
     <div class="bil-row"><div class="bil-lbl">Shenshi</div><div class="bil-val">${fD(resv('SENSHI'))}</div></div>
     <div class="bil-row"><div class="bil-lbl"><b>Total reserva</b></div><div class="bil-val"><b>${fD(resv('COCO')+resv('CUCO')+resv('SENSHI'))}</b></div></div>
   </div></div>`;
-  // QB
   h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">F — QuickBooks Summary</div></div><div class="bil-bd">
     <div class="bil-row"><div class="bil-lbl">COCO — Comb. neto (QTZ)</div><div class="bil-val ${sg(prCO-acCO)}">${fQ(prCO-acCO)}</div></div>
     <div class="bil-row"><div class="bil-lbl">COCO — Pilotaje${espCO>0?' + espera':''}</div><div class="bil-val">${fD(pilFee('COCO')+espCO)}</div></div>
@@ -770,7 +892,6 @@ function calcBil(){
   document.getElementById('bil-out').innerHTML=h;
 }
 
-// FORM
 function fTab(t,el){
   document.querySelectorAll('[id^="form-"]').forEach(d=>d.style.display='none');
   document.getElementById('form-'+t).style.display='block';
@@ -810,7 +931,7 @@ function setDates(){
   const lt=Math.max(...DB.flights.map(f=>f.hf||0),0);
   const e=document.getElementById('ff-hi');
   if(e&&lt>0){
-    e.value=lt.toFixed(1);  // pre-fill with actual value, not just placeholder
+    e.value=lt.toFixed(1);
     e.placeholder=lt.toFixed(1);
   }
 }
@@ -865,7 +986,7 @@ async function saveF(){
   render();
   const ok=await saveGH();
   document.getElementById('ok-f').style.display=ok?'flex':'none';
-  document.getElementById('err-f').textContent=ok?'':'Error guardando. Verifica conexión.';
+  document.getElementById('err-f').textContent=ok?'':'Error guardando. Verifica conexión o token.';
   document.getElementById('err-f').style.display=ok?'none':'block';
   if(ok)setTimeout(()=>document.getElementById('ok-f').style.display='none',3000);
   document.getElementById('ff-hf').value='';document.getElementById('ff-rt').value='';
@@ -910,7 +1031,7 @@ function openPwModal(){
     document.getElementById('pw-admin-err').textContent='';
     document.getElementById('pw-admin-ok').textContent='';
     loadTokenInput();
-    document.getElementById('token-status').textContent = TOKEN ? '✓ Token cargado ('+TOKEN.slice(0,8)+'...)' : '⚠️ Sin token — guarda uno para activar sincronización';
+    document.getElementById('token-status').textContent = TOKEN ? '✓ Token cargado ('+TOKEN.slice(0,8)+'...)' : '⚠️ Sin token — guarda uno para activar escritura';
   } else {
     document.getElementById('pw-user-section').style.display='block';
     document.getElementById('pw-admin-section').style.display='none';
@@ -969,34 +1090,44 @@ async function resetUserPw(user){
 }
 
 async function updatePwInFile(user,newPw){
-  // Save password to data.json via saveGH() - same mechanism as flights/fuel
   if(!DB.passwords) DB.passwords={};
   DB.passwords[user] = newPw;
   const ok = await saveGH();
   if(ok) USERS[user].pass = newPw;
-  else delete DB.passwords[user]; // rollback
+  else delete DB.passwords[user];
   return ok;
 }
-
-
-
-// debug wrapper removed
-
-
 
 async function saveToken(){
   const t = document.getElementById('gh-token-input').value.trim();
   if(!t){document.getElementById('token-status').textContent='Ingresa un token válido';return;}
-  localStorage.setItem('tgshi_token', t);
+  document.getElementById('token-status').textContent='Verificando token...';
+  // Test the token first
+  try {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data.json`,
+      {headers:{Authorization:'token '+t, Accept:'application/vnd.github.v3+json'}});
+    if(!r.ok){
+      document.getElementById('token-status').textContent='Token inválido (HTTP '+r.status+'). Verifica permisos.';
+      return;
+    }
+    const j = await r.json();
+    SHA = j.sha;
+  } catch(e){
+    document.getElementById('token-status').textContent='Error verificando: '+e.message;
+    return;
+  }
+  // Token works — save everywhere
   TOKEN = t;
+  READ_ONLY = false;
+  localStorage.setItem('tgshi_token', TOKEN);
   document.getElementById('token-status').textContent='Guardando para todos los usuarios...';
-  // Save token into data.json so all devices get it automatically
   DB.token = t;
   const ok = await saveGH();
   if(ok){
     document.getElementById('token-status').textContent='✓ Token guardado — todos los usuarios lo recibirán automáticamente';
+    updateReadOnlyUI();
   } else {
-    document.getElementById('token-status').textContent='✓ Guardado en este dispositivo (sin sync)';
+    document.getElementById('token-status').textContent='✓ Guardado localmente (error sync)';
   }
   setTimeout(()=>document.getElementById('token-status').textContent=TOKEN?'✓ Token activo ('+TOKEN.slice(0,8)+'...)':'',3000);
 }
@@ -1013,17 +1144,13 @@ function logout(){
 }
 
 async function testSave(){
-  // Minimal test: just save a tiny JSON to confirm token works
   setDot('sync');
   try{
-    // First get current SHA
     const r1=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
       {headers:{'Authorization':'token '+TOKEN,'Accept':'application/vnd.github.v3+json'}});
     const j1=await r1.json();
     console.log('GET status:',r1.status,'SHA:',j1.sha);
     if(!r1.ok){alert('GET failed: '+r1.status+' '+JSON.stringify(j1));setDot('err');return;}
-    
-    // Try PUT with same content (no-op)
     const r2=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',{
       method:'PUT',
       headers:{'Authorization':'token '+TOKEN,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
