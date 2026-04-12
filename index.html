@@ -376,7 +376,7 @@ window.onload_main=async()=>{
   loadGH().then(()=>{render();buildPending();}).catch(()=>setDot('err'));
 };
 
-window.onload=()=>{
+function initApp(){
   // Auto-login if session exists
   if(CURRENT_USER&&USERS[CURRENT_USER]){
     document.getElementById('login-screen').style.display='none';
@@ -386,8 +386,17 @@ window.onload=()=>{
     document.getElementById('settings-btn').style.display='block';
     window.onload_main();
   }
-  // else: login screen stays visible
-};
+  // else: login screen stays visible - ensure it's showing
+  else {
+    document.getElementById('login-screen').style.display='flex';
+  }
+}
+// Run on both events to be safe
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 async function loadGH(){
   setDot('sync');
@@ -979,27 +988,8 @@ async function updatePwInFile(user,newPw){
 }
 
 
-async function testGHAccess(){
-  try{
-    const r=await fetch('https://api.github.com/repos/'+REPO,
-      {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json'}});
-    const j=await r.json();
-    console.log('Repo access:',r.status,'permissions:',j.permissions);
-    console.log('Can push:',j.permissions&&j.permissions.push);
-    return j;
-  }catch(e){console.error('test failed',e);}
-}
-// Run on load for debugging
-window.onload_main = (function(orig){
-  return async function(){
-    await orig();
-    testGHAccess().then(j=>{
-      if(j&&j.permissions&&!j.permissions.push){
-        console.warn('TOKEN DOES NOT HAVE WRITE ACCESS TO REPO');
-      }
-    });
-  };
-})(window.onload_main);
+
+// debug wrapper removed
 
 </script>
 
