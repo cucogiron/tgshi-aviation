@@ -972,6 +972,37 @@ async function updatePwInFile(user,newPw){
 
 // debug wrapper removed
 
+
+function logout(){
+  sessionStorage.removeItem('tgshi_user');
+  sessionStorage.removeItem('tgshi_role');
+  location.reload();
+}
+
+async function testSave(){
+  // Minimal test: just save a tiny JSON to confirm token works
+  setDot('sync');
+  try{
+    // First get current SHA
+    const r1=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
+      {headers:{'Authorization':'token '+TOKEN,'Accept':'application/vnd.github.v3+json'}});
+    const j1=await r1.json();
+    console.log('GET status:',r1.status,'SHA:',j1.sha);
+    if(!r1.ok){alert('GET failed: '+r1.status+' '+JSON.stringify(j1));setDot('err');return;}
+    
+    // Try PUT with same content (no-op)
+    const r2=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',{
+      method:'PUT',
+      headers:{'Authorization':'token '+TOKEN,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+      body:JSON.stringify({message:'test',content:j1.content.replace(/\n/g,''),sha:j1.sha})
+    });
+    const j2=await r2.json();
+    console.log('PUT status:',r2.status,j2.message||'ok');
+    if(r2.ok){alert('✓ Token funciona correctamente');setDot('ok');}
+    else{alert('PUT failed '+r2.status+': '+JSON.stringify(j2));setDot('err');}
+  }catch(e){alert('Error: '+e.message);setDot('err');}
+}
+
 </script>
 
 <div id="pw-modal" class="pw-modal" style="display:none">
@@ -988,6 +1019,9 @@ async function updatePwInFile(user,newPw){
         <button class="pw-save" onclick="savePw()">Guardar</button>
         <button class="pw-cancel" onclick="closePwModal()">Cancelar</button>
       </div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid #F0F2F6">
+        <button onclick="logout()" style="width:100%;padding:12px;background:#F0F2F6;color:#8B1A1A;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">🚪 Cerrar sesión</button>
+      </div>
     </div>
     <div id="pw-admin-section" style="display:none">
       <div class="pw-title">⚙️ Administrar contraseñas</div>
@@ -1001,7 +1035,11 @@ async function updatePwInFile(user,newPw){
         <button class="pw-save" onclick="saveAdminPw()">Guardar mis cambios</button>
         <button class="pw-cancel" onclick="closePwModal()">Cerrar</button>
       </div>
+      <div style="margin-top:12px">
+        <button onclick="logout()" style="width:100%;padding:12px;background:#F0F2F6;color:#8B1A1A;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">🚪 Cerrar sesión</button>
+      </div>
       <div class="pw-reset-section">
+        <div style="margin-bottom:10px"><button onclick="testSave()" style="width:100%;padding:10px;background:#E8F0FD;color:#1B4E8A;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">🔧 Probar conexión GitHub</button></div>
         <div class="pw-reset-title">Resetear contraseña de otro usuario</div>
         <div class="pw-user-row">
           <div><div class="pw-user-name">👩‍✈️ COCO</div></div>
