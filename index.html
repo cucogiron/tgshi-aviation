@@ -387,14 +387,17 @@ if(document.readyState==='loading'){
 async function loadGH(){
   setDot('sync');
   try{
-    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json?t='+Date.now(),
-      {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
-    if(!r.ok)throw new Error();
+    // Fetch data.json without auth - public repo readable by anyone
+    // Token is stored inside data.json (DB.token) for writes
+    const headers={Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'};
+    if(TOKEN) headers['Authorization']='token '+TOKEN;
+    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json?t='+Date.now(),{headers});
+    if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json(); SHA=j.sha;
     const b64=j.content.replace(/[\r\n ]/g,'');
     DB=JSON.parse(atob(b64));
-    // Load token from DB if available (set by CUCO, shared to all users)
-    if(DB.token && !TOKEN){
+    // Bootstrap token from DB.token (set once by CUCO, shared to all)
+    if(DB.token){
       TOKEN=DB.token;
       localStorage.setItem('tgshi_token', TOKEN);
     }
@@ -403,7 +406,10 @@ async function loadGH(){
       Object.keys(DB.passwords).forEach(u=>{if(USERS[u])USERS[u].pass=DB.passwords[u];});
     }
     setDot('ok');
-  }catch(e){setDot('err');}
+  }catch(e){
+    console.error('loadGH failed:',e);
+    setDot('err');
+  }
 }
 
 async function saveGH(){
