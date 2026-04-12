@@ -343,7 +343,7 @@ let loginSel = 'CUCO';
 
 
 const REPO='cucogiron/tgshi-aviation';
-let TOKEN = localStorage.getItem('tgshi_token') || '';
+let TOKEN = localStorage.getItem('tgshi_token') || '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';
 const MO=['','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
 let DB={flights:[],fuel:[],rates:[],meta:{last_tach:0,last_flight_id:0,last_fuel_id:0},passwords:{CUCO:'shenshi2026',COCO:'coco2026',FERNANDO:'fernando2026'}};
 let SHA='';
@@ -382,31 +382,16 @@ if(document.readyState==='loading'){
 async function loadGH(){
   setDot('sync');
   try{
-    // Try API with token first, fallback to raw URL
-    let j, SHA_new;
-    if(TOKEN){
-      const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json?t='+Date.now(),
-        {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
-      if(r.ok){
-        j=await r.json(); SHA_new=j.sha;
-        const b64=j.content.replace(/[\r\n ]/g,'');
-        DB=JSON.parse(atob(b64));
-      } else {
-        throw new Error('API '+r.status);
-      }
-    } else {
-      // No token yet - fetch raw (public repo, no auth needed)
-      const raw=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/data.json?t='+Date.now(),
-        {'Cache-Control':'no-cache'});
-      if(!raw.ok) throw new Error('RAW '+raw.status);
-      DB=await raw.json();
-      SHA_new=''; // Will fetch SHA on first save
-    }
-    if(SHA_new) SHA=SHA_new;
-    // Bootstrap token from DB.token
-    if(DB.token){
+    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json?t='+Date.now(),
+      {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json(); SHA=j.sha;
+    const b64=j.content.replace(/[\r\n ]/g,'');
+    DB=JSON.parse(atob(b64));
+    // Update token from DB if CUCO saved a newer one
+    if(DB.token && DB.token!==TOKEN){
       TOKEN=DB.token;
-      localStorage.setItem('tgshi_token', TOKEN);
+      localStorage.setItem('tgshi_token',TOKEN);
     }
     // Sync passwords
     if(DB.passwords){
@@ -416,9 +401,6 @@ async function loadGH(){
   }catch(e){
     console.error('loadGH failed:',e.message);
     setDot('err');
-    // Show error on dashboard
-    const el=document.getElementById('tachVal');
-    if(el) el.title='Error: '+e.message;
   }
 }
 
