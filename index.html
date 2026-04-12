@@ -6,220 +6,331 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="TG-SHI">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TG-SHI · Shenshi v4</title>
+<title>TG-SHI · Shenshi v5</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{--nv:#1B2A4A;--md:#2E4272;--sk:#4A9EE8;--gr:#1A6B3A;--am:#B8600A;--rd:#8B1A1A;--bg:#F1F3F7;--bd:#E2E6EE;--wh:#fff;--tx:#1A1F2E;--mu:#8892A4}
-body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;background:var(--bg);color:var(--tx);max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:80px}
-.top{background:var(--nv);padding:52px 18px 10px;position:sticky;top:0;z-index:99}
+:root{--nv:#1B2A4A;--md:#2E4272;--sk:#4A9EE8;--gr:#1A6B3A;--am:#B8600A;--rd:#8B1A1A;--bg:#F1F3F7;--bd:#E2E6EE;--wh:#fff;--tx:#1A1F2E;--mu:#8892A4;--acc:#F59E0B}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;background:var(--bg);color:var(--tx);max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:80px}
+.top{background:var(--nv);padding:50px 16px 10px;position:sticky;top:0;z-index:99}
 .top-r{display:flex;justify-content:space-between;align-items:center}
-.top h1{font-size:20px;font-weight:800;color:#fff;letter-spacing:.06em}
-.top .sub{font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.14em;margin-top:1px;text-transform:uppercase}
-.tach{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:4px 11px;font-size:12px;color:#fff;display:flex;align-items:center;gap:6px}
-.tach-lb{font-size:9px;color:rgba(255,255,255,.5);letter-spacing:.06em}
+.top h1{font-size:19px;font-weight:800;color:#fff;letter-spacing:.06em}
+.top .sub{font-size:8px;color:rgba(255,255,255,.4);letter-spacing:.14em;margin-top:1px;text-transform:uppercase}
+.tach{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:3px 10px;font-size:11px;color:#fff;display:flex;align-items:center;gap:5px}
+.tach-lb{font-size:8px;color:rgba(255,255,255,.45);letter-spacing:.06em}
 .dot{width:6px;height:6px;border-radius:50%;background:#2DA05A;flex-shrink:0}
-.dot.sync{background:#E08B20;animation:pulse 1s infinite}
+.dot.sync{background:var(--acc);animation:pulse 1s infinite}
 .dot.err{background:#C0392B}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.btabs{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--bd);display:flex;z-index:99;padding-bottom:env(safe-area-inset-bottom)}
-.bt{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 4px 6px;cursor:pointer;color:var(--mu);border:none;background:none;font-family:inherit;gap:3px;transition:color .2s}
+.user-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.03em}
+.badge-admin{background:#1B4E8A33;color:#7BB8F0}
+.badge-pilot_admin{background:#1A6B3A33;color:#4ADE80}
+.badge-owner{background:#B8600A33;color:#FBB040}
+.badge-pilot{background:#6B21A833;color:#C084FC}
+.settings-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:4px 9px;font-size:10px;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;display:none;align-items:center;gap:3px}
+
+/* Bottom tabs */
+.btabs{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;background:rgba(255,255,255,.97);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--bd);display:flex;z-index:99;padding-bottom:env(safe-area-inset-bottom)}
+.bt{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 2px 5px;cursor:pointer;color:var(--mu);border:none;background:none;font-family:inherit;gap:2px;transition:color .2s}
 .bt.on{color:var(--nv)}
-.bt-i{font-size:20px;line-height:1}
-.bt-l{font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
-.pg{display:none;padding:14px}
+.bt-i{font-size:18px;line-height:1}
+.bt-l{font-size:8px;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+
+/* Pages */
+.pg{display:none;padding:12px}
 .pg.on{display:block}
-.card{background:var(--wh);border-radius:13px;border:1px solid var(--bd);margin-bottom:12px;overflow:hidden}
-.ch{display:flex;justify-content:space-between;align-items:center;padding:11px 15px;border-bottom:1px solid #F0F2F6}
-.ct{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--mu)}
-.cb{padding:13px 15px}
-.sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:12px}
-.st{background:var(--wh);border-radius:11px;border:1px solid var(--bd);padding:12px 8px;text-align:center}
-.sl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
-.sv{font-size:24px;font-weight:800;margin-top:3px;line-height:1;font-variant-numeric:tabular-nums}
-.sd{font-size:9px;color:var(--mu);margin-top:3px}
+
+/* Cards */
+.card{background:var(--wh);border-radius:12px;border:1px solid var(--bd);margin-bottom:10px;overflow:hidden}
+.ch{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #F0F2F6}
+.ct{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+.cb{padding:12px 14px}
+
+/* Stats grid */
+.sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.st{background:var(--wh);border-radius:10px;border:1px solid var(--bd);padding:10px 7px;text-align:center}
+.sl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mu)}
+.sv{font-size:22px;font-weight:800;margin-top:2px;line-height:1;font-variant-numeric:tabular-nums}
+.sd{font-size:8px;color:var(--mu);margin-top:2px}
 .c1 .sv{color:#1B4E8A}.c2 .sv{color:#1A6B3A}.c3 .sv{color:#B8600A}
-.mr{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F5F6F8}
-.mr:last-child{border:none}
-.ml{font-size:10px;color:var(--mu);width:26px;flex-shrink:0}
-.bt2{flex:1;height:7px;background:#F0F2F6;border-radius:4px;overflow:hidden;display:flex}
+
+/* Bar chart */
+.mr{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #F5F6F8}.mr:last-child{border:none}
+.ml{font-size:9px;color:var(--mu);width:24px;flex-shrink:0}
+.bt2{flex:1;height:6px;background:#F0F2F6;border-radius:3px;overflow:hidden;display:flex}
 .bs{height:100%}
 .b1{background:#4A7CC7}.b2{background:#2DA05A}.b3{background:#E08B20}
-.mh{font-size:10px;color:var(--mu);width:32px;text-align:right;flex-shrink:0}
-.fi{display:flex;gap:11px;align-items:flex-start;padding:11px 15px;border-bottom:1px solid #F5F6F8}
-.fi:last-child{border:none}
-.fdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.mh{font-size:9px;color:var(--mu);width:30px;text-align:right;flex-shrink:0}
+
+/* Flight items */
+.fi{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-bottom:1px solid #F5F6F8}.fi:last-child{border:none}
+.fdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
 .fdot.c1{background:#4A7CC7}.fdot.c2{background:#2DA05A}.fdot.c3{background:#E08B20}
 .fm{flex:1;min-width:0}
-.fr{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fme{font-size:11px;color:var(--mu);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap}
+.fr{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fme{font-size:10px;color:var(--mu);margin-top:1px;display:flex;gap:5px;flex-wrap:wrap}
 .frt{text-align:right;flex-shrink:0}
-.fh{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
-.fh small{font-size:9px;font-weight:400;color:var(--mu)}
-.fdt{font-size:10px;color:var(--mu);margin-top:1px}
-.bx{display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:700}
+.fh{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.fh small{font-size:8px;font-weight:400;color:var(--mu)}
+.fdt{font-size:9px;color:var(--mu);margin-top:1px}
+.bx{display:inline-block;padding:1px 5px;border-radius:6px;font-size:8px;font-weight:700}
 .bx.s{background:#E8F0FD;color:#1B4E8A}.bx.f{background:#FEF3CD;color:#8B5E00}
 .bx.p{background:#F0F2F6;color:#4B5563}.bx.m{background:#FDE8E8;color:#8B1A1A}
-.fue{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;border-bottom:1px solid #F5F6F8}
-.fue:last-child{border:none}
-.fue-l{font-size:13px;font-weight:500}.fue-s{font-size:11px;color:var(--mu);margin-top:2px}
-.fue-r{text-align:right}.fue-m{font-size:15px;font-weight:700;color:#1B4E8A}.fue-d{font-size:10px;color:var(--mu)}
-.qr{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F5F6F8}
-.qr:last-child{border:none}
-.ql{font-size:13px}.qv{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.pend-badge{background:#FEF3CD;color:#8B5E00;padding:1px 6px;border-radius:6px;font-size:8px;font-weight:700;margin-left:3px}
+.edit-btn{font-size:9px;font-weight:700;color:var(--sk);background:none;border:1px solid var(--sk);border-radius:5px;padding:1px 6px;cursor:pointer;margin-left:5px}
+
+/* Fuel items */
+.fue{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #F5F6F8}.fue:last-child{border:none}
+.fue-l{font-size:12px;font-weight:500}.fue-s{font-size:10px;color:var(--mu);margin-top:1px}
+.fue-r{text-align:right}.fue-m{font-size:14px;font-weight:700;color:#1B4E8A}.fue-d{font-size:9px;color:var(--mu)}
+
+/* Summary rows */
+.qr{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #F5F6F8}.qr:last-child{border:none}
+.ql{font-size:12px}.qv{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
 .qv.c1{color:#1B4E8A}.qv.c2{color:#1A6B3A}.qv.c3{color:#B8600A}
-.frow{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+
+/* Filters */
+.frow{display:flex;gap:5px;margin-bottom:9px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
 .frow::-webkit-scrollbar{display:none}
-.fp{padding:5px 13px;border-radius:16px;border:1.5px solid var(--bd);font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;background:var(--wh);color:var(--mu);flex-shrink:0;transition:all .15s}
+.fp{padding:4px 12px;border-radius:14px;border:1.5px solid var(--bd);font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;background:var(--wh);color:var(--mu);flex-shrink:0;transition:all .15s}
 .fp.on{background:var(--nv);color:#fff;border-color:var(--nv)}
-.bil-sec{background:var(--wh);border-radius:11px;border:1px solid var(--bd);margin-bottom:10px;overflow:hidden}
-.bil-hd{background:var(--nv);padding:9px 14px}
-.bil-ht{font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em}
-.bil-bd{padding:4px 14px}
-.bil-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F5F6F8;align-items:flex-start}
-.bil-row:last-child{border:none}
-.bil-lbl{font-size:12px;color:var(--tx)}
-.bil-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+
+/* Billing */
+.bil-sec{background:var(--wh);border-radius:10px;border:1px solid var(--bd);margin-bottom:9px;overflow:hidden}
+.bil-hd{background:var(--nv);padding:8px 13px}
+.bil-ht{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em}
+.bil-bd{padding:3px 13px}
+.bil-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #F5F6F8;align-items:flex-start}.bil-row:last-child{border:none}
+.bil-lbl{font-size:11px;color:var(--tx)}.bil-val{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 .bil-val.neg{color:var(--gr)}.bil-val.pos{color:var(--rd)}
-.qb-note{background:#FFF8E1;border:1px solid #FFE082;border-radius:8px;padding:9px 12px;font-size:11px;color:#5D4037;margin-top:8px;font-style:italic}
-.fs{margin-bottom:15px}
-.fl{display:block;font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
-input,select{width:100%;padding:12px 13px;border:1.5px solid var(--bd);border-radius:10px;font-size:15px;font-family:inherit;color:var(--tx);background:var(--wh);-webkit-appearance:none;outline:none}
-input:focus,select:focus{border-color:var(--sk)}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px}
-.sc{display:grid;background:#F0F2F6;border-radius:10px;padding:3px;gap:2px}
-.sb{padding:9px 4px;border:none;border-radius:8px;background:transparent;font-family:inherit;font-size:12px;font-weight:500;color:var(--mu);cursor:pointer;transition:all .15s;text-align:center}
-.sb.on{background:var(--wh);color:var(--tx);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.tg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.tc{padding:11px 8px;border:2px solid var(--bd);border-radius:10px;cursor:pointer;transition:all .15s;text-align:center}
+.qb-note{background:#FFF8E1;border:1px solid #FFE082;border-radius:7px;padding:8px 11px;font-size:10px;color:#5D4037;margin-top:7px;font-style:italic}
+
+/* Forms */
+.fs{margin-bottom:13px}
+.fl{display:block;font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+input,select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--bd);border-radius:9px;font-size:14px;font-family:inherit;color:var(--tx);background:var(--wh);-webkit-appearance:none;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--sk)}
+textarea{resize:vertical;min-height:60px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:13px}
+.sc{display:grid;background:#F0F2F6;border-radius:9px;padding:3px;gap:2px}
+.sb{padding:8px 3px;border:none;border-radius:7px;background:transparent;font-family:inherit;font-size:11px;font-weight:500;color:var(--mu);cursor:pointer;transition:all .15s;text-align:center}
+.sb.on{background:var(--wh);color:var(--tx);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.tc{padding:10px 7px;border:2px solid var(--bd);border-radius:9px;cursor:pointer;transition:all .15s;text-align:center}
 .tc.on{border-color:var(--sk);background:#EAF4FD}
-.ti{font-size:18px;margin-bottom:3px}.tn{font-size:11px;font-weight:700}.td{font-size:10px;color:var(--mu);margin-top:1px}
-.btn{width:100%;padding:15px;background:var(--nv);color:#fff;border:none;border-radius:11px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;margin-top:4px}
+.ti{font-size:16px;margin-bottom:2px}.tn{font-size:10px;font-weight:700}.td{font-size:9px;color:var(--mu);margin-top:1px}
+.btn{width:100%;padding:14px;background:var(--nv);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:3px}
 .btn:active{opacity:.85}
 .btn.gr{background:var(--gr)}
-.ok-bar{background:var(--gr);color:#fff;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:11px;display:none;align-items:center;gap:7px}
-.ok-bar::before{content:"✓";font-size:16px}
-.err-bar{background:#C0392B;color:#fff;padding:11px 14px;border-radius:10px;font-size:13px;margin-bottom:11px;display:none}
-.empty{text-align:center;padding:28px;color:var(--mu);font-size:13px}
-.empty .big{font-size:28px;margin-bottom:6px}
-.hcalc{text-align:center;font-size:12px;color:var(--mu);margin:-8px 0 12px;display:none}
-.hint{font-size:11px;color:var(--mu);margin-top:4px}
-.stitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--mu);margin:14px 0 8px;padding:0 2px}
+.btn.sm{padding:9px 14px;font-size:12px;width:auto;margin:0}
+.ok-bar{background:var(--gr);color:#fff;padding:10px 13px;border-radius:9px;font-size:12px;font-weight:600;margin-bottom:10px;display:none;align-items:center;gap:6px}
+.ok-bar::before{content:"✓";font-size:14px}
+.err-bar{background:#C0392B;color:#fff;padding:10px 13px;border-radius:9px;font-size:12px;margin-bottom:10px;display:none}
+.empty{text-align:center;padding:24px;color:var(--mu);font-size:12px}
+.empty .big{font-size:26px;margin-bottom:5px}
+.hcalc{text-align:center;font-size:11px;color:var(--mu);margin:-6px 0 10px;display:none}
+.hint{font-size:10px;color:var(--mu);margin-top:3px}
+.stitle{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:12px 0 7px;padding:0 2px}
 
-.login-screen{position:fixed;inset:0;top:0;left:0;right:0;bottom:0;background:#1B2A4A !important;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;padding:32px;isolation:isolate}
-.login-logo{font-size:48px;font-weight:900;color:#fff;letter-spacing:.06em;margin-bottom:4px}
-.login-sub{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.18em;text-transform:uppercase;margin-bottom:40px}
-.login-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:24px;width:100%;max-width:320px}
-.login-users{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px}
-.user-btn{padding:14px 8px;border:2px solid rgba(255,255,255,.15);border-radius:12px;background:transparent;color:rgba(255,255,255,.6);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;letter-spacing:.04em}
-.user-btn .user-ic{font-size:22px;display:block;margin-bottom:4px}
-.user-btn.sel{border-color:#4A9EE8;background:rgba(74,158,232,.2);color:#fff}
-.login-pass-wrap{position:relative;margin-bottom:16px}
-.login-pass{width:100%;padding:13px 16px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.2);border-radius:10px;font-size:16px;color:#fff;font-family:inherit;outline:none;letter-spacing:.12em}
-.login-pass::placeholder{color:rgba(255,255,255,.3);letter-spacing:normal}
-.login-pass:focus{border-color:#4A9EE8}
-.login-err{font-size:12px;color:#FF6B6B;text-align:center;margin-bottom:12px;min-height:18px}
-.login-btn{width:100%;padding:14px;background:#4A9EE8;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
-.login-btn:active{opacity:.85}
-.user-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.04em}
-.badge-admin{background:#1B4E8A22;color:#4A9EE8}
-.badge-pilot{background:#1A6B3A22;color:#2DA05A}
-.badge-viewer{background:#B8600A22;color:#E08B20}
-.pend-badge{background:#FEF3CD;color:#8B5E00;padding:2px 7px;border-radius:8px;font-size:9px;font-weight:700;margin-left:4px}
-.ver-badge{background:#E8F0FD;color:#1B4E8A;padding:2px 7px;border-radius:8px;font-size:9px;font-weight:700;margin-left:4px}
-.edit-btn{font-size:10px;font-weight:700;color:#4A9EE8;background:none;border:1px solid #4A9EE8;border-radius:6px;padding:2px 7px;cursor:pointer;margin-left:6px}
-.del-btn{font-size:10px;font-weight:700;color:#8B1A1A;background:none;border:1px solid #8B1A1A;border-radius:6px;padding:2px 7px;cursor:pointer;margin-left:4px}
-.pend-section{background:#FFF8E1;border:1px solid #FFE082;border-radius:11px;margin-bottom:12px;overflow:hidden}
-.pend-hd{background:#F59E0B;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
-.pend-ht{font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em}
-.pend-count{background:rgba(255,255,255,.3);color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700}
-.pend-item{padding:11px 14px;border-bottom:1px solid #FDE68A;display:flex;justify-content:space-between;align-items:flex-start}
+/* ===== CALENDAR / SCHEDULING ===== */
+.cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 2px}
+.cal-title{font-size:15px;font-weight:700}
+.cal-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--bd);background:var(--wh);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--tx)}
+.cal-btn:active{background:var(--bg)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:10px}
+.cal-dh{text-align:center;font-size:8px;font-weight:700;color:var(--mu);padding:4px 0;text-transform:uppercase;letter-spacing:.06em}
+.cal-d{text-align:center;padding:8px 2px;border-radius:8px;font-size:12px;cursor:pointer;transition:all .12s;position:relative;font-weight:500}
+.cal-d:hover{background:#E8F0FD}
+.cal-d.today{font-weight:800;color:var(--sk)}
+.cal-d.sel{background:var(--nv);color:#fff;font-weight:700}
+.cal-d.sel.today{background:var(--sk)}
+.cal-d.other{color:#C8CED8}
+.cal-d .cal-dots{display:flex;gap:2px;justify-content:center;margin-top:2px;min-height:5px}
+.cal-d .cd{width:4px;height:4px;border-radius:50%}
+.cd.req{background:var(--acc)}.cd.conf{background:var(--sk)}.cd.mine{background:var(--gr)}
+
+/* Day detail */
+.day-detail{background:var(--wh);border-radius:12px;border:1px solid var(--bd);overflow:hidden}
+.dd-hd{background:var(--nv);padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.dd-title{color:#fff;font-size:13px;font-weight:700}
+.dd-add{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:7px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit}
+.slot{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #F5F6F8}
+.slot:last-child{border:none}
+.slot-time{font-size:11px;font-weight:700;color:var(--mu);width:44px;flex-shrink:0;padding-top:1px;font-variant-numeric:tabular-nums}
+.slot-body{flex:1;min-width:0}
+.slot-route{font-size:13px;font-weight:600}
+.slot-meta{font-size:10px;color:var(--mu);margin-top:1px;display:flex;gap:5px;flex-wrap:wrap}
+.slot-status{display:inline-block;padding:1px 6px;border-radius:5px;font-size:8px;font-weight:700}
+.slot-status.requested{background:#FEF3CD;color:#92400E}
+.slot-status.confirmed{background:#DBEAFE;color:#1E40AF}
+.slot-status.completed{background:#D1FAE5;color:#065F46}
+.slot-status.cancelled{background:#FEE2E2;color:#991B1B}
+.slot-actions{flex-shrink:0;display:flex;gap:4px}
+.slot-actions button{padding:4px 8px;border-radius:5px;font-size:9px;font-weight:700;cursor:pointer;border:none;font-family:inherit}
+.slot-confirm{background:var(--gr);color:#fff}
+.slot-cancel{background:#FEE2E2;color:#991B1B}
+.slot-assign{background:#DBEAFE;color:#1E40AF}
+
+/* Booking modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:flex-end}
+.modal-box{background:#fff;border-radius:18px 18px 0 0;padding:22px 18px 32px;width:100%;max-width:520px;margin:0 auto;max-height:85vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:14px}
+.modal-close{float:right;background:none;border:none;font-size:18px;cursor:pointer;color:var(--mu)}
+
+/* Plane selector */
+.plane-sel{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none}
+.plane-sel::-webkit-scrollbar{display:none}
+.plane-chip{padding:6px 14px;border-radius:10px;border:2px solid var(--bd);font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;background:var(--wh);color:var(--mu);flex-shrink:0;transition:all .15s}
+.plane-chip.on{border-color:var(--nv);background:var(--nv);color:#fff}
+
+/* Pending section */
+.pend-section{background:#FFF8E1;border:1px solid #FFE082;border-radius:10px;margin-bottom:10px;overflow:hidden}
+.pend-hd{background:var(--acc);padding:9px 13px;display:flex;justify-content:space-between;align-items:center}
+.pend-ht{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em}
+.pend-count{background:rgba(255,255,255,.3);color:#fff;border-radius:9px;padding:1px 7px;font-size:10px;font-weight:700}
+.pend-item{padding:10px 13px;border-bottom:1px solid #FDE68A;display:flex;justify-content:space-between;align-items:flex-start}
 .pend-item:last-child{border:none}
-.pend-info{font-size:12px}
-.pend-meta{font-size:10px;color:#92400E;margin-top:2px}
-.pend-actions{display:flex;gap:6px;flex-shrink:0;margin-left:10px}
-.ver-btn{padding:6px 12px;background:#1A6B3A;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer}
-.rej-btn{padding:6px 12px;background:#8B1A1A;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:flex-end}
-.modal-box{background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-height:80vh;overflow-y:auto}
-.modal-title{font-size:16px;font-weight:700;margin-bottom:16px}
-.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:#8892A4}
+.pend-info{font-size:11px}.pend-meta{font-size:9px;color:#92400E;margin-top:1px}
+.pend-actions{display:flex;gap:5px;flex-shrink:0;margin-left:8px}
+.ver-btn{padding:5px 10px;background:var(--gr);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer}
+.rej-btn{padding:5px 10px;background:var(--rd);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer}
 
-.pw-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:flex-end;justify-content:center}
-.pw-box{background:#fff;border-radius:20px 20px 0 0;padding:28px 24px 40px;width:100%;max-width:480px}
-.pw-title{font-size:17px;font-weight:700;margin-bottom:4px}
-.pw-sub{font-size:12px;color:#8892A4;margin-bottom:20px}
-.pw-field{margin-bottom:14px}
-.pw-field label{display:block;font-size:10px;font-weight:700;color:#8892A4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
-.pw-field input{width:100%;padding:12px 14px;border:1.5px solid #E2E6EE;border-radius:10px;font-size:15px;font-family:inherit;outline:none}
-.pw-field input:focus{border-color:#4A9EE8}
-.pw-err{font-size:12px;color:#C0392B;margin-bottom:12px;min-height:16px}
-.pw-ok{font-size:12px;color:#1A6B3A;margin-bottom:12px;min-height:16px;font-weight:600}
-.pw-btns{display:flex;gap:10px}
-.pw-save{flex:1;padding:13px;background:#1B2A4A;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
-.pw-cancel{padding:13px 18px;background:#F0F2F6;color:#1A1F2E;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer}
-.pw-reset-section{margin-top:20px;padding-top:16px;border-top:1px solid #F0F2F6}
-.pw-reset-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8892A4;margin-bottom:10px}
-.pw-user-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F5F6F8}
-.pw-user-row:last-child{border:none}
-.pw-user-name{font-size:13px;font-weight:600}
-.pw-reset-btn{font-size:11px;font-weight:700;color:#8B1A1A;background:none;border:1px solid #8B1A1A;border-radius:6px;padding:3px 9px;cursor:pointer}
-.settings-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:5px 10px;font-size:11px;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;display:none;align-items:center;gap:4px}
+/* Admin user management */
+.user-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #F5F6F8}
+.user-row:last-child{border:none}
+.user-info{display:flex;align-items:center;gap:8px}
+.user-icon{font-size:20px}
+.user-name{font-size:13px;font-weight:600}
+.user-role{font-size:10px;color:var(--mu)}
+.user-actions{display:flex;gap:4px}
+.ubtn{padding:3px 8px;border-radius:5px;font-size:9px;font-weight:700;cursor:pointer;border:none;font-family:inherit}
+.ubtn.del{background:#FEE2E2;color:#991B1B}
+.ubtn.edit{background:#E8F0FD;color:#1B4E8A}
 
-.token-setup{background:#FFF8E1;border:1px solid #FFE082;border-radius:13px;padding:18px;margin-bottom:14px;text-align:center}
-.token-setup h3{font-size:14px;color:#5D4037;margin-bottom:8px}
-.token-setup p{font-size:12px;color:#8D6E63;margin-bottom:12px}
-.token-setup input{max-width:300px;margin:0 auto 10px;display:block;font-size:13px;padding:10px 12px}
-.token-setup button{padding:10px 20px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
-.readonly-bar{background:#E8F0FD;color:#1B4E8A;padding:8px 14px;border-radius:8px;font-size:11px;font-weight:600;margin-bottom:12px;display:none;text-align:center}
+/* Plane management */
+.plane-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #F5F6F8}
+.plane-row:last-child{border:none}
+.plane-name{font-size:14px;font-weight:700}
+.plane-type{font-size:10px;color:var(--mu)}
+
+/* Login */
+.login-screen{position:fixed;inset:0;background:var(--nv)!important;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;padding:28px;isolation:isolate}
+.login-logo{font-size:44px;font-weight:900;color:#fff;letter-spacing:.06em;margin-bottom:3px}
+.login-sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.16em;text-transform:uppercase;margin-bottom:36px}
+.login-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:22px;width:100%;max-width:300px}
+.login-field{margin-bottom:14px}
+.login-field label{display:block;font-size:9px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.login-field input{width:100%;padding:12px 14px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.18);border-radius:9px;font-size:15px;color:#fff;font-family:inherit;outline:none}
+.login-field input::placeholder{color:rgba(255,255,255,.25)}
+.login-field input:focus{border-color:var(--sk)}
+.login-err{font-size:11px;color:#FF6B6B;text-align:center;margin-bottom:10px;min-height:16px}
+.login-btn{width:100%;padding:13px;background:var(--sk);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.login-btn:active{opacity:.85}
+
+/* Settings / password modals */
+.pw-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:flex;align-items:flex-end;justify-content:center}
+.pw-box{background:#fff;border-radius:18px 18px 0 0;padding:24px 20px 36px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto}
+.pw-title{font-size:16px;font-weight:700;margin-bottom:3px}
+.pw-sub{font-size:11px;color:var(--mu);margin-bottom:18px}
+.pw-field{margin-bottom:12px}
+.pw-field label{display:block;font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.pw-field input,.pw-field select{width:100%;padding:11px 13px;border:1.5px solid var(--bd);border-radius:9px;font-size:14px;font-family:inherit;outline:none}
+.pw-field input:focus,.pw-field select:focus{border-color:var(--sk)}
+.pw-err{font-size:11px;color:#C0392B;margin-bottom:10px;min-height:14px}
+.pw-ok{font-size:11px;color:var(--gr);margin-bottom:10px;min-height:14px;font-weight:600}
+.pw-btns{display:flex;gap:9px}
+.pw-save{flex:1;padding:12px;background:var(--nv);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.pw-cancel{padding:12px 16px;background:#F0F2F6;color:var(--tx);border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+
+/* Token setup */
+.token-setup{background:#FFF8E1;border:1px solid #FFE082;border-radius:12px;padding:16px;margin-bottom:12px;text-align:center}
+.token-setup h3{font-size:13px;color:#5D4037;margin-bottom:6px}
+.token-setup p{font-size:11px;color:#8D6E63;margin-bottom:10px}
+.token-setup input{max-width:280px;margin:0 auto 8px;display:block;font-size:12px;padding:9px 11px}
+.token-setup button{padding:9px 18px;background:var(--nv);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* Time slot picker */
+.time-pick{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:12px}
+.time-pick .sep{font-size:14px;font-weight:700;color:var(--mu);text-align:center}
 </style>
 </head>
 <body>
 
+<!-- ===== MODALS ===== -->
 <div id="edit-modal" class="modal-overlay" style="display:none">
   <div class="modal-box">
     <button class="modal-close" onclick="closeEdit()">✕</button>
-    <div class="modal-title">Editar vuelo</div>
+    <div class="modal-title" id="edit-modal-title">Editar</div>
     <div id="edit-form-content"></div>
   </div>
 </div>
 
-<div class="top">
-  <div class="top-r">
-    <div><h1>TG-SHI</h1><div class="sub">Shenshi Aviation · v4</div></div>
-    <div class="tach"><div><div class="tach-lb">TACH</div><span id="tachVal">—</span></div><div class="dot" id="dot"></div></div>
-  <button class="settings-btn" id="settings-btn" onclick="openPwModal()">⚙️</button>
-</div>
-</div>
-<div class="btabs">
-  <button class="bt on" onclick="nav('dash',0)"><div class="bt-i">📊</div><div class="bt-l">Panel</div></button>
-  <button class="bt" onclick="nav('vl',1)"><div class="bt-i">✈️</div><div class="bt-l">Vuelos</div></button>
-  <button class="bt" onclick="nav('fuel',2)"><div class="bt-i">⛽</div><div class="bt-l">Combustible</div></button>
-  <button class="bt" onclick="nav('bil',3)"><div class="bt-i">🧾</div><div class="bt-l">Billing</div></button>
-  <button class="bt" onclick="nav('new',4)"><div class="bt-i">➕</div><div class="bt-l">Registrar</div></button>
+<div id="book-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeBooking()">✕</button>
+    <div class="modal-title">Reservar vuelo</div>
+    <div id="book-form"></div>
+  </div>
 </div>
 
-<!-- PANEL -->
+<!-- ===== TOP BAR ===== -->
+<div class="top">
+  <div class="top-r">
+    <div><h1 id="app-title">TG-SHI</h1><div class="sub">Shenshi Aviation · v5</div></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="tach"><div><div class="tach-lb">TACH</div><span id="tachVal">—</span></div><div class="dot" id="dot"></div></div>
+      <button class="settings-btn" id="settings-btn" onclick="openSettings()">⚙️</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB BAR ===== -->
+<div class="btabs" id="btabs">
+  <button class="bt on" onclick="nav('dash',0)"><div class="bt-i">📊</div><div class="bt-l">Panel</div></button>
+  <button class="bt" onclick="nav('sched',1)"><div class="bt-i">📅</div><div class="bt-l">Agenda</div></button>
+  <button class="bt" onclick="nav('vl',2)"><div class="bt-i">✈️</div><div class="bt-l">Vuelos</div></button>
+  <button class="bt" onclick="nav('fuel',3)"><div class="bt-i">⛽</div><div class="bt-l">Comb.</div></button>
+  <button class="bt" onclick="nav('new',4)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
 <div class="pg on" id="pg-dash">
-  <div class="readonly-bar" id="readonly-bar">📖 Modo lectura — sin token de GitHub no se pueden guardar cambios</div>
   <div id="token-setup-area"></div>
   <div id="pend-section" style="display:none"></div>
+  <div id="sched-pend-section" style="display:none"></div>
   <div class="sg">
     <div class="st c1"><div class="sl">COCO</div><div class="sv" id="d-co">—</div><div class="sd">hrs 2026</div></div>
     <div class="st c2"><div class="sl">CUCO</div><div class="sv" id="d-cu">—</div><div class="sd">hrs 2026</div></div>
     <div class="st c3"><div class="sl">CHARTER</div><div class="sv" id="d-se">—</div><div class="sd">hrs 2026</div></div>
   </div>
   <div class="card">
-    <div class="ch"><div class="ct">Horas mensuales 2026</div><div style="display:flex;gap:8px;font-size:9px"><span style="color:#4A7CC7">■ COCO</span><span style="color:#2DA05A">■ CUCO</span><span style="color:#E08B20">■ Charter</span></div></div>
+    <div class="ch"><div class="ct">Horas mensuales 2026</div><div style="display:flex;gap:6px;font-size:8px"><span style="color:#4A7CC7">■ COCO</span><span style="color:#2DA05A">■ CUCO</span><span style="color:#E08B20">■ Charter</span></div></div>
     <div class="cb" id="d-bars"></div>
   </div>
   <div class="card">
-    <div class="ch"><div class="ct">Últimos vuelos</div><a href="#" onclick="nav('vl',1);return false" style="font-size:11px;color:var(--sk);text-decoration:none;font-weight:600">Ver todos</a></div>
+    <div class="ch"><div class="ct">Últimos vuelos</div><a href="#" onclick="nav('vl',2);return false" style="font-size:10px;color:var(--sk);text-decoration:none;font-weight:600">Ver todos</a></div>
     <div id="d-rec"></div>
   </div>
   <div class="card"><div class="ch"><div class="ct">Resumen 2026</div></div><div class="cb" id="d-sum"></div></div>
 </div>
 
-<!-- VUELOS -->
+<!-- ===== SCHEDULE / CALENDAR ===== -->
+<div class="pg" id="pg-sched">
+  <div id="plane-sel-sched" class="plane-sel" style="margin-bottom:10px"></div>
+  <div class="card">
+    <div class="cb">
+      <div class="cal-nav">
+        <button class="cal-btn" onclick="calNav(-1)">‹</button>
+        <div class="cal-title" id="cal-title"></div>
+        <button class="cal-btn" onclick="calNav(1)">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </div>
+  <div id="day-detail"></div>
+</div>
+
+<!-- ===== VUELOS ===== -->
 <div class="pg" id="pg-vl">
   <div class="frow" id="flt-row">
     <div class="fp on" onclick="filtV('ALL',this)">Todos</div>
@@ -229,63 +340,41 @@ input:focus,select:focus{border-color:var(--sk)}
     <div class="fp" onclick="filtV('2026',this)">2026</div>
     <div class="fp" onclick="filtV('2025',this)">2025</div>
     <div class="fp" onclick="filtV('2024',this)">2024</div>
-    <div class="fp" onclick="filtV('2023',this)">2023</div>
   </div>
   <div class="card" id="vl-list"></div>
 </div>
 
-<!-- COMBUSTIBLE -->
+<!-- ===== COMBUSTIBLE ===== -->
 <div class="pg" id="pg-fuel">
   <div class="stitle">Registro de combustible</div>
   <div class="card" id="fuel-list"></div>
 </div>
 
-<!-- BILLING -->
-<div class="pg" id="pg-bil">
-  <div class="stitle">Período de facturación</div>
-  <div class="card"><div class="cb">
-    <div class="row2" style="margin-bottom:12px">
-      <div><label class="fl">Desde</label><input type="month" id="b-from"></div>
-      <div><label class="fl">Hasta</label><input type="month" id="b-to"></div>
-    </div>
-    <div class="fs"><label class="fl">TC QTZ/USD</label><input type="number" id="b-tc" value="7.65" step="0.01" inputmode="decimal" style="max-width:120px"></div>
-    <button class="btn" onclick="calcBil()">Calcular</button>
-  </div></div>
-  <div id="bil-out"></div>
-</div>
-
-<!-- REGISTRAR -->
+<!-- ===== REGISTRAR ===== -->
 <div class="pg" id="pg-new">
-  <div class="sc" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+  <div class="sc" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:12px" id="new-tabs">
     <button class="sb on" onclick="fTab('flight',this)">✈ Vuelo</button>
-    <button class="sb" onclick="fTab('fuel',this)">⛽ Combustible</button>
+    <button class="sb" onclick="fTab('fuel',this)">⛽ Comb.</button>
+    <button class="sb" id="admin-tab" style="display:none" onclick="fTab('admin',this)">⚙ Admin</button>
   </div>
   <div id="form-flight">
     <div class="ok-bar" id="ok-f">Vuelo guardado ✓</div>
     <div class="err-bar" id="err-f"></div>
     <div class="card"><div class="ch"><div class="ct">Nuevo vuelo</div></div><div class="cb">
+      <div class="fs" id="plane-sel-flight"></div>
       <div class="fs"><label class="fl">Fecha</label><input type="date" id="ff-d"></div>
       <div class="fs"><label class="fl">Piloto</label>
-        <div class="sc" style="grid-template-columns:1fr 1fr 1fr">
-          <button class="sb on" onclick="seg('fp','FERNANDO',this)">FERNANDO</button>
-          <button class="sb" onclick="seg('fp','BARRAGAN',this)">BARRAGAN</button>
-          <button class="sb" onclick="seg('fp','OTRO',this)">OTRO</button>
-        </div>
-        <input type="text" id="ff-po" placeholder="Nombre" style="margin-top:7px;display:none">
+        <select id="ff-pilot"></select>
       </div>
       <div class="fs"><label class="fl">Responsable</label>
-        <div class="sc" style="grid-template-columns:1fr 1fr 1fr">
-          <button class="sb on" onclick="seg('fr','COCO',this)">COCO</button>
-          <button class="sb" onclick="seg('fr','CUCO',this)">CUCO</button>
-          <button class="sb" onclick="seg('fr','SENSHI',this)">SHENSHI</button>
-        </div>
+        <select id="ff-resp"></select>
       </div>
       <div class="fs"><label class="fl">Tipo</label>
         <div class="tg">
-          <div class="tc on" onclick="tipo('PERSONAL',this)"><div class="ti">✈</div><div class="tn">Personal</div><div class="td">Sin ingreso</div></div>
-          <div class="tc" onclick="tipo('STD',this)"><div class="ti">💼</div><div class="tn">Charter STD</div><div class="td">$750/hr</div></div>
-          <div class="tc" onclick="tipo('FF',this)"><div class="ti">👥</div><div class="tn">Charter FF</div><div class="td">$650/hr</div></div>
-          <div class="tc" onclick="tipo('MANTE',this)"><div class="ti">🔧</div><div class="tn">Mante</div><div class="td">Sin ingreso</div></div>
+          <div class="tc on" data-t="PERSONAL" onclick="tipo('PERSONAL',this)"><div class="ti">✈</div><div class="tn">Personal</div><div class="td">Sin ingreso</div></div>
+          <div class="tc" data-t="STD" onclick="tipo('STD',this)"><div class="ti">💼</div><div class="tn">Charter STD</div><div class="td">$750/hr</div></div>
+          <div class="tc" data-t="FF" onclick="tipo('FF',this)"><div class="ti">👥</div><div class="tn">Charter FF</div><div class="td">$650/hr</div></div>
+          <div class="tc" data-t="MANTE" onclick="tipo('MANTE',this)"><div class="ti">🔧</div><div class="tn">Mante</div><div class="td">Sin ingreso</div></div>
         </div>
       </div>
       <div class="fs"><label class="fl">Usuario / Cliente</label><select id="ff-u"></select></div>
@@ -297,433 +386,327 @@ input:focus,select:focus{border-color:var(--sk)}
       <div class="hcalc" id="hcalc"></div>
       <div class="row2">
         <div><label class="fl">Combustible (QTZ)</label><input type="number" id="ff-cb" placeholder="0.00" step="0.01" inputmode="decimal"></div>
-        <div><label class="fl">Espera en tierra (hrs · $15/hr a Fernando)</label><input type="number" id="ff-es" value="0" step="0.5" inputmode="decimal"></div>
+        <div><label class="fl">Espera tierra (hrs)</label><input type="number" id="ff-es" value="0" step="0.5" inputmode="decimal"></div>
       </div>
       <div id="rev-sec" style="display:none" class="fs"><label class="fl">Ingreso charter ($)</label><input type="number" id="ff-rv" placeholder="auto" step="0.01" inputmode="decimal"><div class="hint" id="rev-hint"></div></div>
       <div class="fs"><label class="fl">Notas</label><input type="text" id="ff-no" placeholder="opcional"></div>
-      <div id="fer-charter-note" style="display:none;background:#FFF8E1;border:1px solid #FFE082;border-radius:8px;padding:10px 12px;font-size:12px;color:#5D4037;margin-bottom:10px">
-    ⚠️ Los vuelos charter que registres quedarán <b>pendientes de verificación por CUCO</b> antes de incluirse en el billing.
-  </div>
-  <button class="btn" onclick="saveF()">Guardar vuelo</button>
+      <button class="btn" onclick="saveF()">Guardar vuelo</button>
     </div></div>
   </div>
+
   <div id="form-fuel" style="display:none">
     <div class="ok-bar" id="ok-fu">Combustible guardado ✓</div>
     <div class="err-bar" id="err-fu"></div>
-    <div class="card"><div class="ch"><div class="ct">Nueva carga de combustible</div></div><div class="cb">
+    <div class="card"><div class="ch"><div class="ct">Nueva carga</div></div><div class="cb">
       <div class="fs"><label class="fl">Fecha</label><input type="date" id="fu-d"></div>
-      <div class="fs"><label class="fl">Pagado por</label>
-        <div class="sc" style="grid-template-columns:1fr 1fr 1fr">
-          <button class="sb on" onclick="seg('fup','COCO',this)">COCO</button>
-          <button class="sb" onclick="seg('fup','CUCO',this)">CUCO</button>
-          <button class="sb" onclick="seg('fup','SENSHI',this)">SHENSHI</button>
-        </div>
-      </div>
+      <div class="fs"><label class="fl">Pagado por</label><select id="fu-py"></select></div>
       <div class="fs"><label class="fl">Monto total (QTZ)</label><input type="number" id="fu-m" placeholder="0.00" step="0.01" inputmode="decimal"></div>
-      <div class="stitle" style="margin:0 0 8px">Anticipo (quién pagó de su bolsillo)</div>
-      <div class="row2">
-        <div><label class="fl">Anticipo COCO</label><input type="number" id="fu-ac" value="0" step="0.01" inputmode="decimal"></div>
-        <div><label class="fl">Anticipo CUCO</label><input type="number" id="fu-au" value="0" step="0.01" inputmode="decimal"></div>
-      </div>
-      <div class="fs"><label class="fl">Anticipo SHENSHI</label><input type="number" id="fu-as" value="0" step="0.01" inputmode="decimal"></div>
+      <div class="stitle" style="margin:0 0 7px">Anticipo (quién pagó de su bolsillo)</div>
+      <div id="fu-advances"></div>
       <div class="fs"><label class="fl">Notas</label><input type="text" id="fu-no" placeholder="opcional"></div>
       <button class="btn gr" onclick="saveFu()">Guardar combustible</button>
     </div></div>
   </div>
+
+  <div id="form-admin" style="display:none">
+    <div class="card"><div class="ch"><div class="ct">Usuarios</div><button class="btn sm" onclick="openAddUser()">+ Agregar</button></div>
+      <div id="user-list"></div>
+    </div>
+    <div class="card"><div class="ch"><div class="ct">Aviones</div><button class="btn sm" onclick="openAddPlane()">+ Agregar</button></div>
+      <div id="plane-list"></div>
+    </div>
+    <div class="card"><div class="ch"><div class="ct">Conexión Worker</div></div><div class="cb">
+      <div class="fs"><label class="fl">Worker URL</label><input type="url" id="cfg-url" placeholder="https://tgshi-api.xxx.workers.dev"></div>
+      <div class="fs"><label class="fl">Worker Secret</label><input type="password" id="cfg-secret" placeholder="secret"></div>
+      <div style="display:flex;gap:7px">
+        <button class="btn sm" onclick="saveWorkerCfg()">Guardar</button>
+        <button class="btn sm" style="background:#E8F0FD;color:#1B4E8A" onclick="testWorker()">Probar</button>
+      </div>
+      <div id="cfg-msg" style="font-size:10px;color:var(--mu);margin-top:5px"></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ===== BILLING (accessible from nav) ===== -->
+<div class="pg" id="pg-bil">
+  <div class="stitle">Período de facturación</div>
+  <div class="card"><div class="cb">
+    <div class="row2" style="margin-bottom:10px">
+      <div><label class="fl">Desde</label><input type="month" id="b-from"></div>
+      <div><label class="fl">Hasta</label><input type="month" id="b-to"></div>
+    </div>
+    <div class="fs"><label class="fl">TC QTZ/USD</label><input type="number" id="b-tc" value="7.65" step="0.01" inputmode="decimal" style="max-width:110px"></div>
+    <button class="btn" onclick="calcBil()">Calcular</button>
+  </div></div>
+  <div id="bil-out"></div>
 </div>
 
 <script>
+// =====================================================================
+// TG-SHI v5 — Multi-plane, multi-user, scheduling
+// =====================================================================
 
-const USERS={
-  CUCO:{pass:'shenshi2026',role:'admin',icon:'👨‍✈️'},
-  COCO:{pass:'coco2026',role:'viewer',icon:'👩‍✈️'},
-  FERNANDO:{pass:'fernando2026',role:'pilot',icon:'🧑‍✈️'}
+// --- Worker config ---
+let WORKER_URL = localStorage.getItem('tgshi_worker_url') || '';
+let WORKER_SECRET = localStorage.getItem('tgshi_worker_secret') || '';
+let API_OK = false;
+let SHA = '';
+
+// --- Session ---
+let CU = sessionStorage.getItem('tgshi_user') || null; // current user id
+let CR = sessionStorage.getItem('tgshi_role') || null; // current role
+
+// --- DB ---
+let DB = {
+  users: {
+    CUCO: { role:'admin', icon:'👨‍✈️', name:'Eduardo Girón' },
+    COCO: { role:'owner', icon:'👩‍✈️', name:'Coco' },
+    FERNANDO: { role:'pilot_admin', icon:'🧑‍✈️', name:'Fernando Méndez' }
+  },
+  passwords: { CUCO:'shenshi2026', COCO:'coco2026', FERNANDO:'fernando2026' },
+  planes: [{ id:'TG-SHI', name:'Shenshi', type:'Cessna 206', active:true }],
+  flights: [], fuel: [], schedule: [],
+  rates: [
+    { d:'2023-03-01', pilot:110, gw:15, std:750, ff:650, admin:300, res:2 },
+    { d:'2026-01-01', pilot:110, gw:15, std:750, ff:650, admin:350, res:2 }
+  ],
+  meta: { last_tach:0, last_flight_id:0, last_fuel_id:0, last_sched_id:0 }
 };
-let CURRENT_USER = sessionStorage.getItem('tgshi_user') || null;
-let CURRENT_ROLE = sessionStorage.getItem('tgshi_role') || null;
-let loginSel = 'CUCO';
 
-const REPO='cucogiron/tgshi-aviation';
-const BRANCH='main'; // adjust if your default branch differs
+// --- State ---
+const MO = ['','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+const DAYS_ES = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'];
+let selPlane = 'TG-SHI';
+let calDate = new Date();
+let calSelDate = null;
+let formType = 'PERSONAL';
 
-// ===== FIX: NO hardcoded token. Token comes ONLY from localStorage or from data.json =====
-let TOKEN = localStorage.getItem('tgshi_token') || '';
-let READ_ONLY = false; // true if we loaded data but have no working write token
+// --- Helpers ---
+const isAdmin = () => CR === 'admin';
+const isPilotAdmin = () => CR === 'pilot_admin';
+const canManageSchedule = () => isAdmin() || isPilotAdmin();
+const getUser = (id) => DB.users[id] || { icon:'👤', name:id, role:'owner' };
+const getPlane = (id) => DB.planes.find(p=>p.id===id) || DB.planes[0];
+const pad2 = n => String(n).padStart(2,'0');
+const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; };
+const fmtDate = ds => { const p=ds.split('-'); return `${+p[2]} ${MO[+p[1]]} ${p[0]}`; };
 
-const MO=['','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-let DB={flights:[],fuel:[],rates:[],meta:{last_tach:0,last_flight_id:0,last_fuel_id:0},passwords:{}};
-let SHA='';
-let S={fp:'FERNANDO',fr:'COCO',ft:'PERSONAL',fup:'COCO'};
+function getRateFD(ds){
+  let r=DB.rates[0];
+  for(const x of DB.rates) if(new Date(x.d)<=new Date(ds)) r=x;
+  return r;
+}
 
-window.onload_main=async()=>{
-  setDates(); updUsu();
-  setDot('sync');
-  await loadGH();
-  render(); buildPending();
-};
-
+// =====================================================================
+// INIT
+// =====================================================================
 function initApp(){
-  if(CURRENT_USER&&USERS[CURRENT_USER]){
+  if(CU && DB.users[CU]){
     document.getElementById('login-screen').style.display='none';
-    const badge=CURRENT_ROLE==='admin'?'badge-admin':CURRENT_ROLE==='pilot'?'badge-pilot':'badge-viewer';
-    document.querySelector('.tach').insertAdjacentHTML('beforebegin',
-      `<span class="user-badge ${badge}">${USERS[CURRENT_USER].icon} ${CURRENT_USER}</span>`);
+    showUserBadge();
     document.getElementById('settings-btn').style.display='block';
-    window.onload_main();
+    if(isAdmin()) document.getElementById('admin-tab').style.display='block';
+    onReady();
   } else {
     document.getElementById('login-screen').style.display='flex';
   }
 }
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
+
+async function onReady(){
+  setDot('sync');
+  await loadData();
+  buildAll();
 }
 
-// ===== FIX: Rewritten loadGH with 3-tier fallback =====
-// Tier 1: raw.githubusercontent.com (no token needed for public repos, fast CDN)
-// Tier 2: GitHub API with token (needed for private repos and to get SHA for writes)
-// Tier 3: Keep whatever DB already has (offline/fallback)
-async function loadGH(){
-  setDot('sync');
-  let loaded = false;
+function buildAll(){
+  render();
+  buildPending();
+  buildSchedPending();
+  setDates();
+  buildPilotSelect();
+  buildRespSelect();
+  buildPlaneSelectors();
+  buildUserOptions();
+  buildCalendar();
+}
 
-  // --- TIER 1: Try raw.githubusercontent.com (works for public repos, no token needed) ---
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initApp);
+else initApp();
+
+// =====================================================================
+// LOGIN
+// =====================================================================
+function doLogin(){
+  const uid = document.getElementById('login-uid').value.trim().toUpperCase();
+  const pass = document.getElementById('login-pass').value;
+  if(!uid || !pass){ document.getElementById('login-err').textContent='Ingresa usuario y contraseña'; return; }
+
+  // We might not have loaded DB yet, try with defaults
+  const pw = DB.passwords[uid];
+  if(!pw || pass !== pw){
+    document.getElementById('login-err').textContent='Usuario o contraseña incorrectos';
+    document.getElementById('login-pass').value='';
+    return;
+  }
+  const u = DB.users[uid];
+  if(!u){ document.getElementById('login-err').textContent='Usuario no existe'; return; }
+
+  CU = uid;
+  CR = u.role;
+  sessionStorage.setItem('tgshi_user', CU);
+  sessionStorage.setItem('tgshi_role', CR);
+  document.getElementById('login-screen').style.display='none';
+  showUserBadge();
+  document.getElementById('settings-btn').style.display='block';
+  if(isAdmin()) document.getElementById('admin-tab').style.display='block';
+  onReady();
+}
+
+function showUserBadge(){
+  const u = getUser(CU);
+  const badge = `badge-${CR}`;
+  const existing = document.querySelector('.user-badge');
+  if(existing) existing.remove();
+  document.querySelector('.tach').insertAdjacentHTML('beforebegin',
+    `<span class="user-badge ${badge}">${u.icon} ${CU}</span>`);
+}
+
+function logout(){
+  sessionStorage.removeItem('tgshi_user');
+  sessionStorage.removeItem('tgshi_role');
+  location.reload();
+}
+
+// =====================================================================
+// DATA LAYER (Cloudflare Worker)
+// =====================================================================
+async function loadData(){
+  if(!WORKER_URL || !WORKER_SECRET){ setDot('err'); showSetupNeeded(); return; }
   try {
-    const rawUrl = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/data.json?t=${Date.now()}`;
-    const r = await fetch(rawUrl, {cache:'no-store'});
-    if(r.ok){
-      const parsed = await r.json();
-      if(parsed && parsed.flights && parsed.flights.length > 0){
-        DB = parsed;
-        loaded = true;
-        console.log('[loadGH] Tier 1 OK: raw.githubusercontent.com, '+DB.flights.length+' flights');
-      }
-    } else {
-      console.warn('[loadGH] Tier 1 failed: HTTP '+r.status);
+    const r = await fetch(WORKER_URL+'/data', { headers:{'Authorization':'Bearer '+WORKER_SECRET}, cache:'no-store' });
+    if(!r.ok){
+      if(r.status===401){ setDot('err'); showSetupNeeded('Secret incorrecto'); return; }
+      throw new Error('HTTP '+r.status);
     }
-  } catch(e){
-    console.warn('[loadGH] Tier 1 error:', e.message);
-  }
-
-  // --- TIER 2: GitHub API (gets SHA needed for saves, uses token) ---
-  if(TOKEN){
-    try {
-      const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data.json?t=${Date.now()}`,
-        {headers:{Authorization:'token '+TOKEN, Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
-      if(r.ok){
-        const j = await r.json();
-        SHA = j.sha;
-        if(!loaded){
-          // Only parse content if Tier 1 didn't already load
-          const b64 = j.content.replace(/[\r\n ]/g,'');
-          const parsed = JSON.parse(atob(b64));
-          if(parsed && parsed.flights && parsed.flights.length > 0){
-            DB = parsed;
-            loaded = true;
-            console.log('[loadGH] Tier 2 OK: API, '+DB.flights.length+' flights');
-          }
-        }
-        READ_ONLY = false;
-      } else if(r.status === 401 || r.status === 403){
-        console.warn('[loadGH] Tier 2: Token invalid/expired ('+r.status+')');
-        // Token is bad — clear it so we don't keep using it
-        // But DON'T clear localStorage yet, user might fix it in settings
-        READ_ONLY = true;
-      } else {
-        console.warn('[loadGH] Tier 2 failed: HTTP '+r.status);
+    const res = await r.json();
+    if(res.data && res.data.flights){
+      // Merge: keep new model fields, fill defaults
+      DB = { ...DB, ...res.data };
+      if(!DB.users) DB.users = { CUCO:{role:'admin',icon:'👨‍✈️',name:'Eduardo'}, COCO:{role:'owner',icon:'👩‍✈️',name:'Coco'}, FERNANDO:{role:'pilot_admin',icon:'🧑‍✈️',name:'Fernando'} };
+      if(!DB.planes) DB.planes = [{ id:'TG-SHI', name:'Shenshi', type:'Cessna 206', active:true }];
+      if(!DB.schedule) DB.schedule = [];
+      if(!DB.meta) DB.meta = {};
+      SHA = res.sha;
+      API_OK = true;
+      // Sync passwords
+      if(DB.passwords && DB.users[CU]) {
+        // Update role from loaded data
+        const u = DB.users[CU];
+        if(u) CR = u.role;
       }
-    } catch(e){
-      console.warn('[loadGH] Tier 2 error:', e.message);
-    }
-  } else {
-    // No token at all
-    READ_ONLY = true;
-  }
-
-  // --- Post-load: sync passwords and token from loaded DB ---
-  if(loaded){
-    if(DB.token && DB.token !== TOKEN){
-      TOKEN = DB.token;
-      localStorage.setItem('tgshi_token', TOKEN);
-      console.log('[loadGH] Token updated from data.json');
-      // If we just got a token and didn't have SHA yet, fetch SHA now
-      if(!SHA){
-        try {
-          const r2 = await fetch(`https://api.github.com/repos/${REPO}/contents/data.json`,
-            {headers:{Authorization:'token '+TOKEN, Accept:'application/vnd.github.v3+json'}});
-          if(r2.ok){
-            const j2 = await r2.json();
-            SHA = j2.sha;
-            READ_ONLY = false;
-            console.log('[loadGH] Got SHA with new token');
-          }
-        } catch(e){ /* non-critical */ }
-      }
-    }
-    if(DB.passwords){
-      Object.keys(DB.passwords).forEach(u=>{if(USERS[u])USERS[u].pass=DB.passwords[u];});
     }
     setDot('ok');
-  } else {
-    // Nothing loaded — show error
-    setDot('err');
-    const bars = document.getElementById('d-bars');
-    if(bars) bars.innerHTML = `<div style="padding:16px;color:#C0392B;font-size:12px;text-align:center">
-      ⚠️ No se pudieron cargar datos${!TOKEN?' — falta token de GitHub':''}
-      <br><br><button onclick="loadGH().then(()=>{render();buildPending()})" style="padding:8px 16px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">🔄 Reintentar</button>
-    </div>`;
-  }
-
-  // Show read-only indicator
-  updateReadOnlyUI();
-}
-
-function updateReadOnlyUI(){
-  const bar = document.getElementById('readonly-bar');
-  if(bar) bar.style.display = (READ_ONLY && DB.flights.length > 0) ? 'block' : 'none';
-
-  // Show token setup prompt if no token and user is admin
-  const area = document.getElementById('token-setup-area');
-  if(area && !TOKEN && isAdmin()){
-    area.innerHTML = `<div class="token-setup">
-      <h3>🔑 Configurar Token de GitHub</h3>
-      <p>Para guardar vuelos y combustible necesitas un token de GitHub con permisos de escritura al repo.</p>
-      <input type="password" id="inline-token" placeholder="ghp_..." style="font-size:13px">
-      <br><button onclick="saveInlineToken()">Guardar token</button>
-      <div id="inline-token-msg" style="font-size:11px;color:#8892A4;margin-top:8px"></div>
-    </div>`;
-  } else if(area){
-    area.innerHTML = '';
-  }
-}
-
-async function saveInlineToken(){
-  const t = document.getElementById('inline-token').value.trim();
-  const msg = document.getElementById('inline-token-msg');
-  if(!t){msg.textContent='Ingresa un token válido';return;}
-  TOKEN = t;
-  localStorage.setItem('tgshi_token', TOKEN);
-  msg.textContent='Verificando...';
-  // Test with a read
-  try {
-    const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data.json`,
-      {headers:{Authorization:'token '+TOKEN, Accept:'application/vnd.github.v3+json'}});
-    if(r.ok){
-      const j = await r.json();
-      SHA = j.sha;
-      READ_ONLY = false;
-      // Save token into data.json for other users
-      DB.token = TOKEN;
-      await saveGH();
-      msg.textContent='✓ Token válido y guardado para todos los usuarios';
-      msg.style.color='#1A6B3A';
-      setTimeout(()=>{ document.getElementById('token-setup-area').innerHTML=''; updateReadOnlyUI(); }, 2000);
-    } else {
-      msg.textContent='Token inválido (HTTP '+r.status+')';
-      msg.style.color='#C0392B';
-      TOKEN='';
-      localStorage.removeItem('tgshi_token');
-    }
+    hideSetupNeeded();
   } catch(e){
-    msg.textContent='Error: '+e.message;
-    msg.style.color='#C0392B';
-  }
-}
-
-async function saveGH(){
-  if(READ_ONLY || !TOKEN){
-    alert('No hay token de GitHub configurado. Pide a CUCO que configure uno en ⚙️ Ajustes.');
-    return false;
-  }
-  setDot('sync');
-  try{
-    if(!SHA){
-      const sr=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
-        {headers:{Authorization:'token '+TOKEN,Accept:'application/vnd.github.v3+json'}});
-      if(sr.ok){const sj=await sr.json();SHA=sj.sha;}
-    }
-    const jsonStr=JSON.stringify(DB);
-    let content;
-    try{
-      content=btoa(unescape(encodeURIComponent(jsonStr)));
-    }catch(encErr){
-      const bytes=new TextEncoder().encode(jsonStr);
-      let bin='';
-      bytes.forEach(b=>bin+=String.fromCharCode(b));
-      content=btoa(bin);
-    }
-    const body={message:'update '+new Date().toISOString().slice(0,10),content};
-    if(SHA)body.sha=SHA;
-    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
-      {method:'PUT',headers:{Authorization:'token '+TOKEN,'Content-Type':'application/json',Accept:'application/vnd.github.v3+json'},body:JSON.stringify(body)});
-    if(!r.ok){
-      const errBody=await r.text();
-      console.error('GitHub PUT failed:',r.status,errBody);
-      if(r.status===401||r.status===403){
-        READ_ONLY=true;
-        updateReadOnlyUI();
-        alert('Token expirado o sin permisos. Pide a CUCO que actualice el token en ⚙️ Ajustes.');
-      }
-      throw new Error(r.status+': '+errBody.slice(0,100));
-    }
-    const j=await r.json(); SHA=j.content.sha;
-    setDot('ok'); return true;
-  }catch(e){
-    console.error('saveGH error:',e.message||e);
+    console.error('[loadData]', e);
     setDot('err');
-    window._lastSaveError = e.message||String(e);
-    return false;
+    if(DB.flights.length===0){
+      const bars=document.getElementById('d-bars');
+      if(bars) bars.innerHTML=`<div class="empty">⚠️ ${e.message}<br><br><button class="btn sm" onclick="loadData().then(buildAll)">🔄 Reintentar</button></div>`;
+    }
   }
 }
 
-function setDot(s){const d=document.getElementById('dot');d.className='dot'+(s==='sync'?' sync':s==='err'?' err':'');}
+async function saveData(){
+  if(!API_OK){ alert('Sin conexión al servidor. Configura en Admin > Worker.'); return false; }
+  setDot('sync');
+  try {
+    const r = await fetch(WORKER_URL+'/data', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+WORKER_SECRET,'Content-Type':'application/json'},
+      body:JSON.stringify({ data:DB, sha:SHA, user:CU })
+    });
+    const res = await r.json();
+    if(!r.ok){
+      if(r.status===409){ alert('Conflicto: alguien más guardó. Recargando…'); await loadData(); buildAll(); return false; }
+      throw new Error(res.error||'HTTP '+r.status);
+    }
+    SHA = res.sha;
+    setDot('ok');
+    return true;
+  } catch(e){
+    console.error('[saveData]', e);
+    setDot('err');
+    return false;
+  }
+}
+// Aliases
+const saveGH = saveData;
 
+function setDot(s){ const d=document.getElementById('dot'); d.className='dot'+(s==='sync'?' sync':s==='err'?' err':''); }
+
+function showSetupNeeded(msg){
+  const area=document.getElementById('token-setup-area');
+  if(!area)return;
+  area.innerHTML=`<div class="token-setup"><h3>🔗 Configurar conexión</h3><p>${msg||'Configura la conexión al servidor.'}</p>${isAdmin()?`
+    <div style="text-align:left;max-width:280px;margin:0 auto">
+      <div style="margin-bottom:8px"><label class="fl">Worker URL</label><input type="url" id="setup-url" value="${WORKER_URL}" placeholder="https://tgshi-api.xxx.workers.dev" style="font-size:12px"></div>
+      <div style="margin-bottom:8px"><label class="fl">Secret</label><input type="password" id="setup-secret" value="${WORKER_SECRET}" placeholder="secret" style="font-size:12px"></div>
+      <button onclick="quickSetup()">Conectar</button>
+      <div id="setup-msg" style="font-size:10px;color:var(--mu);margin-top:6px"></div>
+    </div>`:`<p style="font-size:11px;color:#92400E">Pide a CUCO que configure.</p>`}</div>`;
+}
+function hideSetupNeeded(){ const a=document.getElementById('token-setup-area'); if(a)a.innerHTML=''; }
+
+async function quickSetup(){
+  const url=document.getElementById('setup-url').value.trim().replace(/\/+$/,'');
+  const sec=document.getElementById('setup-secret').value.trim();
+  const msg=document.getElementById('setup-msg');
+  if(!url||!sec){msg.textContent='Completa ambos campos';return;}
+  msg.textContent='Verificando…';
+  try{
+    const r=await fetch(url+'/data',{headers:{'Authorization':'Bearer '+sec},cache:'no-store'});
+    if(r.status===401){msg.textContent='Secret incorrecto';return;}
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const res=await r.json();
+    WORKER_URL=url; WORKER_SECRET=sec;
+    localStorage.setItem('tgshi_worker_url',url);
+    localStorage.setItem('tgshi_worker_secret',sec);
+    DB={...DB,...res.data}; SHA=res.sha; API_OK=true;
+    if(!DB.users)DB.users={};if(!DB.planes)DB.planes=[];if(!DB.schedule)DB.schedule=[];
+    if(DB.passwords)Object.keys(DB.passwords).forEach(u=>{if(DB.users[u]){}});
+    msg.textContent='✓ Conectado';setDot('ok');buildAll();setTimeout(hideSetupNeeded,1000);
+  }catch(e){msg.textContent='Error: '+e.message;}
+}
+
+// =====================================================================
+// NAVIGATION
+// =====================================================================
 function nav(id,i){
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.bt').forEach(b=>b.classList.remove('on'));
   document.getElementById('pg-'+id).classList.add('on');
   document.querySelectorAll('.bt')[i].classList.add('on');
-  if(id==='vl')buildVL('ALL');
-  if(id==='fuel')buildFuel();
-  if(id==='bil'){initBil();setTimeout(calcBil,100);}
+  if(id==='vl') buildVL('ALL');
+  if(id==='fuel') buildFuel();
+  if(id==='sched') buildCalendar();
+  if(id==='new' && isAdmin()) buildAdminPanel();
 }
 
+// =====================================================================
+// RENDER DASHBOARD
+// =====================================================================
 function render(){
   const t=Math.max(...DB.flights.map(f=>f.hf||0),0);
   document.getElementById('tachVal').textContent=t.toFixed(1);
+  // Update title to show active plane
+  document.getElementById('app-title').textContent = selPlane;
   buildDash();
 }
 
-function getRateFD(ds){
-  let r=DB.rates[0];
-  for(const x of DB.rates)if(new Date(x.d)<=new Date(ds))r=x;
-  return r;
-}
-
-function selUser(u,el){
-  loginSel=u;
-  document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');
-  document.getElementById('login-pass').focus();
-}
-
-function doLogin(){
-  const pass=document.getElementById('login-pass').value;
-  const u=USERS[loginSel];
-  if(!u||pass!==u.pass){
-    document.getElementById('login-err').textContent='Contraseña incorrecta';
-    document.getElementById('login-pass').value='';
-    return;
-  }
-  CURRENT_USER=loginSel; CURRENT_ROLE=u.role;
-  sessionStorage.setItem('tgshi_user',CURRENT_USER);
-  sessionStorage.setItem('tgshi_role',CURRENT_ROLE);
-  document.getElementById('login-screen').style.display='none';
-  const badge=CURRENT_ROLE==='admin'?'badge-admin':CURRENT_ROLE==='pilot'?'badge-pilot':'badge-viewer';
-  document.querySelector('.tach').insertAdjacentHTML('beforebegin',
-    `<span class="user-badge ${badge}">${USERS[CURRENT_USER].icon} ${CURRENT_USER}</span>`);
-  document.getElementById('settings-btn').style.display='block';
-  window.onload_main();
-}
-
-function isAdmin(){return CURRENT_ROLE==='admin';}
-function isPilot(){return CURRENT_ROLE==='pilot';}
-
-function buildPending(){
-  const pends=DB.flights.filter(f=>f.verified===false);
-  const sec=document.getElementById('pend-section');
-  if(!isAdmin()||pends.length===0){sec.style.display='none';return;}
-  sec.style.display='block';
-  sec.innerHTML=`<div class="pend-section">
-    <div class="pend-hd"><span class="pend-ht">✋ Verificaciones pendientes</span><span class="pend-count">${pends.length}</span></div>
-    ${pends.map(f=>`
-    <div class="pend-item">
-      <div>
-        <div class="pend-info"><b>${f.rt||'—'}</b> · ${f.r} · <span class="bx ${f.t==='FF'?'f':'s'}">${f.t}</span></div>
-        <div class="pend-meta">${f.d} · ${f.h.toFixed(1)}hr · Logueado por: ${f.logged_by}</div>
-      </div>
-      <div class="pend-actions">
-        <button class="ver-btn" onclick="verifyFlight('${f.id}','approve')">✓</button>
-        <button class="rej-btn" onclick="verifyFlight('${f.id}','reject')">✕</button>
-      </div>
-    </div>`).join('')}
-  </div>`;
-}
-
-async function verifyFlight(id,action){
-  const f=DB.flights.find(x=>x.id==id);
-  if(!f)return;
-  if(action==='approve'){
-    f.verified=true; f.verified_by=CURRENT_USER;
-  } else {
-    f.t='PERSONAL'; f.rv=0; f.verified=true; f.verified_by=CURRENT_USER;
-  }
-  render(); buildPending();
-  await saveGH();
-}
-
-let editId=null;
-function openEdit(id){
-  if(!isAdmin())return;
-  const f=DB.flights.find(x=>x.id==id);
-  if(!f)return;
-  editId=id;
-  const tipos=['PERSONAL','STD','FF','MANTE'];
-  document.getElementById('edit-form-content').innerHTML=`
-    <div class="fs"><label class="fl">Fecha</label><input type="date" id="ed-d" value="${f.d}"></div>
-    <div class="fs"><label class="fl">Ruta</label><input type="text" id="ed-rt" value="${f.rt||''}" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
-    <div class="fs"><label class="fl">Responsable</label>
-      <select id="ed-r"><option ${f.r==='COCO'?'selected':''}>COCO</option><option ${f.r==='CUCO'?'selected':''}>CUCO</option><option ${f.r==='SENSHI'?'selected':''}>SENSHI</option></select></div>
-    <div class="fs"><label class="fl">Tipo</label>
-      <select id="ed-t">${tipos.map(t=>`<option ${f.t===t?'selected':''}>${t}</option>`).join('')}</select></div>
-    <div class="row2">
-      <div><label class="fl">HRM Ini</label><input type="number" id="ed-hi" value="${f.hi}" step="0.1" inputmode="decimal"></div>
-      <div><label class="fl">HRM Fin</label><input type="number" id="ed-hf" value="${f.hf}" step="0.1" inputmode="decimal"></div>
-    </div>
-    <div class="row2">
-      <div><label class="fl">Hrs Espera</label><input type="number" id="ed-eh" value="${f.eh||0}" step="0.5" inputmode="decimal"></div>
-      <div><label class="fl">Ingreso $</label><input type="number" id="ed-rv" value="${f.rv||0}" step="0.01" inputmode="decimal"></div>
-    </div>
-    <div class="fs"><label class="fl">Notas</label><input type="text" id="ed-no" value="${f.no||''}"></div>
-    <div style="display:flex;gap:10px;margin-top:4px">
-      <button class="btn" onclick="saveEdit()">Guardar cambios</button>
-      <button class="btn" style="background:#8B1A1A" onclick="deleteFlight(${id})">Eliminar</button>
-    </div>`;
-  document.getElementById('edit-modal').style.display='flex';
-}
-
-function closeEdit(){document.getElementById('edit-modal').style.display='none';editId=null;}
-
-async function saveEdit(){
-  const f=DB.flights.find(x=>x.id==editId);
-  if(!f)return;
-  f.d=document.getElementById('ed-d').value;
-  f.rt=document.getElementById('ed-rt').value;
-  f.r=document.getElementById('ed-r').value;
-  f.t=document.getElementById('ed-t').value;
-  const hi=parseFloat(document.getElementById('ed-hi').value);
-  const hf=parseFloat(document.getElementById('ed-hf').value);
-  f.hi=hi; f.hf=hf; f.h=parseFloat((hf-hi).toFixed(1));
-  f.eh=parseFloat(document.getElementById('ed-eh').value)||0;
-  f.rv=parseFloat(document.getElementById('ed-rv').value)||0;
-  f.no=document.getElementById('ed-no').value;
-  f.verified=true; f.verified_by=CURRENT_USER;
-  closeEdit();
-  render(); buildPending(); buildVL('ALL');
-  await saveGH();
-}
-
-async function deleteFlight(id){
-  if(!confirm('¿Eliminar este vuelo?'))return;
-  DB.flights=DB.flights.filter(x=>x.id!=id);
-  closeEdit();
-  render(); buildPending(); buildVL('ALL');
-  await saveGH();
-}
-
 function buildDash(){
-  const f26=DB.flights.filter(f=>f.d.startsWith('2026'));
+  const yr=new Date().getFullYear().toString();
+  const f26=DB.flights.filter(f=>f.d.startsWith(yr) && (!f.plane_id || f.plane_id===selPlane));
   let co=0,cu=0,se=0; const mo={};
   f26.forEach(f=>{
     const m=+f.d.slice(5,7);
@@ -742,154 +725,447 @@ function buildDash(){
     const t=d.co+d.cu+d.se,sc=100/mx;
     bh+=`<div class="mr"><div class="ml">${MO[m]}</div><div class="bt2"><div class="bs b1" style="width:${d.co*sc}%"></div><div class="bs b2" style="width:${d.cu*sc}%"></div><div class="bs b3" style="width:${d.se*sc}%"></div></div><div class="mh">${t.toFixed(1)}</div></div>`;
   }
-  document.getElementById('d-bars').innerHTML=bh||'<div class="empty">Sin vuelos 2026</div>';
-  document.getElementById('d-rec').innerHTML=[...DB.flights].reverse().slice(0,6).map(fRow).join('');
-  const tot=co+cu+se,pct=t=>tot>0?` (${((t/tot)*100).toFixed(0)}%)`:'';
+  document.getElementById('d-bars').innerHTML=bh||'<div class="empty">Sin vuelos '+yr+'</div>';
+  document.getElementById('d-rec').innerHTML=[...DB.flights].reverse().slice(0,5).map(fRow).join('');
+  const tot=co+cu+se,pct=v=>tot>0?` (${((v/tot)*100).toFixed(0)}%)`:'';
   document.getElementById('d-sum').innerHTML=`
-    <div class="qr"><div class="ql">Total horas 2026</div><div class="qv">${tot.toFixed(1)} hrs</div></div>
-    <div class="qr"><div class="ql">COCO</div><div class="qv c1">${co.toFixed(1)} hrs${pct(co)}</div></div>
-    <div class="qr"><div class="ql">CUCO</div><div class="qv c2">${cu.toFixed(1)} hrs${pct(cu)}</div></div>
-    <div class="qr"><div class="ql">Charter/Shenshi</div><div class="qv c3">${se.toFixed(1)} hrs${pct(se)}</div></div>
-    <div class="qr"><div class="ql">Tach actual</div><div class="qv">${Math.max(...DB.flights.map(f=>f.hf||0),0).toFixed(1)}</div></div>
-    <div class="qr"><div class="ql">Total vuelos</div><div class="qv">${DB.flights.length}</div></div>
-    <div class="qr"><div class="ql">Cargas de combustible</div><div class="qv">${DB.fuel.length}</div></div>`;
+    <div class="qr"><div class="ql">Total horas ${yr}</div><div class="qv">${tot.toFixed(1)} hrs</div></div>
+    <div class="qr"><div class="ql">COCO</div><div class="qv c1">${co.toFixed(1)}${pct(co)}</div></div>
+    <div class="qr"><div class="ql">CUCO</div><div class="qv c2">${cu.toFixed(1)}${pct(cu)}</div></div>
+    <div class="qr"><div class="ql">Charter</div><div class="qv c3">${se.toFixed(1)}${pct(se)}</div></div>
+    <div class="qr"><div class="ql">Total vuelos</div><div class="qv">${DB.flights.length}</div></div>`;
 }
 
 function fRow(f){
   const dc=f.r==='COCO'?'c1':f.r==='CUCO'?'c2':'c3';
   const bx=f.t==='STD'?'<span class="bx s">STD</span>':f.t==='FF'?'<span class="bx f">FF</span>':f.t==='MANTE'?'<span class="bx m">MANTE</span>':'<span class="bx p">Personal</span>';
   const rv=(f.rv||0)>0?`<span>$${f.rv.toLocaleString()}</span>`:'';
-  const pendTag=f.verified===false?'<span class="pend-badge">⏳ PENDIENTE</span>':'';
+  const pendTag=f.verified===false?'<span class="pend-badge">⏳</span>':'';
   const editBtn=isAdmin()?`<button class="edit-btn" onclick="openEdit(${f.id})">editar</button>`:'';
-  return `<div class="fi"><div class="fdot ${dc}"></div><div class="fm"><div class="fr">${f.rt||'—'} ${bx}${pendTag}</div><div class="fme"><span>${f.r}</span><span>${f.u}</span>${f.p?`<span>${f.p}</span>`:''}${rv}${editBtn}</div></div><div class="frt"><div class="fh">${f.h.toFixed(1)}<small>hr</small></div><div class="fdt">${f.d.slice(5)}</div></div></div>`;
+  return `<div class="fi"><div class="fdot ${dc}"></div><div class="fm"><div class="fr">${f.rt||'—'} ${bx}${pendTag}</div><div class="fme"><span>${f.r}</span>${f.p?`<span>${f.p}</span>`:''}${rv}${editBtn}</div></div><div class="frt"><div class="fh">${f.h.toFixed(1)}<small>hr</small></div><div class="fdt">${f.d.slice(5)}</div></div></div>`;
 }
 
+// =====================================================================
+// FLIGHT LOG
+// =====================================================================
 function buildVL(fil){
   let out=[...DB.flights].reverse();
   if(fil==='COCO')out=out.filter(f=>f.r==='COCO');
   else if(fil==='CUCO')out=out.filter(f=>f.r==='CUCO');
   else if(fil==='SENSHI')out=out.filter(f=>f.r==='SENSHI');
-  else if(['2026','2025','2024','2023'].includes(fil))out=out.filter(f=>f.d.startsWith(fil));
-  document.getElementById('vl-list').innerHTML=out.length?out.slice(0,120).map(fRow).join(''):'<div class="empty"><div class="big">✈️</div>Sin vuelos</div>';
+  else if(/^\d{4}$/.test(fil))out=out.filter(f=>f.d.startsWith(fil));
+  document.getElementById('vl-list').innerHTML=out.length?out.slice(0,100).map(fRow).join(''):'<div class="empty"><div class="big">✈️</div>Sin vuelos</div>';
 }
+function filtV(f,el){ document.querySelectorAll('#flt-row .fp').forEach(p=>p.classList.remove('on')); el.classList.add('on'); buildVL(f); }
 
-function filtV(f,el){
-  document.querySelectorAll('#flt-row .fp').forEach(p=>p.classList.remove('on'));
-  el.classList.add('on');buildVL(f);
-}
-
+// =====================================================================
+// FUEL LOG
+// =====================================================================
 function buildFuel(){
   const out=[...DB.fuel].reverse();
   if(!out.length){document.getElementById('fuel-list').innerHTML='<div class="empty"><div class="big">⛽</div>Sin registros</div>';return;}
-  document.getElementById('fuel-list').innerHTML=out.slice(0,80).map(f=>{
+  document.getElementById('fuel-list').innerHTML=out.slice(0,60).map(f=>{
     const ants=[];
     if((f.ac||0)>0)ants.push(`COCO Q${f.ac.toLocaleString()}`);
     if((f.au||0)>0)ants.push(`CUCO Q${f.au.toLocaleString()}`);
     if((f.as||0)>0)ants.push(`SENSHI Q${f.as.toLocaleString()}`);
-    return `<div class="fue"><div><div class="fue-l">Q${f.m.toLocaleString()} — ${f.py}</div><div class="fue-s">${ants.length?ants.join(' · '):'Sin anticipo'}${f.no?' · '+f.no:''}</div></div><div class="fue-r"><div class="fue-m">Q${f.m.toLocaleString()}</div><div class="fue-d">${f.d.slice(5)}</div></div></div>`;
+    return `<div class="fue"><div><div class="fue-l">Q${f.m.toLocaleString()} — ${f.py}</div><div class="fue-s">${ants.length?ants.join(' · '):'Sin anticipo'}${f.no?' · '+f.no:''}</div></div><div class="fue-r"><div class="fue-d">${f.d.slice(5)}</div></div></div>`;
   }).join('');
 }
 
-function initBil(){
-  const n=new Date(),y=n.getFullYear(),m=n.getMonth()+1;
-  const pr=m===1?`${y-1}-12`:`${y}-${String(m-1).padStart(2,'0')}`;
-  document.getElementById('b-from').value=pr;
-  document.getElementById('b-to').value=pr;
+// =====================================================================
+// SCHEDULING / CALENDAR
+// =====================================================================
+function buildPlaneSelectors(){
+  const planes = DB.planes.filter(p=>p.active!==false);
+  const html = planes.map(p=>`<div class="plane-chip${p.id===selPlane?' on':''}" onclick="selectPlane('${p.id}',this)">${p.id}</div>`).join('');
+  document.getElementById('plane-sel-sched').innerHTML = html;
 }
 
-function calcBil(){
-  const from=document.getElementById('b-from').value;
-  const to=document.getElementById('b-to').value;
-  const tc=parseFloat(document.getElementById('b-tc').value)||7.65;
-  if(!from||!to)return;
-  const fd=from+'-01',td=to+'-31';
-  const fls=DB.flights.filter(f=>f.d>=fd&&f.d<=td&&(f.verified!==false||(f.t!=='STD'&&f.t!=='FF')));
-  const fus=DB.fuel.filter(f=>f.d>=fd&&f.d<=td);
-  const rt=getRateFD(fd);
-  const hrs={COCO:0,CUCO:0,SENSHI:0};
-  const sub={COCO:{n:0,a:0},CUCO:{n:0,a:0},SENSHI:{n:0,a:0}};
-  const esp={COCO:0,CUCO:0,SENSHI:0};
-  const espHrs={COCO:0,CUCO:0,SENSHI:0};
-  let charterRev=0;
-  fls.forEach(f=>{
-    const r=f.r;if(hrs[r]===undefined)return;
-    hrs[r]+=f.h;
-    if(f.h>0&&f.h<1){sub[r].n++;sub[r].a+=f.h;}
-    if(espHrs[r]!==undefined){espHrs[r]+=(f.eh||0);esp[r]+=(f.eh||0)*rt.gw;}
-    if((f.rv||0)>0)charterRev+=f.rv;
+function selectPlane(id,el){
+  selPlane = id;
+  document.querySelectorAll('.plane-chip').forEach(c=>c.classList.remove('on'));
+  if(el) el.classList.add('on');
+  render();
+  buildCalendar();
+}
+
+function buildCalendar(){
+  const y=calDate.getFullYear(), m=calDate.getMonth();
+  document.getElementById('cal-title').textContent=`${MO[m+1]} ${y}`;
+
+  const first=new Date(y,m,1);
+  const startDay=first.getDay(); // 0=Sun
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const prevDays=new Date(y,m,0).getDate();
+
+  // Build schedule lookup for this month
+  const monthStr=`${y}-${pad2(m+1)}`;
+  const schedMap={};
+  (DB.schedule||[]).filter(s=>s.date.startsWith(monthStr)&&s.plane_id===selPlane&&s.status!=='cancelled').forEach(s=>{
+    if(!schedMap[s.date])schedMap[s.date]=[];
+    schedMap[s.date].push(s);
   });
-  let tfuel=0,acCO=0,acCU=0;
-  fus.forEach(f=>{tfuel+=f.m;acCO+=(f.ac||0);acCU+=(f.au||0);});
-  const th=hrs.COCO+hrs.CUCO+hrs.SENSHI;
-  const qph=th>0?tfuel/th:0;
-  const prCO=hrs.COCO*qph,prCU=hrs.CUCO*qph;
-  const bilH=r=>hrs[r]-sub[r].a+sub[r].n;
-  const pilFee=r=>bilH(r)*rt.pilot;
-  const ruAmt=r=>(sub[r].n-sub[r].a)*rt.pilot;
-  const resv=r=>hrs[r]*rt.res;
-  const fromParts=from.split('-'),toParts=to.split('-');
-  const numMonths=(+toParts[0]-+fromParts[0])*12+(+toParts[1]-+fromParts[1])+1;
-  const adminFee=rt.admin*numMonths;
-  const totFer=pilFee('COCO')+pilFee('CUCO')+pilFee('SENSHI')+esp.COCO+esp.CUCO+esp.SENSHI+adminFee;
-  const fQ=v=>`Q${Math.abs(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-  const fD=v=>`$${Math.abs(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-  const sg=v=>v<0?'neg':'';
-  const periodLbl=from===to?from:`${from} → ${to}`;
-  let h=`<div class="stitle">Período: ${periodLbl} · TC Q${tc}/USD · Tarifa piloto: $${rt.pilot}/hr · Admin: $${rt.admin}/mes</div>`;
-  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">A — Horas</div></div><div class="bil-bd">
-    <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${hrs.COCO.toFixed(1)} hrs</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${hrs.CUCO.toFixed(1)} hrs</div></div>
-    <div class="bil-row"><div class="bil-lbl">Charter/Shenshi</div><div class="bil-val">${hrs.SENSHI.toFixed(1)} hrs</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>Total</b></div><div class="bil-val"><b>${th.toFixed(1)} hrs</b></div></div>
-  </div></div>`;
-  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">B — Combustible</div></div><div class="bil-bd">
-    <div class="bil-row"><div class="bil-lbl">Total QTZ</div><div class="bil-val">${fQ(tfuel)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">QTZ/hr promedio</div><div class="bil-val">${fQ(qph)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">COCO — prop. ${hrs.COCO.toFixed(1)}hr</div><div class="bil-val">${fQ(prCO)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">COCO — anticipo ya pagado</div><div class="bil-val">${fQ(acCO)}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>COCO neto a cobrar</b></div><div class="bil-val ${sg(prCO-acCO)}"><b>${fQ(prCO-acCO)}</b></div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO — prop. ${hrs.CUCO.toFixed(1)}hr</div><div class="bil-val">${fQ(prCU)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO — anticipo ya pagado</div><div class="bil-val">${fQ(acCU)}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>CUCO neto a cobrar</b></div><div class="bil-val ${sg(prCU-acCU)}"><b>${fQ(prCU-acCU)}</b></div></div>
-  </div></div>`;
-  const ruCO=ruAmt('COCO'),ruCU=ruAmt('CUCO');
-  const espCO=esp.COCO,espCU=esp.CUCO,espSE=esp.SENSHI;
-  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">C — Pilotaje Fernando ($${rt.pilot}/hr · Espera $${rt.gw}/hr)</div></div><div class="bil-bd">
-    <div class="bil-row"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:10px;text-transform:uppercase;letter-spacing:.06em">COCO</div><div class="bil-val" style="font-size:10px;color:#8892A4">${bilH('COCO').toFixed(1)} hrs fact.</div></div>
-    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('COCO'))}</div></div>
-    ${ruCO>0?`<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A">↳ Roundup (${sub.COCO.n} vuelo(s) &lt;1hr)</div><div class="bil-val pos">incl. +${fD(ruCO)}</div></div>`:''}
-    ${espHrs.COCO>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.COCO.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espCO)}</div></div>`:``}
-    <div class="bil-row" style="border-top:1px solid #E2E6EE;margin-top:2px"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:10px;text-transform:uppercase;letter-spacing:.06em">CUCO</div><div class="bil-val" style="font-size:10px;color:#8892A4">${bilH('CUCO').toFixed(1)} hrs fact.</div></div>
-    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('CUCO'))}</div></div>
-    ${ruCU>0?`<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A">↳ Roundup (${sub.CUCO.n} vuelo(s) &lt;1hr)</div><div class="bil-val pos">incl. +${fD(ruCU)}</div></div>`:''}
-    ${espHrs.CUCO>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.CUCO.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espCU)}</div></div>`:``}
-    <div class="bil-row" style="border-top:1px solid #E2E6EE;margin-top:2px"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:10px;text-transform:uppercase;letter-spacing:.06em">SHENSHI</div><div class="bil-val" style="font-size:10px;color:#8892A4">${bilH('SENSHI').toFixed(1)} hrs</div></div>
-    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('SENSHI'))}</div></div>
-    ${espHrs.SENSHI>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.SENSHI.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espSE)}</div></div>`:``}
-    <div class="bil-row" style="border-top:2px solid #E2E6EE;margin-top:4px"><div class="bil-lbl">Admin fee Fernando (${numMonths} mes${numMonths>1?"es":""})</div><div class="bil-val">${fD(adminFee)}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>TOTAL A PAGAR FERNANDO</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
-  </div></div>`;
-  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">D — Reserva ($${rt.res}/hr)</div></div><div class="bil-bd">
-    <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${fD(resv('COCO'))}</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${fD(resv('CUCO'))}</div></div>
-    <div class="bil-row"><div class="bil-lbl">Shenshi</div><div class="bil-val">${fD(resv('SENSHI'))}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>Total reserva</b></div><div class="bil-val"><b>${fD(resv('COCO')+resv('CUCO')+resv('SENSHI'))}</b></div></div>
-  </div></div>`;
-  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">F — QuickBooks Summary</div></div><div class="bil-bd">
-    <div class="bil-row"><div class="bil-lbl">COCO — Comb. neto (QTZ)</div><div class="bil-val ${sg(prCO-acCO)}">${fQ(prCO-acCO)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">COCO — Pilotaje${espCO>0?' + espera':''}</div><div class="bil-val">${fD(pilFee('COCO')+espCO)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">COCO — Reserva mante</div><div class="bil-val">${fD(resv('COCO'))}</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO — Comb. neto (QTZ)</div><div class="bil-val ${sg(prCU-acCU)}">${fQ(prCU-acCU)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO — Pilotaje${espCU>0?' + espera':''}</div><div class="bil-val">${fD(pilFee('CUCO')+espCU)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO — Reserva mante</div><div class="bil-val">${fD(resv('CUCO'))}</div></div>
-    <div class="bil-row"><div class="bil-lbl">Shenshi — Charter</div><div class="bil-val">${fD(charterRev)}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>Total Fernando</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
-  </div></div>`;
-  const notes=[];
-  if(ruCO>0)notes.push(`COCO: Agregar ${fD(ruCO)} roundup (${sub.COCO.n} vuelo(s) &lt;1hr → 1hr)`);
-  if(ruCU>0)notes.push(`CUCO: Agregar ${fD(ruCU)} roundup (${sub.CUCO.n} vuelo(s) &lt;1hr → 1hr)`);
-  if(notes.length)h+=`<div class="qb-note">📋 Nota QB:<br>${notes.join('<br>')}</div>`;
-  document.getElementById('bil-out').innerHTML=h;
+
+  let html=DAYS_ES.map(d=>`<div class="cal-dh">${d}</div>`).join('');
+  const today=todayStr();
+  const selStr=calSelDate;
+
+  // Previous month filler
+  for(let i=startDay-1;i>=0;i--){
+    html+=`<div class="cal-d other">${prevDays-i}</div>`;
+  }
+
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${y}-${pad2(m+1)}-${pad2(d)}`;
+    const isToday=ds===today;
+    const isSel=ds===selStr;
+    const scheds=schedMap[ds]||[];
+    let dots='';
+    if(scheds.length){
+      dots='<div class="cal-dots">';
+      scheds.slice(0,3).forEach(s=>{
+        const cls=s.booked_by===CU?'mine':s.status==='confirmed'?'conf':'req';
+        dots+=`<div class="cd ${cls}"></div>`;
+      });
+      dots+='</div>';
+    } else {
+      dots='<div class="cal-dots"></div>';
+    }
+    html+=`<div class="cal-d${isToday?' today':''}${isSel?' sel':''}" onclick="selectDay('${ds}')">${d}${dots}</div>`;
+  }
+
+  // Next month filler
+  const totalCells=startDay+daysInMonth;
+  const remaining=totalCells%7===0?0:7-totalCells%7;
+  for(let i=1;i<=remaining;i++){
+    html+=`<div class="cal-d other">${i}</div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML=html;
+
+  // Show day detail if selected
+  if(calSelDate) buildDayDetail(calSelDate);
+}
+
+function calNav(dir){
+  calDate.setMonth(calDate.getMonth()+dir);
+  calSelDate=null;
+  buildCalendar();
+  document.getElementById('day-detail').innerHTML='';
+}
+
+function selectDay(ds){
+  calSelDate=ds;
+  buildCalendar();
+}
+
+function buildDayDetail(ds){
+  const scheds=(DB.schedule||[]).filter(s=>s.date===ds&&s.plane_id===selPlane&&s.status!=='cancelled')
+    .sort((a,b)=>a.start.localeCompare(b.start));
+
+  let html=`<div class="day-detail">
+    <div class="dd-hd">
+      <div class="dd-title">📅 ${fmtDate(ds)}</div>
+      <button class="dd-add" onclick="openBooking('${ds}')">+ Reservar</button>
+    </div>`;
+
+  if(scheds.length===0){
+    html+=`<div class="empty" style="padding:20px">Sin reservas — disponible todo el día</div>`;
+  } else {
+    scheds.forEach(s=>{
+      const u=getUser(s.booked_by);
+      const pilot=s.pilot?getUser(s.pilot).name:'Sin asignar';
+      const canAct=isAdmin()||isPilotAdmin()||s.booked_by===CU;
+      let actions='';
+      if(s.status==='requested' && canManageSchedule()){
+        actions+=`<button class="slot-confirm" onclick="confirmSlot(${s.id})">✓ Confirmar</button>`;
+        actions+=`<button class="slot-assign" onclick="assignPilot(${s.id})">Asignar piloto</button>`;
+      }
+      if(canAct && s.status!=='completed'){
+        actions+=`<button class="slot-cancel" onclick="cancelSlot(${s.id})">Cancelar</button>`;
+      }
+      html+=`<div class="slot">
+        <div class="slot-time">${s.start}<br><span style="font-weight:400;font-size:9px">→${s.end}</span></div>
+        <div class="slot-body">
+          <div class="slot-route">${s.route||'Pendiente ruta'} <span class="slot-status ${s.status}">${s.status==='requested'?'⏳ Solicitado':s.status==='confirmed'?'✓ Confirmado':s.status==='completed'?'✈ Completado':'✕ Cancelado'}</span></div>
+          <div class="slot-meta"><span>${u.icon} ${s.booked_by}</span><span>🧑‍✈️ ${pilot}</span>${s.notes?`<span>${s.notes}</span>`:''}</div>
+        </div>
+        <div class="slot-actions">${actions}</div>
+      </div>`;
+    });
+  }
+  html+='</div>';
+  document.getElementById('day-detail').innerHTML=html;
+}
+
+// --- Booking modal ---
+function openBooking(ds){
+  calSelDate=ds;
+  const pilots=Object.entries(DB.users).filter(([k,v])=>v.role==='pilot_admin'||v.role==='pilot').map(([k,v])=>`<option value="${k}">${v.name||k}</option>`).join('');
+
+  // Generate 30-min time options
+  let timeOpts='';
+  for(let h=5;h<=21;h++){
+    for(let m=0;m<60;m+=30){
+      const t=`${pad2(h)}:${pad2(m)}`;
+      timeOpts+=`<option value="${t}">${t}</option>`;
+    }
+  }
+
+  document.getElementById('book-form').innerHTML=`
+    <div class="fs"><label class="fl">Fecha</label><input type="date" id="bk-date" value="${ds}"></div>
+    <div class="fs"><label class="fl">Avión</label><div style="font-size:14px;font-weight:700;color:var(--nv)">${selPlane}</div></div>
+    <div class="time-pick">
+      <div><label class="fl">Inicio</label><select id="bk-start">${timeOpts}</select></div>
+      <div class="sep">→</div>
+      <div><label class="fl">Fin</label><select id="bk-end">${timeOpts}</select></div>
+    </div>
+    <div class="fs"><label class="fl">Ruta</label><input type="text" id="bk-route" placeholder="AUR-MGPB" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="fs"><label class="fl">Piloto solicitado</label><select id="bk-pilot"><option value="">— Por asignar —</option>${pilots}</select></div>
+    <div class="fs"><label class="fl">Notas</label><input type="text" id="bk-notes" placeholder="opcional"></div>
+    <button class="btn" onclick="submitBooking()">Reservar</button>`;
+
+  // Set reasonable defaults
+  document.getElementById('bk-start').value='08:00';
+  document.getElementById('bk-end').value='10:00';
+  document.getElementById('book-modal').style.display='flex';
+}
+
+function closeBooking(){ document.getElementById('book-modal').style.display='none'; }
+
+async function submitBooking(){
+  const date=document.getElementById('bk-date').value;
+  const start=document.getElementById('bk-start').value;
+  const end=document.getElementById('bk-end').value;
+  const route=document.getElementById('bk-route').value.toUpperCase().trim();
+  const pilot=document.getElementById('bk-pilot').value;
+  const notes=document.getElementById('bk-notes').value;
+
+  if(!date||!start||!end){alert('Selecciona fecha y horario');return;}
+  if(start>=end){alert('La hora de fin debe ser mayor que el inicio');return;}
+
+  // Check conflicts
+  const existing=(DB.schedule||[]).filter(s=>s.date===date&&s.plane_id===selPlane&&s.status!=='cancelled');
+  const conflict=existing.find(s=>start<s.end&&end>s.start);
+  if(conflict){alert(`Conflicto con reserva de ${conflict.booked_by} (${conflict.start}-${conflict.end})`);return;}
+
+  if(!DB.schedule)DB.schedule=[];
+  if(!DB.meta)DB.meta={};
+  const id=(DB.meta.last_sched_id||0)+1;
+  DB.meta.last_sched_id=id;
+
+  DB.schedule.push({
+    id, plane_id:selPlane, date, start, end,
+    booked_by:CU, pilot:pilot||null,
+    status: canManageSchedule()?'confirmed':'requested',
+    route, notes
+  });
+
+  closeBooking();
+  const ok=await saveData();
+  if(ok){ buildCalendar(); }
+  else { alert('Error guardando reserva'); }
+}
+
+async function confirmSlot(id){
+  const s=DB.schedule.find(x=>x.id===id);
+  if(s){s.status='confirmed'; await saveData(); buildDayDetail(s.date); buildSchedPending();}
+}
+
+async function cancelSlot(id){
+  if(!confirm('¿Cancelar esta reserva?'))return;
+  const s=DB.schedule.find(x=>x.id===id);
+  if(s){s.status='cancelled'; await saveData(); buildDayDetail(s.date); buildCalendar();}
+}
+
+function assignPilot(id){
+  const s=DB.schedule.find(x=>x.id===id);
+  if(!s)return;
+  const pilots=Object.entries(DB.users).filter(([k,v])=>v.role==='pilot_admin'||v.role==='pilot');
+  const sel=prompt('Asignar piloto:\n'+pilots.map(([k,v])=>`${k} — ${v.name}`).join('\n')+'\n\nIngresa ID del piloto:');
+  if(!sel)return;
+  const pid=sel.trim().toUpperCase();
+  if(!DB.users[pid]){alert('Usuario no encontrado');return;}
+  s.pilot=pid;
+  s.status='confirmed';
+  saveData().then(()=>{buildDayDetail(s.date);buildSchedPending();});
+}
+
+function buildSchedPending(){
+  const pends=(DB.schedule||[]).filter(s=>s.status==='requested');
+  const sec=document.getElementById('sched-pend-section');
+  if(!canManageSchedule()||pends.length===0){if(sec)sec.style.display='none';return;}
+  sec.style.display='block';
+  sec.innerHTML=`<div class="pend-section"><div class="pend-hd"><span class="pend-ht">📅 Reservas pendientes</span><span class="pend-count">${pends.length}</span></div>
+    ${pends.map(s=>`<div class="pend-item"><div><div class="pend-info"><b>${s.route||'Sin ruta'}</b> · ${s.plane_id} · ${s.start}-${s.end}</div><div class="pend-meta">${s.date} · ${getUser(s.booked_by).name}</div></div><div class="pend-actions"><button class="ver-btn" onclick="confirmSlot(${s.id})">✓</button><button class="rej-btn" onclick="cancelSlot(${s.id})">✕</button></div></div>`).join('')}
+  </div>`;
+}
+
+// =====================================================================
+// FLIGHT VERIFICATION PENDING
+// =====================================================================
+function buildPending(){
+  const pends=DB.flights.filter(f=>f.verified===false);
+  const sec=document.getElementById('pend-section');
+  if(!isAdmin()||pends.length===0){sec.style.display='none';return;}
+  sec.style.display='block';
+  sec.innerHTML=`<div class="pend-section"><div class="pend-hd"><span class="pend-ht">✋ Vuelos pendientes</span><span class="pend-count">${pends.length}</span></div>
+    ${pends.map(f=>`<div class="pend-item"><div><div class="pend-info"><b>${f.rt||'—'}</b> · ${f.r} · <span class="bx ${f.t==='FF'?'f':'s'}">${f.t}</span></div><div class="pend-meta">${f.d} · ${f.h.toFixed(1)}hr · ${f.logged_by}</div></div><div class="pend-actions"><button class="ver-btn" onclick="verifyFlight(${f.id},'approve')">✓</button><button class="rej-btn" onclick="verifyFlight(${f.id},'reject')">✕</button></div></div>`).join('')}
+  </div>`;
+}
+
+async function verifyFlight(id,action){
+  const f=DB.flights.find(x=>x.id===id);
+  if(!f)return;
+  if(action==='approve'){f.verified=true;f.verified_by=CU;}
+  else{f.t='PERSONAL';f.rv=0;f.verified=true;f.verified_by=CU;}
+  await saveData(); buildAll();
+}
+
+// =====================================================================
+// EDIT FLIGHT
+// =====================================================================
+let editId=null;
+function openEdit(id){
+  if(!isAdmin())return;
+  const f=DB.flights.find(x=>x.id===id);if(!f)return;
+  editId=id;
+  const tipos=['PERSONAL','STD','FF','MANTE'];
+  const respOpts=Object.keys(DB.users).map(k=>`<option ${f.r===k?'selected':''}>${k}</option>`).join('');
+  document.getElementById('edit-modal-title').textContent='Editar vuelo #'+id;
+  document.getElementById('edit-form-content').innerHTML=`
+    <div class="fs"><label class="fl">Fecha</label><input type="date" id="ed-d" value="${f.d}"></div>
+    <div class="fs"><label class="fl">Ruta</label><input type="text" id="ed-rt" value="${f.rt||''}" style="text-transform:uppercase"></div>
+    <div class="fs"><label class="fl">Responsable</label><select id="ed-r">${respOpts}</select></div>
+    <div class="fs"><label class="fl">Tipo</label><select id="ed-t">${tipos.map(t=>`<option ${f.t===t?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="row2"><div><label class="fl">HRM Ini</label><input type="number" id="ed-hi" value="${f.hi}" step="0.1"></div><div><label class="fl">HRM Fin</label><input type="number" id="ed-hf" value="${f.hf}" step="0.1"></div></div>
+    <div class="row2"><div><label class="fl">Espera</label><input type="number" id="ed-eh" value="${f.eh||0}" step="0.5"></div><div><label class="fl">Ingreso $</label><input type="number" id="ed-rv" value="${f.rv||0}" step="0.01"></div></div>
+    <div style="display:flex;gap:8px;margin-top:3px"><button class="btn" onclick="saveEdit()">Guardar</button><button class="btn" style="background:var(--rd)" onclick="deleteFlight(${id})">Eliminar</button></div>`;
+  document.getElementById('edit-modal').style.display='flex';
+}
+function closeEdit(){document.getElementById('edit-modal').style.display='none';editId=null;}
+async function saveEdit(){
+  const f=DB.flights.find(x=>x.id===editId);if(!f)return;
+  f.d=document.getElementById('ed-d').value; f.rt=document.getElementById('ed-rt').value;
+  f.r=document.getElementById('ed-r').value; f.t=document.getElementById('ed-t').value;
+  const hi=parseFloat(document.getElementById('ed-hi').value),hf=parseFloat(document.getElementById('ed-hf').value);
+  f.hi=hi;f.hf=hf;f.h=parseFloat((hf-hi).toFixed(1));
+  f.eh=parseFloat(document.getElementById('ed-eh').value)||0;f.rv=parseFloat(document.getElementById('ed-rv').value)||0;
+  f.verified=true;f.verified_by=CU;
+  closeEdit(); await saveData(); buildAll();
+}
+async function deleteFlight(id){
+  if(!confirm('¿Eliminar vuelo?'))return;
+  DB.flights=DB.flights.filter(x=>x.id!==id);
+  closeEdit(); await saveData(); buildAll();
+}
+
+// =====================================================================
+// NEW FLIGHT FORM
+// =====================================================================
+function buildPilotSelect(){
+  const sel=document.getElementById('ff-pilot');if(!sel)return;
+  sel.innerHTML=Object.entries(DB.users).filter(([k,v])=>v.role==='pilot_admin'||v.role==='pilot')
+    .map(([k,v])=>`<option value="${k}">${v.name||k}</option>`).join('');
+}
+function buildRespSelect(){
+  const sel=document.getElementById('ff-resp');if(!sel)return;
+  sel.innerHTML=Object.entries(DB.users).filter(([k,v])=>v.role==='admin'||v.role==='owner')
+    .map(([k,v])=>`<option value="${k}">${k}</option>`).join('');
+}
+function buildUserOptions(){
+  // Fuel payer select
+  const fuPy=document.getElementById('fu-py');
+  if(fuPy) fuPy.innerHTML=Object.keys(DB.users).map(k=>`<option>${k}</option>`).join('');
+  // Fuel advances
+  const adv=document.getElementById('fu-advances');
+  if(adv){
+    const owners=Object.entries(DB.users).filter(([k,v])=>v.role==='admin'||v.role==='owner');
+    adv.innerHTML=`<div class="row2">${owners.map(([k])=>`<div><label class="fl">Anticipo ${k}</label><input type="number" id="fu-adv-${k}" value="0" step="0.01" inputmode="decimal"></div>`).join('')}</div>`;
+  }
+}
+
+function tipo(v,el){
+  formType=v;
+  document.querySelectorAll('.tc').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('rev-sec').style.display=(v==='STD'||v==='FF')?'block':'none';
+  updRevH();
+}
+
+function setDates(){
+  const ds=todayStr();
+  ['ff-d','fu-d'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=ds;});
+  const lt=Math.max(...DB.flights.map(f=>f.hf||0),0);
+  const e=document.getElementById('ff-hi');
+  if(e&&lt>0){e.value=lt.toFixed(1);}
+}
+
+function calcH(){
+  const a=parseFloat(document.getElementById('ff-hi').value),b=parseFloat(document.getElementById('ff-hf').value);
+  const div=document.getElementById('hcalc');
+  if(!isNaN(a)&&!isNaN(b)&&b>a){
+    const h=(b-a).toFixed(1); div.textContent=`${h}hrs · fact: ${parseFloat(h)<1?'1.0 (roundup)':h}`;
+    div.style.display='block'; updRevH();
+  } else div.style.display='none';
+}
+function updRevH(){
+  const a=parseFloat(document.getElementById('ff-hi').value)||0,b=parseFloat(document.getElementById('ff-hf').value)||0;
+  const h=Math.max(0,b-a),rate=formType==='FF'?650:750;
+  const el=document.getElementById('rev-hint');
+  if(el&&h>0)el.textContent=`Auto: ${h.toFixed(1)}hr × $${rate} = $${(h*rate).toFixed(2)}`;
+}
+
+async function saveF(){
+  const d=document.getElementById('ff-d').value;
+  const hi=parseFloat(document.getElementById('ff-hi').value),hf=parseFloat(document.getElementById('ff-hf').value);
+  const rt=document.getElementById('ff-rt').value.toUpperCase().trim();
+  if(!d||!rt||isNaN(hi)||isNaN(hf)||hf<=hi){alert('Completa campos requeridos');return;}
+  const h=parseFloat((hf-hi).toFixed(1));
+  const pilot=document.getElementById('ff-pilot').value;
+  const resp=document.getElementById('ff-resp').value;
+  const u=document.getElementById('ff-u').value;
+  const cb=parseFloat(document.getElementById('ff-cb').value)||0;
+  const es=parseFloat(document.getElementById('ff-es').value)||0;
+  const rate=formType==='FF'?650:formType==='STD'?750:0;
+  const rv=document.getElementById('ff-rv').value?parseFloat(document.getElementById('ff-rv').value):(rate>0?parseFloat((h*rate).toFixed(2)):0);
+  const mid=(DB.meta.last_flight_id||0)+1;
+  DB.meta.last_flight_id=mid;
+  const needsVerify=!isAdmin()&&(formType==='STD'||formType==='FF');
+  DB.flights.push({id:mid,d,r:resp,u:u||resp,rt,p:pilot,hi,hf,h,t:formType,rv,eh:es,no:document.getElementById('ff-no').value,
+    plane_id:selPlane,logged_by:CU,verified:!needsVerify,verified_by:needsVerify?null:CU});
+  DB.meta.last_tach=hf;
+  if(cb>0){
+    const fid=(DB.meta.last_fuel_id||0)+1;DB.meta.last_fuel_id=fid;
+    DB.fuel.push({id:fid,d,py:resp,m:cb,ac:resp==='COCO'?cb:0,au:resp==='CUCO'?cb:0,as:0,no:''});
+  }
+  const ok=await saveData();
+  document.getElementById('ok-f').style.display=ok?'flex':'none';
+  document.getElementById('err-f').textContent=ok?'':'Error guardando';
+  document.getElementById('err-f').style.display=ok?'none':'block';
+  if(ok){setTimeout(()=>document.getElementById('ok-f').style.display='none',3000);buildAll();}
+  document.getElementById('ff-hf').value='';document.getElementById('ff-rt').value='';
+  document.getElementById('ff-cb').value='';document.getElementById('ff-es').value='0';document.getElementById('ff-rv').value='';document.getElementById('ff-no').value='';
+  document.getElementById('hcalc').style.display='none';document.getElementById('ff-hi').value=hf;
+}
+
+async function saveFu(){
+  const d=document.getElementById('fu-d').value;
+  const m=parseFloat(document.getElementById('fu-m').value);
+  if(!d||isNaN(m)||m<=0){alert('Completa fecha y monto');return;}
+  const py=document.getElementById('fu-py').value;
+  const no=document.getElementById('fu-no').value;
+  // Collect advances dynamically
+  let ac=0,au=0,as_=0;
+  const acEl=document.getElementById('fu-adv-COCO'); if(acEl)ac=parseFloat(acEl.value)||0;
+  const auEl=document.getElementById('fu-adv-CUCO'); if(auEl)au=parseFloat(auEl.value)||0;
+  const fid=(DB.meta.last_fuel_id||0)+1;DB.meta.last_fuel_id=fid;
+  DB.fuel.push({id:fid,d,py,m,ac,au,as:as_,no});
+  const ok=await saveData();
+  document.getElementById('ok-fu').style.display=ok?'flex':'none';
+  document.getElementById('err-fu').style.display=ok?'none':'block';
+  if(ok){setTimeout(()=>document.getElementById('ok-fu').style.display='none',3000);document.getElementById('fu-m').value='';document.getElementById('fu-no').value='';}
 }
 
 function fTab(t,el){
@@ -897,354 +1173,285 @@ function fTab(t,el){
   document.getElementById('form-'+t).style.display='block';
   el.closest('.sc').querySelectorAll('.sb').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');
-}
-function seg(k,v,el){
-  S[k]=v;
-  el.closest('.sc').querySelectorAll('.sb').forEach(b=>b.classList.remove('on'));
-  el.classList.add('on');
-  if(k==='fp')document.getElementById('ff-po').style.display=v==='OTRO'?'block':'none';
-  if(k==='fr'||k==='ft')updUsu();
-}
-function tipo(v,el){
-  S.ft=v;
-  document.querySelectorAll('.tc').forEach(c=>c.classList.remove('on'));
-  el.classList.add('on');
-  document.getElementById('rev-sec').style.display=(v==='STD'||v==='FF')?'block':'none';
-  const noteEl=document.getElementById('fer-charter-note');
-  if(noteEl) noteEl.style.display=(!isAdmin()&&(v==='STD'||v==='FF'))?'block':'none';
-  updUsu();updRevH();
-}
-function updUsu(){
-  const sel=document.getElementById('ff-u');if(!sel)return;
-  let opts=[];
-  if(S.ft==='PERSONAL')opts=[S.fr==='COCO'?'COCO':S.fr==='CUCO'?'CUCO':'SENSHI'];
-  else if(S.ft==='MANTE')opts=['MANTE','SENSHI'];
-  else if(S.fr==='COCO')opts=['ALQ COCO','ALQ COCO FF','ALQ HRS PIVARAL COCO','ALQ LICO','ALQ PREMISA','ALQ FER'];
-  else if(S.fr==='CUCO')opts=['ALQ CUCO','ALQ CUCO FF','CUCO HRS ADAN','ALQ LICO','ALQ PREMISA'];
-  else opts=['ALQ COCO','ALQ CUCO','ALQ LICO','ALQ PREMISA','ALQ FER'];
-  sel.innerHTML=opts.map(o=>`<option>${o}</option>`).join('');
-}
-function setDates(){
-  const d=new Date(),z=n=>String(n).padStart(2,'0');
-  const ds=`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
-  ['ff-d','fu-d'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=ds;});
-  const lt=Math.max(...DB.flights.map(f=>f.hf||0),0);
-  const e=document.getElementById('ff-hi');
-  if(e&&lt>0){
-    e.value=lt.toFixed(1);
-    e.placeholder=lt.toFixed(1);
-  }
-}
-function calcH(){
-  const a=parseFloat(document.getElementById('ff-hi').value);
-  const b=parseFloat(document.getElementById('ff-hf').value);
-  const div=document.getElementById('hcalc');
-  if(!isNaN(a)&&!isNaN(b)&&b>a){
-    const h=(b-a).toFixed(1);
-    const bil=parseFloat(h)<1?`1.0 (roundup!)`:h;
-    div.textContent=`${h}hrs voladas · facturadas: ${bil}`;
-    div.style.display='block';updRevH();
-  }else div.style.display='none';
-}
-function updRevH(){
-  const a=parseFloat(document.getElementById('ff-hi').value)||0;
-  const b=parseFloat(document.getElementById('ff-hf').value)||0;
-  const h=Math.max(0,b-a),rate=S.ft==='FF'?650:750;
-  const el=document.getElementById('rev-hint');
-  if(el&&h>0)el.textContent=`Auto: ${h.toFixed(1)}hr × $${rate} = $${(h*rate).toFixed(2)}`;
-}
-async function saveF(){
-  const d=document.getElementById('ff-d').value;
-  const hi=parseFloat(document.getElementById('ff-hi').value);
-  const hf=parseFloat(document.getElementById('ff-hf').value);
-  const rt=document.getElementById('ff-rt').value.toUpperCase().trim();
-  if(!d||!rt||isNaN(hi)||isNaN(hf)||hf<=hi){alert('Completa: Fecha, Ruta, HRM Inicio y HRM Fin');return;}
-  const h=parseFloat((hf-hi).toFixed(1));
-  const pi=S.fp==='OTRO'?document.getElementById('ff-po').value:S.fp;
-  const u=document.getElementById('ff-u').value;
-  const cb=parseFloat(document.getElementById('ff-cb').value)||0;
-  const es=parseFloat(document.getElementById('ff-es').value)||0;
-  const no=document.getElementById('ff-no').value;
-  const rate=S.ft==='FF'?650:S.ft==='STD'?750:0;
-  const rv=document.getElementById('ff-rv').value?parseFloat(document.getElementById('ff-rv').value):(rate>0?parseFloat((h*rate).toFixed(2)):0);
-  const nd=new Date(d+'T12:00:00');
-  const per=nd.getFullYear()*12+(nd.getMonth()+1);
-  const mid=(DB.meta&&DB.meta.last_flight_id?DB.meta.last_flight_id:Math.max(...DB.flights.map(f=>f.id||0),0))+1;
-  const needsVerify = !isAdmin() && (S.ft==='STD'||S.ft==='FF');
-  DB.flights.push({id:mid,d,r:S.fr,u,rt,p:pi,hi,hf,h,t:S.ft,rv,eh:es,no,per,
-    logged_by:CURRENT_USER,
-    verified: needsVerify ? false : true,
-    verified_by: needsVerify ? null : CURRENT_USER
-  });
-  if(!DB.meta) DB.meta={};
-  DB.meta.last_flight_id = mid;
-  DB.meta.last_tach = hf;
-  if(cb>0){
-    const fid=Math.max(...DB.fuel.map(f=>f.id||0),0)+1;
-    DB.fuel.push({id:fid,d,py:S.fr,m:cb,ac:S.fr==='COCO'?cb:0,au:S.fr==='CUCO'?cb:0,as:S.fr==='SENSHI'?cb:0,no:''});
-  }
-  render();
-  const ok=await saveGH();
-  document.getElementById('ok-f').style.display=ok?'flex':'none';
-  document.getElementById('err-f').textContent=ok?'':'Error guardando. Verifica conexión o token.';
-  document.getElementById('err-f').style.display=ok?'none':'block';
-  if(ok)setTimeout(()=>document.getElementById('ok-f').style.display='none',3000);
-  document.getElementById('ff-hf').value='';document.getElementById('ff-rt').value='';
-  document.getElementById('ff-cb').value='';document.getElementById('ff-es').value='0';
-  document.getElementById('ff-rv').value='';document.getElementById('ff-no').value='';
-  document.getElementById('hcalc').style.display='none';
-  document.getElementById('ff-hi').value=hf;
-}
-async function saveFu(){
-  const d=document.getElementById('fu-d').value;
-  const m=parseFloat(document.getElementById('fu-m').value);
-  if(!d||isNaN(m)||m<=0){alert('Completa: Fecha y Monto');return;}
-  const ac=parseFloat(document.getElementById('fu-ac').value)||0;
-  const au=parseFloat(document.getElementById('fu-au').value)||0;
-  const as_=parseFloat(document.getElementById('fu-as').value)||0;
-  const no=document.getElementById('fu-no').value;
-  const fid=Math.max(...DB.fuel.map(f=>f.id||0),0)+1;
-  DB.fuel.push({id:fid,d,py:S.fup,m,ac,au,as:as_,no});
-  if(!DB.meta) DB.meta={};
-  DB.meta.last_fuel_id = fid;
-  const ok=await saveGH();
-  document.getElementById('ok-fu').style.display=ok?'flex':'none';
-  document.getElementById('err-fu').textContent=ok?'':'Error guardando.';
-  document.getElementById('err-fu').style.display=ok?'none':'block';
-  if(ok){setTimeout(()=>document.getElementById('ok-fu').style.display='none',3000);
-    ['fu-m','fu-ac','fu-au','fu-as','fu-no'].forEach(id=>{const e=document.getElementById(id);if(e){e.value=id.includes('fu-m')||id.includes('fu-no')?'':'0';}});}
+  if(t==='admin')buildAdminPanel();
 }
 
-// PASSWORD MANAGEMENT
-function openPwModal(){
+// =====================================================================
+// ADMIN: Users & Planes
+// =====================================================================
+function buildAdminPanel(){
+  // Users list
+  const ul=document.getElementById('user-list');
+  if(ul){
+    ul.innerHTML=Object.entries(DB.users).map(([k,v])=>`
+      <div class="user-row">
+        <div class="user-info"><div class="user-icon">${v.icon||'👤'}</div><div><div class="user-name">${k}</div><div class="user-role">${v.role} · ${v.name||''}</div></div></div>
+        <div class="user-actions">
+          <button class="ubtn edit" onclick="editUser('${k}')">Editar</button>
+          ${k!==CU?`<button class="ubtn del" onclick="deleteUser('${k}')">×</button>`:''}
+        </div>
+      </div>`).join('');
+  }
+  // Planes list
+  const pl=document.getElementById('plane-list');
+  if(pl){
+    pl.innerHTML=DB.planes.map(p=>`
+      <div class="plane-row">
+        <div><div class="plane-name">${p.id}</div><div class="plane-type">${p.type||''} ${p.active===false?'(inactivo)':''}</div></div>
+        <button class="ubtn edit" onclick="editPlane('${p.id}')">Editar</button>
+      </div>`).join('');
+  }
+  // Worker config
+  const u=document.getElementById('cfg-url'),s=document.getElementById('cfg-secret');
+  if(u)u.value=WORKER_URL;if(s)s.value=WORKER_SECRET;
+}
+
+function openAddUser(){
+  document.getElementById('edit-modal-title').textContent='Agregar usuario';
+  document.getElementById('edit-form-content').innerHTML=`
+    <div class="fs"><label class="fl">ID (username)</label><input type="text" id="nu-id" placeholder="ej. PEDRO" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="fs"><label class="fl">Nombre completo</label><input type="text" id="nu-name" placeholder="Pedro García"></div>
+    <div class="fs"><label class="fl">Rol</label><select id="nu-role"><option value="owner">Owner (dueño/copropietario)</option><option value="pilot">Piloto</option><option value="pilot_admin">Piloto Admin</option><option value="admin">Administrador</option></select></div>
+    <div class="fs"><label class="fl">Ícono</label><input type="text" id="nu-icon" value="👤" style="max-width:60px"></div>
+    <div class="fs"><label class="fl">Contraseña inicial</label><input type="text" id="nu-pass" placeholder="mínimo 4 caracteres"></div>
+    <button class="btn" onclick="addUser()">Crear usuario</button>`;
+  document.getElementById('edit-modal').style.display='flex';
+}
+
+async function addUser(){
+  const id=document.getElementById('nu-id').value.trim().toUpperCase();
+  const name=document.getElementById('nu-name').value.trim();
+  const role=document.getElementById('nu-role').value;
+  const icon=document.getElementById('nu-icon').value||'👤';
+  const pass=document.getElementById('nu-pass').value;
+  if(!id||id.length<2){alert('ID debe tener al menos 2 caracteres');return;}
+  if(DB.users[id]){alert('Usuario ya existe');return;}
+  if(!pass||pass.length<4){alert('Contraseña mínimo 4 caracteres');return;}
+  DB.users[id]={role,icon,name};
+  if(!DB.passwords)DB.passwords={};
+  DB.passwords[id]=pass;
+  closeEdit();
+  const ok=await saveData();
+  if(ok){buildAdminPanel();alert('✓ Usuario '+id+' creado');}
+}
+
+function editUser(id){
+  const u=DB.users[id];if(!u)return;
+  document.getElementById('edit-modal-title').textContent='Editar '+id;
+  document.getElementById('edit-form-content').innerHTML=`
+    <div class="fs"><label class="fl">Nombre</label><input type="text" id="eu-name" value="${u.name||''}"></div>
+    <div class="fs"><label class="fl">Rol</label><select id="eu-role"><option value="owner" ${u.role==='owner'?'selected':''}>Owner</option><option value="pilot" ${u.role==='pilot'?'selected':''}>Piloto</option><option value="pilot_admin" ${u.role==='pilot_admin'?'selected':''}>Piloto Admin</option><option value="admin" ${u.role==='admin'?'selected':''}>Administrador</option></select></div>
+    <div class="fs"><label class="fl">Ícono</label><input type="text" id="eu-icon" value="${u.icon||'👤'}" style="max-width:60px"></div>
+    <div class="fs"><label class="fl">Nueva contraseña (dejar vacío para no cambiar)</label><input type="text" id="eu-pass" placeholder=""></div>
+    <button class="btn" onclick="saveUser('${id}')">Guardar</button>`;
+  document.getElementById('edit-modal').style.display='flex';
+}
+
+async function saveUser(id){
+  DB.users[id].name=document.getElementById('eu-name').value;
+  DB.users[id].role=document.getElementById('eu-role').value;
+  DB.users[id].icon=document.getElementById('eu-icon').value;
+  const pw=document.getElementById('eu-pass').value;
+  if(pw&&pw.length>=4){if(!DB.passwords)DB.passwords={};DB.passwords[id]=pw;}
+  closeEdit();await saveData();buildAdminPanel();
+}
+
+async function deleteUser(id){
+  if(!confirm('¿Eliminar usuario '+id+'?'))return;
+  delete DB.users[id];
+  if(DB.passwords)delete DB.passwords[id];
+  await saveData();buildAdminPanel();
+}
+
+function openAddPlane(){
+  document.getElementById('edit-modal-title').textContent='Agregar avión';
+  document.getElementById('edit-form-content').innerHTML=`
+    <div class="fs"><label class="fl">Matrícula (ID)</label><input type="text" id="np-id" placeholder="TG-XXX" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="fs"><label class="fl">Nombre</label><input type="text" id="np-name" placeholder="ej. Shenshi II"></div>
+    <div class="fs"><label class="fl">Tipo</label><input type="text" id="np-type" placeholder="ej. Cessna 182"></div>
+    <button class="btn" onclick="addPlane()">Crear avión</button>`;
+  document.getElementById('edit-modal').style.display='flex';
+}
+
+async function addPlane(){
+  const id=document.getElementById('np-id').value.trim().toUpperCase();
+  const name=document.getElementById('np-name').value;
+  const type=document.getElementById('np-type').value;
+  if(!id){alert('Ingresa matrícula');return;}
+  if(DB.planes.find(p=>p.id===id)){alert('Ya existe');return;}
+  DB.planes.push({id,name,type,active:true});
+  closeEdit();await saveData();buildAdminPanel();buildPlaneSelectors();
+}
+
+function editPlane(id){
+  const p=DB.planes.find(x=>x.id===id);if(!p)return;
+  document.getElementById('edit-modal-title').textContent='Editar '+id;
+  document.getElementById('edit-form-content').innerHTML=`
+    <div class="fs"><label class="fl">Nombre</label><input type="text" id="ep-name" value="${p.name||''}"></div>
+    <div class="fs"><label class="fl">Tipo</label><input type="text" id="ep-type" value="${p.type||''}"></div>
+    <div class="fs"><label class="fl">Activo</label><select id="ep-active"><option value="true" ${p.active!==false?'selected':''}>Sí</option><option value="false" ${p.active===false?'selected':''}>No</option></select></div>
+    <button class="btn" onclick="savePlane('${id}')">Guardar</button>`;
+  document.getElementById('edit-modal').style.display='flex';
+}
+
+async function savePlane(id){
+  const p=DB.planes.find(x=>x.id===id);
+  p.name=document.getElementById('ep-name').value;
+  p.type=document.getElementById('ep-type').value;
+  p.active=document.getElementById('ep-active').value==='true';
+  closeEdit();await saveData();buildAdminPanel();buildPlaneSelectors();
+}
+
+// Worker config save
+async function saveWorkerCfg(){
+  const url=document.getElementById('cfg-url').value.trim().replace(/\/+$/,'');
+  const sec=document.getElementById('cfg-secret').value.trim();
+  const msg=document.getElementById('cfg-msg');
+  if(!url||!sec){msg.textContent='Completa ambos campos';return;}
+  msg.textContent='Verificando…';
+  try{
+    const r=await fetch(url+'/data',{headers:{'Authorization':'Bearer '+sec},cache:'no-store'});
+    if(r.status===401){msg.textContent='Secret incorrecto';return;}
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    WORKER_URL=url;WORKER_SECRET=sec;
+    localStorage.setItem('tgshi_worker_url',url);
+    localStorage.setItem('tgshi_worker_secret',sec);
+    API_OK=true;
+    msg.textContent='✓ Guardado y verificado';
+    msg.style.color='var(--gr)';
+    await loadData();buildAll();
+  }catch(e){msg.textContent='Error: '+e.message;msg.style.color='var(--rd)';}
+}
+
+async function testWorker(){
+  const msg=document.getElementById('cfg-msg');
+  if(!WORKER_URL){msg.textContent='Configura URL primero';return;}
+  msg.textContent='Probando…';
+  try{
+    const r=await fetch(WORKER_URL+'/health');
+    if(r.ok){msg.textContent='✓ Worker respondió OK';msg.style.color='var(--gr)';}
+    else msg.textContent='Error: HTTP '+r.status;
+  }catch(e){msg.textContent='Error: '+e.message;}
+}
+
+// =====================================================================
+// SETTINGS MODAL (password change + logout)
+// =====================================================================
+function openSettings(){
+  document.getElementById('pw-modal').style.display='flex';
   document.getElementById('pw-err').textContent='';
   document.getElementById('pw-ok').textContent='';
-  document.getElementById('pw-old').value='';
-  document.getElementById('pw-new').value='';
-  document.getElementById('pw-confirm').value='';
-  if(isAdmin()){
-    document.getElementById('pw-admin-section').style.display='block';
-    document.getElementById('pw-user-section').style.display='none';
-    document.getElementById('pw-admin-old').value='';
-    document.getElementById('pw-admin-new').value='';
-    document.getElementById('pw-admin-confirm').value='';
-    document.getElementById('pw-admin-err').textContent='';
-    document.getElementById('pw-admin-ok').textContent='';
-    loadTokenInput();
-    document.getElementById('token-status').textContent = TOKEN ? '✓ Token cargado ('+TOKEN.slice(0,8)+'...)' : '⚠️ Sin token — guarda uno para activar escritura';
-  } else {
-    document.getElementById('pw-user-section').style.display='block';
-    document.getElementById('pw-admin-section').style.display='none';
-    document.getElementById('pw-sub-text').textContent='Cambia tu contraseña — usuario: '+CURRENT_USER;
-  }
-  document.getElementById('pw-modal').style.display='flex';
 }
+function closeSettings(){document.getElementById('pw-modal').style.display='none';}
 
-function closePwModal(){
-  document.getElementById('pw-modal').style.display='none';
-}
-
-document.addEventListener('click',e=>{if(e.target===document.getElementById('pw-modal'))closePwModal();});
-
-async function savePw(){
-  const op=document.getElementById('pw-old').value;
-  const np=document.getElementById('pw-new').value.trim();
-  const cp=document.getElementById('pw-confirm').value.trim();
-  const err=document.getElementById('pw-err');
-  const ok=document.getElementById('pw-ok');
+async function changePw(){
+  const old=document.getElementById('pw-old').value;
+  const np=document.getElementById('pw-new').value;
+  const cp=document.getElementById('pw-confirm').value;
+  const err=document.getElementById('pw-err'),ok=document.getElementById('pw-ok');
   err.textContent='';ok.textContent='';
-  if(op!==USERS[CURRENT_USER].pass){err.textContent='Contraseña actual incorrecta.';return;}
-  if(np.length<4){err.textContent='Mínimo 4 caracteres.';return;}
-  if(np!==cp){err.textContent='Las contraseñas no coinciden.';return;}
-  ok.textContent='Guardando…';
-  const res=await updatePwInFile(CURRENT_USER,np);
-  if(res){ok.textContent='✓ Contraseña actualizada.';err.textContent='';setTimeout(closePwModal,2000);}
-  else{err.textContent='Error guardando. Intenta de nuevo.';ok.textContent='';}
+  if(old!==DB.passwords[CU]){err.textContent='Contraseña actual incorrecta';return;}
+  if(np.length<4){err.textContent='Mínimo 4 caracteres';return;}
+  if(np!==cp){err.textContent='No coinciden';return;}
+  DB.passwords[CU]=np;
+  const saved=await saveData();
+  if(saved){ok.textContent='✓ Actualizada';setTimeout(closeSettings,1500);}
+  else{err.textContent='Error guardando';}
 }
 
-async function saveAdminPw(){
-  const op=document.getElementById('pw-admin-old').value;
-  const np=document.getElementById('pw-admin-new').value.trim();
-  const cp=document.getElementById('pw-admin-confirm').value.trim();
-  const err=document.getElementById('pw-admin-err');
-  const ok=document.getElementById('pw-admin-ok');
-  err.textContent='';ok.textContent='';
-  if(op!==USERS['CUCO'].pass){err.textContent='Contraseña de CUCO incorrecta.';return;}
-  if(np===''){ok.textContent='Sin cambios en tu contraseña.';return;}
-  if(np.length<4){err.textContent='Mínimo 4 caracteres.';return;}
-  if(np!==cp){err.textContent='Las contraseñas no coinciden.';return;}
-  ok.textContent='Guardando…';
-  const res=await updatePwInFile('CUCO',np);
-  if(res){ok.textContent='✓ Contraseña de CUCO actualizada.';setTimeout(()=>ok.textContent='',3000);}
-  else{err.textContent='Error guardando.';ok.textContent='';}
+// =====================================================================
+// BILLING (same logic as v4)
+// =====================================================================
+function initBil(){
+  const n=new Date(),y=n.getFullYear(),m=n.getMonth()+1;
+  const pr=m===1?`${y-1}-12`:`${y}-${pad2(m-1)}`;
+  document.getElementById('b-from').value=pr;document.getElementById('b-to').value=pr;
 }
-
-async function resetUserPw(user){
-  const defPw=user.toLowerCase();
-  if(!confirm('¿Resetear contraseña de '+user+' a "'+defPw+'"?'))return;
-  const ap=document.getElementById('pw-admin-old').value;
-  if(ap!==USERS['CUCO'].pass){document.getElementById('pw-admin-err').textContent='Ingresa tu contraseña actual primero.';return;}
-  const res=await updatePwInFile(user,defPw);
-  if(res){document.getElementById('pw-admin-ok').textContent='✓ '+user+' reseteado a "'+defPw+'"';document.getElementById('pw-admin-err').textContent='';setTimeout(()=>document.getElementById('pw-admin-ok').textContent='',4000);}
-  else{document.getElementById('pw-admin-err').textContent='Error guardando.';document.getElementById('pw-admin-ok').textContent='';}
-}
-
-async function updatePwInFile(user,newPw){
-  if(!DB.passwords) DB.passwords={};
-  DB.passwords[user] = newPw;
-  const ok = await saveGH();
-  if(ok) USERS[user].pass = newPw;
-  else delete DB.passwords[user];
-  return ok;
-}
-
-async function saveToken(){
-  const t = document.getElementById('gh-token-input').value.trim();
-  if(!t){document.getElementById('token-status').textContent='Ingresa un token válido';return;}
-  document.getElementById('token-status').textContent='Verificando token...';
-  // Test the token first
-  try {
-    const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data.json`,
-      {headers:{Authorization:'token '+t, Accept:'application/vnd.github.v3+json'}});
-    if(!r.ok){
-      document.getElementById('token-status').textContent='Token inválido (HTTP '+r.status+'). Verifica permisos.';
-      return;
-    }
-    const j = await r.json();
-    SHA = j.sha;
-  } catch(e){
-    document.getElementById('token-status').textContent='Error verificando: '+e.message;
-    return;
-  }
-  // Token works — save everywhere
-  TOKEN = t;
-  READ_ONLY = false;
-  localStorage.setItem('tgshi_token', TOKEN);
-  document.getElementById('token-status').textContent='Guardando para todos los usuarios...';
-  DB.token = t;
-  const ok = await saveGH();
-  if(ok){
-    document.getElementById('token-status').textContent='✓ Token guardado — todos los usuarios lo recibirán automáticamente';
-    updateReadOnlyUI();
-  } else {
-    document.getElementById('token-status').textContent='✓ Guardado localmente (error sync)';
-  }
-  setTimeout(()=>document.getElementById('token-status').textContent=TOKEN?'✓ Token activo ('+TOKEN.slice(0,8)+'...)':'',3000);
-}
-
-function loadTokenInput(){
-  const el = document.getElementById('gh-token-input');
-  if(el && TOKEN) el.value = TOKEN;
-}
-
-function logout(){
-  sessionStorage.removeItem('tgshi_user');
-  sessionStorage.removeItem('tgshi_role');
-  location.reload();
-}
-
-async function testSave(){
-  setDot('sync');
-  try{
-    const r1=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',
-      {headers:{'Authorization':'token '+TOKEN,'Accept':'application/vnd.github.v3+json'}});
-    const j1=await r1.json();
-    console.log('GET status:',r1.status,'SHA:',j1.sha);
-    if(!r1.ok){alert('GET failed: '+r1.status+' '+JSON.stringify(j1));setDot('err');return;}
-    const r2=await fetch('https://api.github.com/repos/'+REPO+'/contents/data.json',{
-      method:'PUT',
-      headers:{'Authorization':'token '+TOKEN,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
-      body:JSON.stringify({message:'test',content:j1.content.replace(/\n/g,''),sha:j1.sha})
-    });
-    const j2=await r2.json();
-    console.log('PUT status:',r2.status,j2.message||'ok');
-    if(r2.ok){alert('✓ Token funciona correctamente');setDot('ok');}
-    else{alert('PUT failed '+r2.status+': '+JSON.stringify(j2));setDot('err');}
-  }catch(e){alert('Error: '+e.message);setDot('err');}
+function calcBil(){
+  const from=document.getElementById('b-from').value,to=document.getElementById('b-to').value;
+  const tc=parseFloat(document.getElementById('b-tc').value)||7.65;
+  if(!from||!to)return;
+  const fd=from+'-01',td=to+'-31';
+  const fls=DB.flights.filter(f=>f.d>=fd&&f.d<=td&&(f.verified!==false||(f.t!=='STD'&&f.t!=='FF')));
+  const fus=DB.fuel.filter(f=>f.d>=fd&&f.d<=td);
+  const rt=getRateFD(fd);
+  const hrs={COCO:0,CUCO:0,SENSHI:0},sub={COCO:{n:0,a:0},CUCO:{n:0,a:0},SENSHI:{n:0,a:0}};
+  const esp={COCO:0,CUCO:0,SENSHI:0},espH={COCO:0,CUCO:0,SENSHI:0};
+  let chartR=0;
+  fls.forEach(f=>{const r=f.r;if(hrs[r]===undefined)return;hrs[r]+=f.h;if(f.h>0&&f.h<1){sub[r].n++;sub[r].a+=f.h;}espH[r]+=(f.eh||0);esp[r]+=(f.eh||0)*rt.gw;if((f.rv||0)>0)chartR+=f.rv;});
+  let tf=0,acCO=0,acCU=0;fus.forEach(f=>{tf+=f.m;acCO+=(f.ac||0);acCU+=(f.au||0);});
+  const th=hrs.COCO+hrs.CUCO+hrs.SENSHI,qph=th>0?tf/th:0;
+  const prCO=hrs.COCO*qph,prCU=hrs.CUCO*qph;
+  const bilH=r=>hrs[r]-sub[r].a+sub[r].n;
+  const pilFee=r=>bilH(r)*rt.pilot;
+  const resv=r=>hrs[r]*rt.res;
+  const fp=from.split('-'),tp=to.split('-');
+  const nm=(+tp[0]-+fp[0])*12+(+tp[1]-+fp[1])+1;
+  const admin=rt.admin*nm;
+  const totF=pilFee('COCO')+pilFee('CUCO')+pilFee('SENSHI')+esp.COCO+esp.CUCO+esp.SENSHI+admin;
+  const fQ=v=>`Q${Math.abs(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const fD=v=>`$${Math.abs(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  document.getElementById('bil-out').innerHTML=`
+    <div class="bil-sec"><div class="bil-hd"><div class="bil-ht">Resumen ${from===to?from:from+' → '+to}</div></div><div class="bil-bd">
+      <div class="bil-row"><div class="bil-lbl">Total horas</div><div class="bil-val">${th.toFixed(1)} hrs</div></div>
+      <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${hrs.COCO.toFixed(1)}</div></div>
+      <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${hrs.CUCO.toFixed(1)}</div></div>
+      <div class="bil-row"><div class="bil-lbl">Charter</div><div class="bil-val">${hrs.SENSHI.toFixed(1)}</div></div>
+      <div class="bil-row"><div class="bil-lbl">Combustible total</div><div class="bil-val">${fQ(tf)}</div></div>
+      <div class="bil-row"><div class="bil-lbl">COCO comb. neto</div><div class="bil-val">${fQ(prCO-acCO)}</div></div>
+      <div class="bil-row"><div class="bil-lbl">CUCO comb. neto</div><div class="bil-val">${fQ(prCU-acCU)}</div></div>
+      <div class="bil-row"><div class="bil-lbl"><b>Total Fernando</b></div><div class="bil-val"><b>${fD(totF)}</b></div></div>
+      <div class="bil-row"><div class="bil-lbl">Charter revenue</div><div class="bil-val">${fD(chartR)}</div></div>
+    </div></div>`;
 }
 
 </script>
 
+<!-- ===== SETTINGS MODAL ===== -->
 <div id="pw-modal" class="pw-modal" style="display:none">
   <div class="pw-box">
-    <div id="pw-user-section">
-      <div class="pw-title">Cambiar contraseña</div>
-      <div class="pw-sub" id="pw-sub-text">Cambia tu contraseña de acceso</div>
-      <div class="pw-field"><label>Contraseña actual</label><input type="password" id="pw-old" placeholder="••••••••"></div>
-      <div class="pw-field"><label>Nueva contraseña</label><input type="password" id="pw-new" placeholder="••••••••"></div>
-      <div class="pw-field"><label>Confirmar nueva contraseña</label><input type="password" id="pw-confirm" placeholder="••••••••"></div>
-      <div class="pw-err" id="pw-err"></div>
-      <div class="pw-ok" id="pw-ok"></div>
-      <div class="pw-btns">
-        <button class="pw-save" onclick="savePw()">Guardar</button>
-        <button class="pw-cancel" onclick="closePwModal()">Cancelar</button>
-      </div>
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid #F0F2F6">
-        <button onclick="logout()" style="width:100%;padding:12px;background:#F0F2F6;color:#8B1A1A;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">🚪 Cerrar sesión</button>
-      </div>
+    <div class="pw-title">⚙️ Ajustes</div>
+    <div class="pw-sub">Usuario: <b id="pw-user-label"></b></div>
+    <div class="pw-field"><label>Contraseña actual</label><input type="password" id="pw-old"></div>
+    <div class="pw-field"><label>Nueva contraseña</label><input type="password" id="pw-new"></div>
+    <div class="pw-field"><label>Confirmar</label><input type="password" id="pw-confirm"></div>
+    <div class="pw-err" id="pw-err"></div>
+    <div class="pw-ok" id="pw-ok"></div>
+    <div class="pw-btns" style="margin-bottom:12px">
+      <button class="pw-save" onclick="changePw()">Cambiar contraseña</button>
+      <button class="pw-cancel" onclick="closeSettings()">Cerrar</button>
     </div>
-    <div id="pw-admin-section" style="display:none">
-      <div class="pw-title">⚙️ Administrar contraseñas</div>
-      <div class="pw-sub">Como admin puedes resetear contraseñas de cualquier usuario</div>
-      <div class="pw-field"><label>Tu contraseña actual</label><input type="password" id="pw-admin-old" placeholder="••••••••"></div>
-      <div class="pw-field"><label>Tu nueva contraseña (opcional)</label><input type="password" id="pw-admin-new" placeholder="dejar vacío si no cambias"></div>
-      <div class="pw-field"><label>Confirmar nueva contraseña</label><input type="password" id="pw-admin-confirm" placeholder=""></div>
-      <div class="pw-err" id="pw-admin-err"></div>
-      <div class="pw-ok" id="pw-admin-ok"></div>
-      <div class="pw-btns" style="margin-bottom:0">
-        <button class="pw-save" onclick="saveAdminPw()">Guardar mis cambios</button>
-        <button class="pw-cancel" onclick="closePwModal()">Cerrar</button>
-      </div>
-      <div style="margin-top:12px">
-        <button onclick="logout()" style="width:100%;padding:12px;background:#F0F2F6;color:#8B1A1A;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">🚪 Cerrar sesión</button>
-      </div>
-      <div class="pw-reset-section">
-        <div class="pw-field" style="margin-bottom:16px">
-        <label style="display:block;font-size:10px;font-weight:700;color:#8892A4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">GitHub Token (solo CUCO)</label>
-        <input type="password" id="gh-token-input" placeholder="ghp_..." style="width:100%;padding:11px 13px;border:1.5px solid #E2E6EE;border-radius:10px;font-size:13px;font-family:inherit;outline:none">
-        <div style="display:flex;gap:8px;margin-top:6px">
-          <button onclick="saveToken()" style="flex:1;padding:9px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Guardar token</button>
-          <button onclick="testSave()" style="flex:1;padding:9px;background:#E8F0FD;color:#1B4E8A;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">🔧 Probar</button>
-        </div>
-        <div id="token-status" style="font-size:11px;color:#8892A4;margin-top:5px"></div>
-      </div>
-        <div class="pw-reset-title">Resetear contraseña de otro usuario</div>
-        <div class="pw-user-row">
-          <div><div class="pw-user-name">👩‍✈️ COCO</div></div>
-          <button class="pw-reset-btn" onclick="resetUserPw('COCO')">Resetear</button>
-        </div>
-        <div class="pw-user-row">
-          <div><div class="pw-user-name">🧑‍✈️ FERNANDO</div></div>
-          <button class="pw-reset-btn" onclick="resetUserPw('FERNANDO')">Resetear</button>
-        </div>
-        <div style="font-size:11px;color:#8892A4;margin-top:10px">Al resetear, la nueva contraseña será el nombre del usuario en minúsculas (ej: "coco", "fernando")</div>
-      </div>
-    </div>
+    <button onclick="logout()" style="width:100%;padding:11px;background:#F0F2F6;color:var(--rd);border:none;border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">🚪 Cerrar sesión</button>
   </div>
 </div>
 
+<!-- ===== LOGIN ===== -->
 <div id="login-screen" class="login-screen">
   <div class="login-logo">TG-SHI</div>
   <div class="login-sub">Shenshi Aviation</div>
   <div class="login-card">
-    <div class="login-users">
-      <button class="user-btn sel" onclick="selUser('CUCO',this)">
-        <span class="user-ic">👨‍✈️</span>CUCO
-      </button>
-      <button class="user-btn" onclick="selUser('COCO',this)">
-        <span class="user-ic">👩‍✈️</span>COCO
-      </button>
-      <button class="user-btn" onclick="selUser('FERNANDO',this)">
-        <span class="user-ic">🧑‍✈️</span>FERNANDO
-      </button>
-    </div>
-    <div class="login-pass-wrap">
-      <input type="password" class="login-pass" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
+    <div class="login-field"><label>Usuario</label><input type="text" id="login-uid" placeholder="ej. CUCO" autocapitalize="characters" autocomplete="off"></div>
+    <div class="login-field"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <div class="login-err" id="login-err"></div>
     <button class="login-btn" onclick="doLogin()">Ingresar</button>
   </div>
 </div>
+
+<script>
+// Set pw-user-label on settings open
+const origOpen=openSettings;
+openSettings=function(){
+  origOpen();
+  const lbl=document.getElementById('pw-user-label');
+  if(lbl)lbl.textContent=CU;
+};
+// Click outside modals
+document.addEventListener('click',e=>{
+  if(e.target===document.getElementById('pw-modal'))closeSettings();
+  if(e.target===document.getElementById('edit-modal'))closeEdit();
+  if(e.target===document.getElementById('book-modal'))closeBooking();
+});
+</script>
 
 </body>
 </html>
