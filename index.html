@@ -164,7 +164,7 @@ input:focus,select:focus{border-color:var(--sk)}
 .pw-user-row:last-child{border:none}
 .pw-user-name{font-size:13px;font-weight:600}
 .pw-reset-btn{font-size:11px;font-weight:700;color:#8B1A1A;background:none;border:1px solid #8B1A1A;border-radius:6px;padding:3px 9px;cursor:pointer}
-.settings-btn{position:fixed;top:58px;right:16px;z-index:98;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:5px 10px;font-size:11px;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;display:none}
+.settings-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:5px 10px;font-size:11px;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;display:none;align-items:center;gap:4px}
 
 </style>
 </head>
@@ -193,7 +193,6 @@ input:focus,select:focus{border-color:var(--sk)}
   </div>
 </div>
 
-<button class="settings-btn" id="settings-btn" onclick="openPwModal()">⚙️ Cuenta</button>
 <div id="edit-modal" class="modal-overlay" style="display:none">
   <div class="modal-box">
     <button class="modal-close" onclick="closeEdit()">✕</button>
@@ -206,7 +205,8 @@ input:focus,select:focus{border-color:var(--sk)}
   <div class="top-r">
     <div><h1>TG-SHI</h1><div class="sub">Shenshi Aviation</div></div>
     <div class="tach"><div><div class="tach-lb">TACH</div><span id="tachVal">916.0</span></div><div class="dot" id="dot"></div></div>
-  </div>
+  <button class="settings-btn" id="settings-btn" onclick="openPwModal()">⚙️</button>
+</div>
 </div>
 <div class="btabs">
   <button class="bt on" onclick="nav('dash',0)"><div class="bt-i">📊</div><div class="bt-l">Panel</div></button>
