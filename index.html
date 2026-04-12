@@ -106,7 +106,7 @@ input:focus,select:focus{border-color:var(--sk)}
 .hint{font-size:11px;color:var(--mu);margin-top:4px}
 .stitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--mu);margin:14px 0 8px;padding:0 2px}
 
-.login-screen{position:fixed;inset:0;background:var(–nv);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:32px}
+.login-screen{position:fixed;inset:0;top:0;left:0;right:0;bottom:0;background:#1B2A4A !important;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;padding:32px;isolation:isolate}
 .login-logo{font-size:48px;font-weight:900;color:#fff;letter-spacing:.06em;margin-bottom:4px}
 .login-sub{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.18em;text-transform:uppercase;margin-bottom:40px}
 .login-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:24px;width:100%;max-width:320px}
@@ -169,29 +169,6 @@ input:focus,select:focus{border-color:var(--sk)}
 </style>
 </head>
 <body>
-
-<div id="login-screen" class="login-screen">
-  <div class="login-logo">TG-SHI</div>
-  <div class="login-sub">Shenshi Aviation</div>
-  <div class="login-card">
-    <div class="login-users">
-      <button class="user-btn sel" onclick="selUser('CUCO',this)">
-        <span class="user-ic">👨‍✈️</span>CUCO
-      </button>
-      <button class="user-btn" onclick="selUser('COCO',this)">
-        <span class="user-ic">👩‍✈️</span>COCO
-      </button>
-      <button class="user-btn" onclick="selUser('FERNANDO',this)">
-        <span class="user-ic">🧑‍✈️</span>FERNANDO
-      </button>
-    </div>
-    <div class="login-pass-wrap">
-      <input type="password" class="login-pass" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <div class="login-err" id="login-err"></div>
-    <button class="login-btn" onclick="doLogin()">Ingresar</button>
-  </div>
-</div>
 
 <div id="edit-modal" class="modal-overlay" style="display:none">
   <div class="modal-box">
@@ -1033,6 +1010,29 @@ async function updatePwInFile(user,newPw){
         <div style="font-size:11px;color:#8892A4;margin-top:10px">Al resetear, la nueva contraseña será el nombre del usuario en minúsculas (ej: "coco", "fernando")</div>
       </div>
     </div>
+  </div>
+</div>
+
+<div id="login-screen" class="login-screen">
+  <div class="login-logo">TG-SHI</div>
+  <div class="login-sub">Shenshi Aviation</div>
+  <div class="login-card">
+    <div class="login-users">
+      <button class="user-btn sel" onclick="selUser('CUCO',this)">
+        <span class="user-ic">👨‍✈️</span>CUCO
+      </button>
+      <button class="user-btn" onclick="selUser('COCO',this)">
+        <span class="user-ic">👩‍✈️</span>COCO
+      </button>
+      <button class="user-btn" onclick="selUser('FERNANDO',this)">
+        <span class="user-ic">🧑‍✈️</span>FERNANDO
+      </button>
+    </div>
+    <div class="login-pass-wrap">
+      <input type="password" class="login-pass" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <button class="login-btn" onclick="doLogin()">Ingresar</button>
   </div>
 </div>
 
