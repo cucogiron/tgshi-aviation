@@ -403,6 +403,11 @@ async function loadGH(){
     const j=await r.json(); SHA=j.sha;
     const b64=j.content.replace(/[\r\n ]/g,'');
     DB=JSON.parse(atob(b64));
+    // Load token from DB if available (set by CUCO, shared to all users)
+    if(DB.token && !TOKEN){
+      TOKEN=DB.token;
+      localStorage.setItem('tgshi_token', TOKEN);
+    }
     setDot('ok');
   }catch(e){setDot('err');}
 }
@@ -987,13 +992,21 @@ function updatePwInFile(user,newPw){
 
 
 
-function saveToken(){
+async function saveToken(){
   const t = document.getElementById('gh-token-input').value.trim();
   if(!t){document.getElementById('token-status').textContent='Ingresa un token válido';return;}
   localStorage.setItem('tgshi_token', t);
   TOKEN = t;
-  document.getElementById('token-status').textContent='✓ Token guardado en este dispositivo';
-  setTimeout(()=>document.getElementById('token-status').textContent='',3000);
+  document.getElementById('token-status').textContent='Guardando para todos los usuarios...';
+  // Save token into data.json so all devices get it automatically
+  DB.token = t;
+  const ok = await saveGH();
+  if(ok){
+    document.getElementById('token-status').textContent='✓ Token guardado — todos los usuarios lo recibirán automáticamente';
+  } else {
+    document.getElementById('token-status').textContent='✓ Guardado en este dispositivo (sin sync)';
+  }
+  setTimeout(()=>document.getElementById('token-status').textContent=TOKEN?'✓ Token activo ('+TOKEN.slice(0,8)+'...)':'',3000);
 }
 
 function loadTokenInput(){
