@@ -330,17 +330,14 @@ const Billing = (() => {
 
     if (owner === 'SENSHI') {
       // ── SENSHI→Fernando: pilotaje + espera + admin for ALL owners ──
-
-      // QTZ: Senshi's own fuel
-      qtzLines.push({ desc: `Combustible Charter (${d.hrs.SENSHI.toFixed(1)} hrs × Q${d.qph.toFixed(2)}/hr)`, amt: d.fuelProp.SENSHI });
-      if (d.antic.SENSHI > 0) qtzLines.push({ desc: 'Menos: anticipo Charter pagado', amt: -d.antic.SENSHI });
+      // No fuel — fuel is paid via corporate card, not to Fernando
 
       // USD: all owners' pilotaje + espera, then admin (NO reserva)
       ['COCO', 'CUCO', 'SENSHI'].forEach(o => {
         const oLabel = o === 'SENSHI' ? 'Charter' : o;
         usdLines.push({ desc: `Pilotaje ${oLabel} (${d.bilH[o].toFixed(1)} hrs × $${d.rt.pilot}/hr)`, amt: d.pilFee[o] });
         if (d.ruAmt[o] > 0) {
-          usdLines.push({ desc: `↳ Roundup ${oLabel} (${d.sub[o].n} vuelo(s) <1hr)`, amt: d.ruAmt[o], note: 'incluido en pilotaje' });
+          usdLines.push({ desc: `↳ Roundup ${oLabel} (${d.sub[o].n} vuelo(s) <1hr)`, amt: 0, note: 'incluido en pilotaje' });
         }
         if (d.espHrs[o] > 0) {
           usdLines.push({ desc: `Espera ${oLabel} (${d.espHrs[o].toFixed(1)} hrs × $${d.rt.gw}/hr)`, amt: d.esp[o] });
@@ -358,7 +355,7 @@ const Billing = (() => {
       // USD: pilotaje + espera (no admin — that's 100% Senshi)
       usdLines.push({ desc: `Pilotaje Fernando (${d.bilH[owner].toFixed(1)} hrs × $${d.rt.pilot}/hr)`, amt: d.pilFee[owner] });
       if (d.ruAmt[owner] > 0) {
-        usdLines.push({ desc: `↳ Roundup (${d.sub[owner].n} vuelo(s) <1hr → 1hr)`, amt: d.ruAmt[owner], note: 'incluido en pilotaje' });
+        usdLines.push({ desc: `↳ Roundup (${d.sub[owner].n} vuelo(s) <1hr → 1hr)`, amt: 0, note: 'incluido en pilotaje' });
       }
       if (d.espHrs[owner] > 0) {
         usdLines.push({ desc: `Espera en tierra (${d.espHrs[owner].toFixed(1)} hrs × $${d.rt.gw}/hr)`, amt: d.esp[owner] });
