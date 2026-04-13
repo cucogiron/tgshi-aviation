@@ -97,6 +97,16 @@ const API = (() => {
 
   async function saveData() {
     if (!API_OK) { alert('Sin conexión al servidor. Configura en Admin > Worker.'); return false; }
+    // Safety: if we previously loaded data with flights, refuse to save an empty flights array
+    // This prevents accidental data wipes from stale tabs or race conditions
+    if (SHA && (!DB.flights || DB.flights.length === 0)) {
+      const proceed = confirm('⚠️ La base de datos de vuelos está vacía. ¿Guardar de todos modos? (Cancelar = recargar datos del servidor)');
+      if (!proceed) {
+        await loadData();
+        App.buildAll();
+        return false;
+      }
+    }
     setDot('sync');
     try {
       const r = await fetch(WORKER_URL + '/data', {
