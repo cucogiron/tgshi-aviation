@@ -345,7 +345,8 @@ textarea{resize:vertical;min-height:60px}
   <button class="bt" onclick="App.nav('bil',4)"><div class="bt-i">🧾</div><div class="bt-l">Billing</div></button>
   <button class="bt" onclick="App.nav('xch',5)"><div class="bt-i">🤝</div><div class="bt-l">Interc.</div></button>
   <button class="bt" onclick="App.nav('maint',6)"><div class="bt-i">🔧</div><div class="bt-l">Mante</div></button>
-  <button class="bt" onclick="App.nav('new',7)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
+  <button class="bt" onclick="App.nav('fexp',7)"><div class="bt-i">&#x1F4B2;</div><div class="bt-l">Gastos</div></button>
+  <button class="bt" onclick="App.nav('new',8)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
 </div>
 
 <!-- ===== DASHBOARD ===== -->
@@ -543,6 +544,21 @@ textarea{resize:vertical;min-height:60px}
   <div id="maint-content"></div>
 </div>
 
+<!-- ===== FLIGHT EXPENSES ===== -->
+
+<div class="pg" id="pg-fexp">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div class="stitle" style="margin:0">Gastos de vuelo</div>
+    <button class="btn sm" onclick="FlightExpenses.openAddExpense()">+ Agregar</button>
+  </div>
+  <div class="frow" id="fexp-yr-row">
+    <div class="fp on" onclick="FlightExpenses.filtExpYr('ALL',this)">Todos</div>
+    <div class="fp" onclick="FlightExpenses.filtExpYr('2026',this)">2026</div>
+    <div class="fp" onclick="FlightExpenses.filtExpYr('2025',this)">2025</div>
+  </div>
+  <div id="fexp-content"></div>
+</div>
+
 <!-- ===== BILLING ===== -->
 
 <div class="pg" id="pg-bil">
@@ -608,6 +624,7 @@ textarea{resize:vertical;min-height:60px}
 <script src="js/fuel.js"></script>
 <script src="js/billing.js"></script>
 <script src="js/maintenance.js"></script>
+<script src="js/flight-expenses.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/exchange.js"></script>
 
