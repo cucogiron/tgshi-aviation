@@ -344,7 +344,8 @@ textarea{resize:vertical;min-height:60px}
   <button class="bt" onclick="App.nav('fuel',3)"><div class="bt-i">⛽</div><div class="bt-l">Comb.</div></button>
   <button class="bt" onclick="App.nav('bil',4)"><div class="bt-i">🧾</div><div class="bt-l">Billing</div></button>
   <button class="bt" onclick="App.nav('xch',5)"><div class="bt-i">🤝</div><div class="bt-l">Interc.</div></button>
-  <button class="bt" onclick="App.nav('new',6)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
+  <button class="bt" onclick="App.nav('maint',6)"><div class="bt-i">🔧</div><div class="bt-l">Mante</div></button>
+  <button class="bt" onclick="App.nav('new',7)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
 </div>
 
 <!-- ===== DASHBOARD ===== -->
@@ -532,6 +533,16 @@ textarea{resize:vertical;min-height:60px}
   </div>
 </div>
 
+<!-- ===== MAINTENANCE ===== -->
+
+<div class="pg" id="pg-maint">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div class="stitle" style="margin:0">Mantenimiento — <span id="maint-plane-label">TG-SHI</span></div>
+    <button class="btn sm" onclick="Maintenance.openAddMaint()" id="maint-add-btn" style="display:none">+ Agregar</button>
+  </div>
+  <div id="maint-content"></div>
+</div>
+
 <!-- ===== BILLING ===== -->
 
 <div class="pg" id="pg-bil">
@@ -596,6 +607,7 @@ textarea{resize:vertical;min-height:60px}
 <script src="js/flights.js"></script>
 <script src="js/fuel.js"></script>
 <script src="js/billing.js"></script>
+<script src="js/maintenance.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/exchange.js"></script>
 
