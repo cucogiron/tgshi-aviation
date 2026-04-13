@@ -1,13 +1,13 @@
 // =====================================================================
 // TG-SHI v6.0 — js/billing.js
 // Billing calculations (sections A–F) + downloadable invoices
-// Currency separation: Fuel in QTZ, Fernando/Reserva in USD
+// Currency: Fuel = QTZ, Fernando/Pilotaje = USD, Reserva = USD (Senshi fund)
 // Three owners: COCO, CUCO, SENSHI (Charter)
+// Payment flow: COCO/CUCO pay Senshi → Senshi pays Fernando
 // =====================================================================
 
 const Billing = (() => {
 
-  // Cached billing data for invoice generation
   let lastBilData = null;
 
   function initBil() {
@@ -32,7 +32,7 @@ const Billing = (() => {
     const fus = DB.fuel.filter(f => f.d >= fd && f.d <= td);
     const rt = App.getRateFD(fd);
 
-    // --- Accumulate hours, sub-hour flights, espera, charter revenue ---
+    // --- Hours, sub-hour, espera, charter revenue ---
     const hrs = { COCO: 0, CUCO: 0, SENSHI: 0 };
     const sub = { COCO: { n: 0, a: 0 }, CUCO: { n: 0, a: 0 }, SENSHI: { n: 0, a: 0 } };
     const esp = { COCO: 0, CUCO: 0, SENSHI: 0 };
@@ -48,7 +48,7 @@ const Billing = (() => {
       if ((f.rv || 0) > 0) charterRev += f.rv;
     });
 
-    // --- Fuel totals (QTZ) and anticipos per owner ---
+    // --- Fuel (QTZ) ---
     let tfuel = 0;
     const antic = { COCO: 0, CUCO: 0, SENSHI: 0 };
     fus.forEach(f => {
@@ -60,33 +60,31 @@ const Billing = (() => {
 
     const th = hrs.COCO + hrs.CUCO + hrs.SENSHI;
     const qph = th > 0 ? tfuel / th : 0;
-
-    // Fuel proration per owner (QTZ)
     const fuelProp = { COCO: hrs.COCO * qph, CUCO: hrs.CUCO * qph, SENSHI: hrs.SENSHI * qph };
     const fuelNet = { COCO: fuelProp.COCO - antic.COCO, CUCO: fuelProp.CUCO - antic.CUCO, SENSHI: fuelProp.SENSHI - antic.SENSHI };
 
-    // Billable hours (roundup: sub-hour flights count as 1hr each)
+    // --- Fernando (USD) ---
     const bilH = r => hrs[r] - sub[r].a + sub[r].n;
-    const pilFee = r => bilH(r) * rt.pilot;   // USD
-    const ruAmt = r => (sub[r].n - sub[r].a) * rt.pilot; // USD roundup portion
-    const resv = r => hrs[r] * rt.res;          // USD
+    const pilFee = r => bilH(r) * rt.pilot;
+    const ruAmt = r => (sub[r].n - sub[r].a) * rt.pilot;
+
+    // --- Reserva mantenimiento (USD — fondo Senshi, NO va a Fernando) ---
+    const resv = r => hrs[r] * rt.res;
 
     const fromParts = from.split('-'), toParts = to.split('-');
     const numMonths = (+toParts[0] - +fromParts[0]) * 12 + (+toParts[1] - +fromParts[1]) + 1;
-    const adminFee = rt.admin * numMonths; // USD total
+    const adminFee = rt.admin * numMonths;
 
-    // Fernando total (USD) — all three owners
+    // Fernando total = pilotaje + espera + admin — reserva NOT included
     const totFer = pilFee('COCO') + pilFee('CUCO') + pilFee('SENSHI')
                  + esp.COCO + esp.CUCO + esp.SENSHI + adminFee;
 
-    // Formatters
     const fQ = v => `Q${Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const fD = v => `$${Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const sg = v => v < 0 ? 'neg' : '';
-
     const periodLbl = from === to ? from : `${from} → ${to}`;
 
-    // --- Cache for invoices ---
+    // --- Cache ---
     lastBilData = {
       from, to, tc, periodLbl, rt, numMonths,
       hrs, sub, esp, espHrs, charterRev,
@@ -98,7 +96,7 @@ const Billing = (() => {
       adminFee, totFer, fQ, fD
     };
 
-    // ========== BUILD REPORT HTML ==========
+    // ========== BUILD REPORT ==========
 
     let h = `<div class="stitle">Período: ${periodLbl} · TC Q${tc}/USD · Piloto: $${rt.pilot}/hr · Admin: $${rt.admin}/mes</div>`;
 
@@ -115,18 +113,16 @@ const Billing = (() => {
       <div class="bil-row"><div class="bil-lbl">Total combustible</div><div class="bil-val">${fQ(tfuel)}</div></div>
       <div class="bil-row"><div class="bil-lbl">QTZ/hr promedio</div><div class="bil-val">${fQ(qph)}</div></div>`;
 
-    // Per-owner fuel breakdown
-    ['COCO', 'CUCO', 'SENSHI'].forEach((owner, idx) => {
+    ['COCO', 'CUCO', 'SENSHI'].forEach(owner => {
       const label = owner === 'SENSHI' ? 'CHARTER' : owner;
       h += `<div class="bil-row" style="border-top:1px solid #E2E6EE;margin-top:4px"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:9px;text-transform:uppercase;letter-spacing:.06em">${label}</div><div class="bil-val" style="font-size:9px;color:#8892A4">${hrs[owner].toFixed(1)} hrs</div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Proporcional</div><div class="bil-val">${fQ(fuelProp[owner])}</div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Anticipo pagado</div><div class="bil-val">${fQ(antic[owner])}</div></div>
         <div class="bil-row"><div class="bil-lbl"><b>↳ Neto a cobrar</b></div><div class="bil-val ${sg(fuelNet[owner])}"><b>${fuelNet[owner] < 0 ? '(' + fQ(fuelNet[owner]) + ')' : fQ(fuelNet[owner])}</b></div></div>`;
     });
-
     h += `</div></div>`;
 
-    // ── C — PILOTAJE FERNANDO (USD) ──
+    // ── C — PILOTAJE FERNANDO (USD) — what Senshi pays Fernando ──
     h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">C — Pilotaje Fernando (USD · $${rt.pilot}/hr · Espera $${rt.gw}/hr)</div></div><div class="bil-bd">`;
 
     ['COCO', 'CUCO', 'SENSHI'].forEach((owner, idx) => {
@@ -143,17 +139,17 @@ const Billing = (() => {
       }
     });
 
-    h += `<div class="bil-row" style="border-top:2px solid #E2E6EE;margin-top:4px"><div class="bil-lbl">Admin fee Fernando (${numMonths} mes${numMonths > 1 ? 'es' : ''})</div><div class="bil-val">${fD(adminFee)}</div></div>
+    h += `<div class="bil-row" style="border-top:2px solid #E2E6EE;margin-top:4px"><div class="bil-lbl">Admin fee Fernando (${numMonths} mes${numMonths > 1 ? 'es' : ''}) — 100% Senshi</div><div class="bil-val">${fD(adminFee)}</div></div>
       <div class="bil-row"><div class="bil-lbl"><b>TOTAL A PAGAR FERNANDO</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
     </div></div>`;
 
-    // ── D — RESERVA MANTENIMIENTO (USD) ──
+    // ── D — RESERVA MANTENIMIENTO (USD — fondo Senshi, no Fernando) ──
     const totRes = resv('COCO') + resv('CUCO') + resv('SENSHI');
-    h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">D — Reserva Mantenimiento (USD · $${rt.res}/hr)</div></div><div class="bil-bd">
+    h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">D — Reserva Mantenimiento (USD · $${rt.res}/hr · Fondo Senshi)</div></div><div class="bil-bd">
       <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${fD(resv('COCO'))}</div></div>
       <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${fD(resv('CUCO'))}</div></div>
       <div class="bil-row"><div class="bil-lbl">Charter</div><div class="bil-val">${fD(resv('SENSHI'))}</div></div>
-      <div class="bil-row"><div class="bil-lbl"><b>Total reserva</b></div><div class="bil-val"><b>${fD(totRes)}</b></div></div>
+      <div class="bil-row"><div class="bil-lbl"><b>Total reserva (fondo Senshi)</b></div><div class="bil-val"><b>${fD(totRes)}</b></div></div>
     </div></div>`;
 
     // ── E — RESUMEN POR SOCIO ──
@@ -165,18 +161,20 @@ const Billing = (() => {
       const ownerFerUSD = pilFee(owner) + esp[owner];
       const ownerAdminUSD = owner === 'SENSHI' ? adminFee : 0;
       const ownerResvUSD = resv(owner);
-      const totalUSD = ownerFerUSD + ownerAdminUSD + ownerResvUSD;
+      // Fernando portion (what goes to Fernando via Senshi)
+      const ferTotal = ownerFerUSD + ownerAdminUSD;
+      // Total USD owed to Senshi = Fernando portion + reserva
+      const totalUSD = ferTotal + ownerResvUSD;
       const totalQTZ = fuelNet[owner];
 
       h += `<div class="bil-row" style="${border}"><div class="bil-lbl" style="font-weight:700;font-size:11px">${label}</div><div class="bil-val"></div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Combustible neto (QTZ)</div><div class="bil-val ${sg(totalQTZ)}">${totalQTZ < 0 ? '(' + fQ(totalQTZ) + ')' : fQ(totalQTZ)}</div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Pilotaje + espera (USD)</div><div class="bil-val">${fD(ownerFerUSD)}</div></div>
         ${ownerAdminUSD > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Admin fee (USD, 100% Charter)</div><div class="bil-val">${fD(ownerAdminUSD)}</div></div>` : ''}
-        <div class="bil-row"><div class="bil-lbl">↳ Reserva mante (USD)</div><div class="bil-val">${fD(ownerResvUSD)}</div></div>
+        <div class="bil-row"><div class="bil-lbl">↳ Reserva mante (USD, fondo Senshi)</div><div class="bil-val">${fD(ownerResvUSD)}</div></div>
         <div class="bil-row"><div class="bil-lbl"><b>↳ Total USD</b></div><div class="bil-val"><b>${fD(totalUSD)}</b></div></div>
         <div class="bil-row"><div class="bil-lbl"><b>↳ Total QTZ</b></div><div class="bil-val ${sg(totalQTZ)}"><b>${totalQTZ < 0 ? '(' + fQ(totalQTZ) + ')' : fQ(totalQTZ)}</b></div></div>`;
     });
-
     h += `</div></div>`;
 
     // ── F — QuickBooks Summary ──
@@ -188,14 +186,15 @@ const Billing = (() => {
       h += `<div class="bil-row" style="${border}"><div class="bil-lbl" style="font-weight:700;font-size:10px">${label}</div><div class="bil-val"></div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Combustible neto (QTZ)</div><div class="bil-val ${sg(fuelNet[owner])}">${fuelNet[owner] < 0 ? '(' + fQ(fuelNet[owner]) + ')' : fQ(fuelNet[owner])}</div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Pilotaje${esp[owner] > 0 ? ' + espera' : ''} (USD)</div><div class="bil-val">${fD(pilFee(owner) + esp[owner])}</div></div>
-        <div class="bil-row"><div class="bil-lbl">↳ Reserva mante (USD)</div><div class="bil-val">${fD(resv(owner))}</div></div>`;
+        <div class="bil-row"><div class="bil-lbl">↳ Reserva mante (USD, fondo)</div><div class="bil-val">${fD(resv(owner))}</div></div>`;
     });
 
-    h += `<div class="bil-row" style="border-top:1px solid #E2E6EE;margin-top:4px"><div class="bil-lbl">Admin fee Fernando (USD)</div><div class="bil-val">${fD(adminFee)}</div></div>`;
+    h += `<div class="bil-row" style="border-top:1px solid #E2E6EE;margin-top:4px"><div class="bil-lbl">Admin fee Fernando (USD, 100% Senshi)</div><div class="bil-val">${fD(adminFee)}</div></div>`;
     if (charterRev > 0) {
       h += `<div class="bil-row"><div class="bil-lbl">Charter — Ingreso bruto (USD)</div><div class="bil-val">${fD(charterRev)}</div></div>`;
     }
     h += `<div class="bil-row"><div class="bil-lbl"><b>Total Fernando (USD)</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
+      <div class="bil-row"><div class="bil-lbl"><b>Total Reserva fondo (USD)</b></div><div class="bil-val"><b>${fD(totRes)}</b></div></div>
     </div></div>`;
 
     // QB notes
@@ -207,7 +206,7 @@ const Billing = (() => {
     });
     if (notes.length) h += `<div class="qb-note">📋 Nota QB:<br>${notes.join('<br>')}</div>`;
 
-    // ── Download buttons — 3 invoices, each shows both QTZ and USD ──
+    // ── Download buttons — 3 invoices ──
     h += `<div class="stitle" style="margin-top:14px">Descargar facturas</div>
       <div style="display:grid;grid-template-columns:1fr;gap:7px;margin-bottom:10px">
         <button class="btn sm" style="width:100%" onclick="Billing.downloadInvoice('COCO')">📄 COCO — lo que COCO debe a Senshi</button>
@@ -220,8 +219,9 @@ const Billing = (() => {
   }
 
   // --- Invoice generation ---
-  // COCO/CUCO invoice: what that owner owes Senshi (fuel QTZ + pilotaje/espera/reserva USD)
-  // SENSHI invoice: what Senshi pays Fernando (all 3 owners' pilotaje + espera + admin + all reserva USD) + Senshi's own fuel QTZ
+  // COCO/CUCO: what they owe Senshi (fuel QTZ + pilotaje/espera/reserva USD)
+  // SENSHI: what Senshi pays Fernando (all 3 pilotaje + espera + admin USD) + Senshi fuel QTZ
+  //         Reserva NOT included in Senshi→Fernando invoice (it stays in the Senshi fund)
   function downloadInvoice(owner) {
     if (!lastBilData) { alert('Calcula el billing primero'); return; }
     const d = lastBilData;
@@ -230,18 +230,17 @@ const Billing = (() => {
     const fQs = v => v < 0 ? `-${fQ(v)}` : fQ(v);
     const fDs = v => v < 0 ? `-${fD(v)}` : fD(v);
 
-    let qtzLines = []; // { desc, amt }
-    let usdLines = []; // { desc, amt, note? }
+    let qtzLines = [];
+    let usdLines = [];
 
     if (owner === 'SENSHI') {
-      // ── SENSHI: pays Fernando for ALL three owners ──
-      const label = 'Senshi';
+      // ── SENSHI→Fernando: pilotaje + espera + admin for ALL owners ──
 
-      // QTZ section: Senshi's own fuel
+      // QTZ: Senshi's own fuel
       qtzLines.push({ desc: `Combustible Charter (${d.hrs.SENSHI.toFixed(1)} hrs × Q${d.qph.toFixed(2)}/hr)`, amt: d.fuelProp.SENSHI });
       if (d.antic.SENSHI > 0) qtzLines.push({ desc: 'Menos: anticipo Charter pagado', amt: -d.antic.SENSHI });
 
-      // USD section: all three owners' pilotaje + espera + reserva + admin
+      // USD: all owners' pilotaje + espera, then admin (NO reserva)
       ['COCO', 'CUCO', 'SENSHI'].forEach(o => {
         const oLabel = o === 'SENSHI' ? 'Charter' : o;
         usdLines.push({ desc: `Pilotaje ${oLabel} (${d.bilH[o].toFixed(1)} hrs × $${d.rt.pilot}/hr)`, amt: d.pilFee[o] });
@@ -252,22 +251,16 @@ const Billing = (() => {
           usdLines.push({ desc: `Espera ${oLabel} (${d.espHrs[o].toFixed(1)} hrs × $${d.rt.gw}/hr)`, amt: d.esp[o] });
         }
       });
-      // Admin fee (100% Senshi)
       usdLines.push({ desc: `Admin fee Fernando (${d.numMonths} mes × $${d.rt.admin}/mes)`, amt: d.adminFee });
-      // Reserva for all three
-      ['COCO', 'CUCO', 'SENSHI'].forEach(o => {
-        const oLabel = o === 'SENSHI' ? 'Charter' : o;
-        usdLines.push({ desc: `Reserva mante ${oLabel} (${d.hrs[o].toFixed(1)} hrs × $${d.rt.res}/hr)`, amt: d.resv[o] });
-      });
 
     } else {
-      // ── COCO / CUCO: what they owe Senshi ──
+      // ── COCO/CUCO → Senshi: fuel + pilotaje + espera + reserva ──
 
-      // QTZ section: their fuel
+      // QTZ: their fuel
       qtzLines.push({ desc: `Combustible proporcional (${d.hrs[owner].toFixed(1)} hrs × Q${d.qph.toFixed(2)}/hr)`, amt: d.fuelProp[owner] });
       if (d.antic[owner] > 0) qtzLines.push({ desc: 'Menos: anticipo ya pagado', amt: -d.antic[owner] });
 
-      // USD section: their pilotaje + espera + reserva (no admin)
+      // USD: pilotaje + espera + reserva (no admin — that's 100% Senshi)
       usdLines.push({ desc: `Pilotaje Fernando (${d.bilH[owner].toFixed(1)} hrs × $${d.rt.pilot}/hr)`, amt: d.pilFee[owner] });
       if (d.ruAmt[owner] > 0) {
         usdLines.push({ desc: `↳ Roundup (${d.sub[owner].n} vuelo(s) <1hr → 1hr)`, amt: d.ruAmt[owner], note: 'incluido en pilotaje' });
@@ -275,15 +268,15 @@ const Billing = (() => {
       if (d.espHrs[owner] > 0) {
         usdLines.push({ desc: `Espera en tierra (${d.espHrs[owner].toFixed(1)} hrs × $${d.rt.gw}/hr)`, amt: d.esp[owner] });
       }
-      usdLines.push({ desc: `Reserva mantenimiento (${d.hrs[owner].toFixed(1)} hrs × $${d.rt.res}/hr)`, amt: d.resv[owner] });
+      usdLines.push({ desc: `Reserva mantenimiento (${d.hrs[owner].toFixed(1)} hrs × $${d.rt.res}/hr) — fondo Senshi`, amt: d.resv[owner] });
     }
 
     const totalQTZ = qtzLines.reduce((s, l) => s + l.amt, 0);
     const totalUSD = usdLines.reduce((s, l) => s + l.amt, 0);
     const label = owner === 'SENSHI' ? 'Senshi' : owner;
     const subtitle = owner === 'SENSHI'
-      ? 'Senshi paga a Fernando — pilotaje + espera + admin + reserva (todos los socios)'
-      : `${owner} debe a Senshi — combustible + pilotaje + espera + reserva`;
+      ? 'Senshi paga a Fernando — pilotaje + espera + admin (todos los socios)'
+      : `${owner} debe a Senshi — combustible + pilotaje + espera + reserva mante`;
 
     const invoiceHTML = `<!DOCTYPE html>
 <html lang="es">
@@ -341,7 +334,7 @@ ${qtzLines.length > 0 ? `
 </table>` : ''}
 
 ${usdLines.length > 0 ? `
-<div class="sec-hd">${owner === 'SENSHI' ? 'Pago a Fernando + Reserva (USD)' : 'Pilotaje + Reserva (USD)'}</div>
+<div class="sec-hd">${owner === 'SENSHI' ? 'Pago a Fernando (USD)' : 'Pilotaje + Reserva (USD)'}</div>
 <table>
   <thead><tr><th>Concepto</th><th>Monto</th></tr></thead>
   <tbody>
