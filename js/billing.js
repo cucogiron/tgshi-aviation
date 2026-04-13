@@ -84,6 +84,17 @@ const Billing = (() => {
     const sg = v => v < 0 ? 'neg' : '';
     const periodLbl = from === to ? from : `${from} → ${to}`;
 
+    // --- Maintenance data (compute before cache) ---
+    const maintData = (typeof Maintenance !== 'undefined') ? Maintenance.billingForPeriod(from, to) : null;
+    const maintUSD = { COCO: 0, CUCO: 0, SENSHI: 0 };
+    const maintQTZ = { COCO: 0, CUCO: 0, SENSHI: 0 };
+    if (maintData) {
+      ['COCO', 'CUCO', 'SENSHI'].forEach(o => {
+        maintUSD[o] = maintData[o].USD;
+        maintQTZ[o] = maintData[o].QTZ;
+      });
+    }
+
     // --- Cache ---
     lastBilData = {
       from, to, tc, periodLbl, rt, numMonths,
@@ -145,16 +156,6 @@ const Billing = (() => {
     </div></div>`;
 
     // ── D — MANTENIMIENTO (costos reales asignados por TACH) ──
-    const maintData = (typeof Maintenance !== 'undefined') ? Maintenance.billingForPeriod(from, to) : null;
-    const maintUSD = { COCO: 0, CUCO: 0, SENSHI: 0 };
-    const maintQTZ = { COCO: 0, CUCO: 0, SENSHI: 0 };
-    if (maintData) {
-      ['COCO', 'CUCO', 'SENSHI'].forEach(o => {
-        maintUSD[o] = maintData[o].USD;
-        maintQTZ[o] = maintData[o].QTZ;
-      });
-    }
-
     if (typeof Maintenance !== 'undefined') {
       h += Maintenance.buildBillingSectionD(from, to);
     } else {
