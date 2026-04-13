@@ -276,8 +276,16 @@ const Calendar = (() => {
 
   async function cancelSlot(id) {
     if (!confirm('Cancelar esta reserva?')) return;
-    const s = DB.schedule.find(function(x) { return x.id === id; });
-    if (s) { s.status = 'cancelled'; await API.saveData(); buildDayDetail(s.date); buildCalendar(); }
+    var s = DB.schedule.find(function(x) { return x.id === id; });
+    if (s) {
+      s.status = 'cancelled';
+      var ok = await API.saveData();
+      if (ok) {
+        API.notify('flight_cancelled', id);
+      }
+      buildDayDetail(s.date);
+      buildCalendar();
+    }
   }
 
   function buildSchedPending() {
