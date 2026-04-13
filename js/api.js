@@ -1,5 +1,5 @@
 // =====================================================================
-// TG-SHI v5.2 — js/api.js
+// TG-SHI v6.0 — js/api.js
 // Cloudflare Worker communication layer
 // =====================================================================
 
@@ -65,7 +65,7 @@ const API = (() => {
         // Ensure all required keys exist
         if (!DB.users) DB.users = { CUCO: { role: 'admin', icon: '👨‍✈️', name: 'Eduardo' }, COCO: { role: 'owner', icon: '👩‍✈️', name: 'Coco' }, FERNANDO: { role: 'pilot_admin', icon: '🧑‍✈️', name: 'Fernando' } };
         if (!DB.passwords) DB.passwords = {};
-        if (!DB.planes) DB.planes = [{ id: 'TG-SHI', name: 'Shenshi', type: 'Cessna 206', active: true }];
+        if (!DB.planes) DB.planes = [{ id: 'TG-SHI', name: 'Senshi', type: 'Cessna 206', active: true }];
         if (!DB.schedule) DB.schedule = [];
         if (!DB.pilots) DB.pilots = [];
         if (!DB.exchange_partners) DB.exchange_partners = [];

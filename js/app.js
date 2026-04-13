@@ -1,5 +1,5 @@
 // =====================================================================
-// TG-SHI v5.2 — js/app.js
+// TG-SHI v6.0 — js/app.js
 // Init, login, navigation, state management, helpers
 // =====================================================================
 
@@ -11,7 +11,7 @@ const DB = {
     FERNANDO: { role: 'pilot_admin', icon: '🧑‍✈️', name: 'Fernando Méndez' }
   },
   passwords: {},
-  planes: [{ id: 'TG-SHI', name: 'Shenshi', type: 'Cessna 206', active: true }],
+  planes: [{ id: 'TG-SHI', name: 'Senshi', type: 'Cessna 206', active: true }],
   flights: [], fuel: [], schedule: [],
   pilots: [],
   exchange_partners: [],
@@ -127,6 +127,11 @@ const App = (() => {
     location.reload();
   }
 
+  // --- Forgot password ---
+  function showForgotPw() {
+    document.getElementById('login-err').innerHTML = '<span style="color:rgba(255,255,255,.6)">Contacta al administrador para restablecer tu contraseña.</span>';
+  }
+
   // --- Navigation ---
   function nav(id, i) {
     document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
@@ -171,7 +176,7 @@ const App = (() => {
     isAdmin, isPilotAdmin, canManageSchedule,
     getUser, getPlane, getPilot, pad2, todayStr, fmtDate, getRateFD,
     initApp, onReady, buildAll,
-    doLogin, showUserBadge, logout,
+    doLogin, showUserBadge, logout, showForgotPw,
     nav, openSettings, closeSettings, changePw
   };
 })();

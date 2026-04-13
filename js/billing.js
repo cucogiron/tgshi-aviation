@@ -1,5 +1,5 @@
 // =====================================================================
-// TG-SHI v5.2 — js/billing.js
+// TG-SHI v6.0 — js/billing.js
 // Billing calculations (sections A–F) + downloadable invoices
 // =====================================================================
 
@@ -81,7 +81,7 @@ const Billing = (() => {
     h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">A — Horas</div></div><div class="bil-bd">
       <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${hrs.COCO.toFixed(1)} hrs</div></div>
       <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${hrs.CUCO.toFixed(1)} hrs</div></div>
-      <div class="bil-row"><div class="bil-lbl">Charter/Shenshi</div><div class="bil-val">${hrs.SENSHI.toFixed(1)} hrs</div></div>
+      <div class="bil-row"><div class="bil-lbl">Charter</div><div class="bil-val">${hrs.SENSHI.toFixed(1)} hrs</div></div>
       <div class="bil-row"><div class="bil-lbl"><b>Total</b></div><div class="bil-val"><b>${th.toFixed(1)} hrs</b></div></div>
     </div></div>`;
 
@@ -107,7 +107,7 @@ const Billing = (() => {
       <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('CUCO'))}</div></div>
       ${ruCU > 0 ? `<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A">↳ Roundup (${sub.CUCO.n} vuelo(s) &lt;1hr)</div><div class="bil-val pos">incl. +${fD(ruCU)}</div></div>` : ''}
       ${espHrs.CUCO > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.CUCO.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espCU)}</div></div>` : ''}
-      <div class="bil-row" style="border-top:1px solid #E2E6EE;margin-top:2px"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:9px;text-transform:uppercase;letter-spacing:.06em">SHENSHI</div><div class="bil-val" style="font-size:9px;color:#8892A4">${bilH('SENSHI').toFixed(1)} hrs</div></div>
+      <div class="bil-row" style="border-top:1px solid #E2E6EE;margin-top:2px"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:9px;text-transform:uppercase;letter-spacing:.06em">CHARTER</div><div class="bil-val" style="font-size:9px;color:#8892A4">${bilH('SENSHI').toFixed(1)} hrs</div></div>
       <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('SENSHI'))}</div></div>
       ${espHrs.SENSHI > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.SENSHI.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espSE)}</div></div>` : ''}
       <div class="bil-row" style="border-top:2px solid #E2E6EE;margin-top:4px"><div class="bil-lbl">Admin fee Fernando (${numMonths} mes${numMonths > 1 ? 'es' : ''})</div><div class="bil-val">${fD(adminFee)}</div></div>
@@ -118,7 +118,7 @@ const Billing = (() => {
     h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">D — Reserva ($${rt.res}/hr)</div></div><div class="bil-bd">
       <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${fD(resv('COCO'))}</div></div>
       <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${fD(resv('CUCO'))}</div></div>
-      <div class="bil-row"><div class="bil-lbl">Shenshi</div><div class="bil-val">${fD(resv('SENSHI'))}</div></div>
+      <div class="bil-row"><div class="bil-lbl">Charter</div><div class="bil-val">${fD(resv('SENSHI'))}</div></div>
       <div class="bil-row"><div class="bil-lbl"><b>Total reserva</b></div><div class="bil-val"><b>${fD(resv('COCO') + resv('CUCO') + resv('SENSHI'))}</b></div></div>
     </div></div>`;
 
@@ -130,7 +130,7 @@ const Billing = (() => {
       <div class="bil-row"><div class="bil-lbl">CUCO — Comb. neto (QTZ)</div><div class="bil-val ${sg(prCU - acCU)}">${fQ(prCU - acCU)}</div></div>
       <div class="bil-row"><div class="bil-lbl">CUCO — Pilotaje${espCU > 0 ? ' + espera' : ''}</div><div class="bil-val">${fD(pilFee('CUCO') + espCU)}</div></div>
       <div class="bil-row"><div class="bil-lbl">CUCO — Reserva mante</div><div class="bil-val">${fD(resv('CUCO'))}</div></div>
-      <div class="bil-row"><div class="bil-lbl">Shenshi — Charter</div><div class="bil-val">${fD(charterRev)}</div></div>
+      <div class="bil-row"><div class="bil-lbl">Charter — Ingreso</div><div class="bil-val">${fD(charterRev)}</div></div>
       <div class="bil-row"><div class="bil-lbl"><b>Total Fernando</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
     </div></div>`;
 
@@ -259,7 +259,7 @@ tr.total td{border-top:2px solid #1B2A4A;font-size:14px;font-weight:800;padding-
 <body>
 <button class="print-btn no-print" onclick="window.print()">🖨 Imprimir</button>
 <div class="header">
-  <div><div class="logo">TG-SHI</div><div class="logo-sub">Shenshi Aviation</div></div>
+  <div><div class="logo">TG-SHI</div><div class="logo-sub">Senshi Aviation</div></div>
   <div class="meta">
     <div><b>Factura — ${owner}</b></div>
     <div>Período: ${d.periodLbl}</div>
@@ -277,7 +277,7 @@ tr.total td{border-top:2px solid #1B2A4A;font-size:14px;font-weight:800;padding-
   </tbody>
 </table>
 <div class="footer">
-  TG-SHI · Shenshi Aviation · Generado automáticamente
+  TG-SHI · Senshi Aviation · Generado automáticamente
 </div>
 </body>
 </html>`;

@@ -1,5 +1,5 @@
 // =====================================================================
-// TG-SHI v5.2 — js/calendar.js
+// TG-SHI v6.0 — js/calendar.js
 // Scheduling calendar, booking modal, confirmation flow
 // =====================================================================
 

@@ -1,5 +1,5 @@
 // =====================================================================
-// TG-SHI v5.2.2 — js/exchange.js
+// TG-SHI v6.0 — js/exchange.js
 // Exchange hours tracking — multi-partner, multi-plane, per-owner
 //
 // Data model:
@@ -17,6 +17,8 @@
 // =====================================================================
 
 const Exchange = (() => {
+
+  let xchYearFilter = 'ALL';
 
   function getPartner(id) { return (DB.exchange_partners || []).find(p => p.id === id); }
 
@@ -48,6 +50,29 @@ const Exchange = (() => {
   function calcReceived(entries, owner) {
     return entries.filter(e => e.direction === 'received' && e.paid_by === owner)
       .reduce((s, e) => s + e.hours, 0);
+  }
+
+  // --- Per-plane balance breakdown ---
+  function calcPlaneBreakdown(entries, owner, rate) {
+    const planes = {};
+    entries.filter(e => e.paid_by === owner).forEach(e => {
+      const plane = e.direction === 'given' ? (e.our_plane || 'TG-SHI') : (e.their_plane || '???');
+      if (!planes[plane]) planes[plane] = 0;
+      if (e.direction === 'given') planes[plane] += e.hours * rate;
+      else planes[plane] -= e.hours;
+    });
+    return planes;
+  }
+
+  function planeBreakdownStr(entries, owner, rate) {
+    const breakdown = calcPlaneBreakdown(entries, owner, rate);
+    const parts = Object.entries(breakdown)
+      .filter(([_, v]) => Math.abs(v) >= 0.05)
+      .map(([plane, val]) => {
+        const sign = val >= 0 ? '+' : '';
+        return `${plane}: ${sign}${val.toFixed(1)}h`;
+      });
+    return parts.length > 0 ? parts.join(', ') : '';
   }
 
   // --- Dashboard widget (clear "who owes whom") ---
@@ -122,6 +147,10 @@ const Exchange = (() => {
         const totalGiven = gCO + gCU;
         const totalRecv = rCO + rCU;
 
+        // Per-plane breakdown
+        const breakdownCO = planeBreakdownStr(entries, 'COCO', p.exchange_rate);
+        const breakdownCU = planeBreakdownStr(entries, 'CUCO', p.exchange_rate);
+
         balanceHtml += `<div class="card"><div class="ch"><div class="ct">🤝 ${p.name}</div><div style="font-size:9px;color:#8892A4">${planesStr(p)} · Rate ${p.exchange_rate}:1</div></div><div class="cb">
           <div class="stitle" style="margin:0 0 5px">Resumen global</div>
           <div class="qr"><div class="ql">Hrs dadas (${p.name} voló en nuestras aeronaves)</div><div class="qv">${totalGiven.toFixed(1)}</div></div>
@@ -131,19 +160,29 @@ const Exchange = (() => {
           <div class="qr"><div class="ql">Pagó por ${p.name} en TG-SHI</div><div class="qv">${gCO.toFixed(1)} hrs</div></div>
           <div class="qr"><div class="ql">Usó en aeronaves de ${p.name}</div><div class="qv">${rCO.toFixed(1)} hrs</div></div>
           <div class="qr"><div class="ql"><b>Saldo COCO</b></div><div class="qv ${balCO > 0 ? 'c2' : balCO < 0 ? 'c3' : ''}" style="font-size:13px"><b>${formatBal(balCO, p.name)}</b></div></div>
+          ${breakdownCO ? `<div style="font-size:9px;color:#8892A4;margin-top:2px;padding-left:2px">Por aeronave: ${breakdownCO}</div>` : ''}
 
           <div class="stitle" style="margin:10px 0 5px">Balance CUCO</div>
           <div class="qr"><div class="ql">Pagó por ${p.name} en TG-SHI</div><div class="qv">${gCU.toFixed(1)} hrs</div></div>
           <div class="qr"><div class="ql">Usó en aeronaves de ${p.name}</div><div class="qv">${rCU.toFixed(1)} hrs</div></div>
           <div class="qr"><div class="ql"><b>Saldo CUCO</b></div><div class="qv ${balCU > 0 ? 'c2' : balCU < 0 ? 'c3' : ''}" style="font-size:13px"><b>${formatBal(balCU, p.name)}</b></div></div>
+          ${breakdownCU ? `<div style="font-size:9px;color:#8892A4;margin-top:2px;padding-left:2px">Por aeronave: ${breakdownCU}</div>` : ''}
         </div></div>`;
       });
     } else {
       balanceHtml = '<div class="card"><div class="empty"><div class="big">🤝</div>Sin socios de intercambio<br><span style="font-size:10px">Agrégalos en Admin > Socios</span></div></div>';
     }
 
+    // Year filter for log
+    const yearFilterHtml = `<div class="frow" id="xch-yr-row" style="margin-top:4px">
+      <div class="fp${xchYearFilter === 'ALL' ? ' on' : ''}" onclick="Exchange.filtXchYr('ALL',this)">Todos</div>
+      <div class="fp${xchYearFilter === '2026' ? ' on' : ''}" onclick="Exchange.filtXchYr('2026',this)">2026</div>
+      <div class="fp${xchYearFilter === '2025' ? ' on' : ''}" onclick="Exchange.filtXchYr('2025',this)">2025</div>
+      <div class="fp${xchYearFilter === '2024' ? ' on' : ''}" onclick="Exchange.filtXchYr('2024',this)">2024</div>
+    </div>`;
+
     document.getElementById('xch-content').innerHTML = filterHtml + balanceHtml +
-      '<div class="stitle">Registro de intercambios</div><div class="card" id="xch-log-list"></div>';
+      '<div class="stitle">Registro de intercambios</div>' + yearFilterHtml + '<div class="card" id="xch-log-list"></div>';
 
     buildXchLog('ALL');
   }
@@ -156,7 +195,13 @@ const Exchange = (() => {
   }
 
   function buildXchLog(filter) {
-    const log = [...(DB.exchange_log || [])].reverse();
+    let log = [...(DB.exchange_log || [])].reverse();
+
+    // Apply year filter
+    if (/^\d{4}$/.test(xchYearFilter)) {
+      log = log.filter(e => e.date.startsWith(xchYearFilter));
+    }
+
     let filtered = log;
     if (filter !== 'ALL') {
       filtered = log.filter(e => e.partner_id === filter);
@@ -194,6 +239,96 @@ const Exchange = (() => {
     document.querySelectorAll('#xch-flt-row .fp').forEach(p => p.classList.remove('on'));
     el.classList.add('on');
     buildXchLog(filter);
+  }
+
+  function filtXchYr(yr, el) {
+    xchYearFilter = yr;
+    document.querySelectorAll('#xch-yr-row .fp').forEach(p => p.classList.remove('on'));
+    el.classList.add('on');
+    // Re-run log with current partner filter
+    const activePartnerPill = document.querySelector('#xch-flt-row .fp.on');
+    let currentPartnerFilter = 'ALL';
+    if (activePartnerPill) {
+      const onclickAttr = activePartnerPill.getAttribute('onclick') || '';
+      const match = onclickAttr.match(/filtXch\((\d+|'ALL')/);
+      if (match) currentPartnerFilter = match[1] === "'ALL'" ? 'ALL' : parseInt(match[1]);
+    }
+    buildXchLog(currentPartnerFilter);
+  }
+
+  // --- Export exchange summary ---
+  function exportExchangeSummary() {
+    ensureMigrated();
+    const partners = DB.exchange_partners || [];
+    const log = DB.exchange_log || [];
+    if (partners.length === 0) { alert('Sin socios de intercambio'); return; }
+
+    let tableRows = '';
+    partners.forEach(p => {
+      const entries = log.filter(e => e.partner_id === p.id);
+      const gCO = calcGiven(entries, 'COCO'), gCU = calcGiven(entries, 'CUCO');
+      const rCO = calcReceived(entries, 'COCO'), rCU = calcReceived(entries, 'CUCO');
+      const balCO = calcBalance(entries, 'COCO', p.exchange_rate);
+      const balCU = calcBalance(entries, 'CUCO', p.exchange_rate);
+      const breakdownCO = planeBreakdownStr(entries, 'COCO', p.exchange_rate);
+      const breakdownCU = planeBreakdownStr(entries, 'CUCO', p.exchange_rate);
+
+      tableRows += `
+        <tr style="background:#F8F9FB"><td colspan="5" style="font-weight:800;font-size:14px;padding:12px 10px;border-bottom:2px solid #1B2A4A">${p.name} <span style="font-weight:400;font-size:10px;color:#8892A4">${planesStr(p)} · Rate ${p.exchange_rate}:1</span></td></tr>
+        <tr><td>COCO — Hrs dadas</td><td style="text-align:right">${gCO.toFixed(1)}</td><td>CUCO — Hrs dadas</td><td style="text-align:right">${gCU.toFixed(1)}</td></tr>
+        <tr><td>COCO — Hrs recibidas</td><td style="text-align:right">${rCO.toFixed(1)}</td><td>CUCO — Hrs recibidas</td><td style="text-align:right">${rCU.toFixed(1)}</td></tr>
+        <tr style="font-weight:700"><td>Saldo COCO</td><td style="text-align:right;color:${balCO >= 0 ? '#1A6B3A' : '#8B1A1A'}">${formatBal(balCO, p.name)}</td><td>Saldo CUCO</td><td style="text-align:right;color:${balCU >= 0 ? '#1A6B3A' : '#8B1A1A'}">${formatBal(balCU, p.name)}</td></tr>
+        ${breakdownCO || breakdownCU ? `<tr><td colspan="2" style="font-size:10px;color:#8892A4">${breakdownCO ? 'COCO por aeronave: ' + breakdownCO : ''}</td><td colspan="2" style="font-size:10px;color:#8892A4">${breakdownCU ? 'CUCO por aeronave: ' + breakdownCU : ''}</td></tr>` : ''}`;
+    });
+
+    // Log detail
+    let logRows = '';
+    [...log].reverse().forEach(e => {
+      const p = getPartner(e.partner_id);
+      const pName = p ? p.name : '???';
+      const dir = e.direction === 'given' ? '→ Dado' : '← Recibido';
+      logRows += `<tr>
+        <td>${e.date}</td><td>${pName}</td><td>${dir}</td>
+        <td>${e.route || '—'}</td><td>${e.paid_by}</td>
+        <td style="text-align:right">${e.hours.toFixed(1)}</td>
+        <td style="text-align:right">${e.fuel_cost ? 'Q' + e.fuel_cost : '—'}</td>
+      </tr>`;
+    });
+
+    const html = `<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Resumen Intercambios — TG-SHI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;color:#1A1F2E;max-width:800px;margin:0 auto;padding:30px 24px}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:3px solid #1B2A4A}
+.logo{font-size:28px;font-weight:900;color:#1B2A4A;letter-spacing:.04em}
+.logo-sub{font-size:9px;color:#8892A4;letter-spacing:.1em;text-transform:uppercase}
+.meta{text-align:right;font-size:11px;color:#8892A4;line-height:1.6}
+.meta b{color:#1A1F2E}
+h2{font-size:14px;font-weight:700;color:#1B2A4A;margin:20px 0 10px;text-transform:uppercase;letter-spacing:.04em}
+table{width:100%;border-collapse:collapse;margin-bottom:20px}
+th{text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8892A4;padding:8px 10px;border-bottom:2px solid #E2E6EE}
+td{padding:8px 10px;font-size:11px;border-bottom:1px solid #F0F2F6}
+.footer{margin-top:24px;padding-top:14px;border-top:1px solid #E2E6EE;font-size:10px;color:#8892A4;text-align:center}
+@media print{body{padding:10px}.no-print{display:none!important}}
+.print-btn{display:block;margin:0 auto 20px;padding:10px 28px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+</style></head><body>
+<button class="print-btn no-print" onclick="window.print()">🖨 Imprimir</button>
+<div class="header">
+  <div><div class="logo">TG-SHI</div><div class="logo-sub">Senshi Aviation — Intercambios</div></div>
+  <div class="meta"><div><b>Resumen de intercambios</b></div><div>Generado: ${new Date().toLocaleDateString('es-GT')}</div><div>Total registros: ${log.length}</div></div>
+</div>
+<h2>Balances por socio</h2>
+<table>${tableRows}</table>
+<h2>Registro detallado</h2>
+<table><thead><tr><th>Fecha</th><th>Socio</th><th>Dirección</th><th>Ruta</th><th>Pagó</th><th style="text-align:right">Hrs</th><th style="text-align:right">Comb.</th></tr></thead><tbody>${logRows}</tbody></table>
+<div class="footer">TG-SHI · Senshi Aviation · Generado automáticamente</div>
+</body></html>`;
+
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(html); w.document.close(); }
+    else { alert('Permite pop-ups para exportar'); }
   }
 
   // --- New exchange flight form ---
@@ -355,7 +490,8 @@ const Exchange = (() => {
   }
 
   return {
-    renderDashboardWidget, buildExchangePage, buildXchLog, filtXch,
+    renderDashboardWidget, buildExchangePage, buildXchLog, filtXch, filtXchYr,
+    exportExchangeSummary,
     openNewExchange, onPartnerChange, xfDir, saveExchange,
     openAddPartner, addPartner, editPartner, savePartner, deletePartner
   };

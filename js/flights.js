@@ -1,14 +1,18 @@
 // =====================================================================
-// TG-SHI v5.2 — js/flights.js
-// Flight log, new flight form, edit/delete
+// TG-SHI v6.0 — js/flights.js
+// Flight log, new flight form, edit/delete, search, duplicate
 // =====================================================================
 
 const Flights = (() => {
   let formType = 'PERSONAL';
+  let currentFilter = 'ALL';
+  let searchQuery = '';
 
   function fRow(f) {
     const dc = f.r === 'COCO' ? 'c1' : f.r === 'CUCO' ? 'c2' : 'c3';
     const bx = f.t === 'STD' ? '<span class="bx s">STD</span>' : f.t === 'FF' ? '<span class="bx f">FF</span>' : f.t === 'MANTE' ? '<span class="bx m">MANTE</span>' : '<span class="bx p">Personal</span>';
+    // Display "Charter" instead of "Shenshi" for SENSHI responsable
+    const displayR = f.r === 'SENSHI' ? 'Charter' : f.r;
     const rv = (f.rv || 0) > 0 ? `<span>$${f.rv.toLocaleString()}</span>` : '';
     const pendTag = f.verified === false ? '<span class="pend-badge">⏳</span>' : '';
     let pilotDisplay = f.p || '';
@@ -17,21 +21,39 @@ const Flights = (() => {
       if (rp) pilotDisplay = rp.name;
     }
     const editBtn = App.isAdmin() ? `<button class="edit-btn" onclick="Flights.openEdit(${f.id})">editar</button>` : '';
-    return `<div class="fi"><div class="fdot ${dc}"></div><div class="fm"><div class="fr">${f.rt || '—'} ${bx}${pendTag}</div><div class="fme"><span>${f.r}</span>${pilotDisplay ? `<span>🧑‍✈️ ${pilotDisplay}</span>` : ''}${rv}${editBtn}</div></div><div class="frt"><div class="fh">${f.h.toFixed(1)}<small>hr</small></div><div class="fdt">${f.d.slice(5)}</div></div></div>`;
+    const dupBtn = App.isAdmin() ? `<button class="dup-btn" onclick="Flights.duplicateFlight(${f.id})">duplicar</button>` : '';
+    const tachDisplay = f.hf ? `<div class="tach-sm">TACH ${f.hf.toFixed(1)}</div>` : '';
+    return `<div class="fi"><div class="fdot ${dc}"></div><div class="fm"><div class="fr">${f.rt || '—'} ${bx}${pendTag}</div><div class="fme"><span>${displayR}</span>${pilotDisplay ? `<span>🧑‍✈️ ${pilotDisplay}</span>` : ''}${rv}${editBtn}${dupBtn}</div></div><div class="frt"><div class="fh">${f.h.toFixed(1)}<small>hr</small></div><div class="fdt">${f.d.slice(5)}</div>${tachDisplay}</div></div>`;
+  }
+
+  function getFilteredFlights() {
+    let out = [...DB.flights].reverse();
+    if (currentFilter === 'COCO') out = out.filter(f => f.r === 'COCO');
+    else if (currentFilter === 'CUCO') out = out.filter(f => f.r === 'CUCO');
+    else if (currentFilter === 'SENSHI') out = out.filter(f => f.r === 'SENSHI');
+    else if (/^\d{4}$/.test(currentFilter)) out = out.filter(f => f.d.startsWith(currentFilter));
+    if (searchQuery) {
+      const q = searchQuery.toUpperCase();
+      out = out.filter(f => (f.rt || '').toUpperCase().includes(q));
+    }
+    return out;
   }
 
   function buildVL(fil) {
-    let out = [...DB.flights].reverse();
-    if (fil === 'COCO') out = out.filter(f => f.r === 'COCO');
-    else if (fil === 'CUCO') out = out.filter(f => f.r === 'CUCO');
-    else if (fil === 'SENSHI') out = out.filter(f => f.r === 'SENSHI');
-    else if (/^\d{4}$/.test(fil)) out = out.filter(f => f.d.startsWith(fil));
+    if (fil !== undefined) currentFilter = fil;
+    const out = getFilteredFlights();
     document.getElementById('vl-list').innerHTML = out.length ? out.slice(0, 100).map(fRow).join('') : '<div class="empty"><div class="big">✈️</div>Sin vuelos</div>';
+  }
+
+  function searchVL() {
+    searchQuery = (document.getElementById('vl-search').value || '').trim();
+    buildVL();
   }
 
   function filtV(f, el) {
     document.querySelectorAll('#flt-row .fp').forEach(p => p.classList.remove('on'));
     el.classList.add('on');
+    currentFilter = f;
     buildVL(f);
   }
 
@@ -154,6 +176,40 @@ const Flights = (() => {
     document.getElementById('ff-hi').value = hf;
   }
 
+  // --- Duplicate flight ---
+  function duplicateFlight(id) {
+    if (!App.isAdmin()) return;
+    const f = DB.flights.find(x => x.id === id);
+    if (!f) return;
+    // Navigate to the new flight form
+    App.nav('new', 6);
+    // Switch to flight tab
+    const flightTabBtn = document.querySelector('#new-tabs .sb');
+    if (flightTabBtn) Fuel.fTab('flight', flightTabBtn);
+    // Pre-fill fields
+    setTimeout(() => {
+      document.getElementById('ff-d').value = App.todayStr();
+      document.getElementById('ff-rt').value = f.rt || '';
+      // Set responsable
+      const respSel = document.getElementById('ff-resp');
+      if (respSel) respSel.value = f.r;
+      // Set pilot
+      const pilotSel = document.getElementById('ff-pilot');
+      if (pilotSel) {
+        if (f.pilot_roster_id) pilotSel.value = 'ROSTER_' + f.pilot_roster_id;
+        else if (f.p) pilotSel.value = f.p;
+      }
+      // Set type
+      const typeCard = document.querySelector(`#form-flight .tc[data-t="${f.t}"]`);
+      if (typeCard) tipo(f.t, typeCard);
+      // Clear HRM values but set HRM inicio to last known tach
+      const lt = Math.max(...DB.flights.map(fl => fl.hf || 0), 0);
+      document.getElementById('ff-hi').value = lt > 0 ? lt.toFixed(1) : '';
+      document.getElementById('ff-hf').value = '';
+      document.getElementById('hcalc').style.display = 'none';
+    }, 100);
+  }
+
   // --- Edit flight ---
   let editId = null;
 
@@ -200,9 +256,10 @@ const Flights = (() => {
   }
 
   return {
-    fRow, buildVL, filtV,
+    fRow, buildVL, filtV, searchVL,
     buildPilotSelect, buildRespSelect, buildUserOptions,
     tipo, setDates, calcH, updRevH, saveF,
+    duplicateFlight,
     openEdit, saveEdit, deleteFlight
   };
 })();

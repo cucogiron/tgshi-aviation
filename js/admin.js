@@ -1,6 +1,6 @@
 // =====================================================================
-// TG-SHI v5.2 — js/admin.js
-// User, pilot, plane CRUD + worker config + setup screens
+// TG-SHI v6.0 — js/admin.js
+// User, pilot, plane CRUD + password reset + worker config + setup
 // =====================================================================
 
 const Admin = (() => {
@@ -30,6 +30,7 @@ const Admin = (() => {
           <div class="user-info"><div class="user-icon">${v.icon || '👤'}</div><div><div class="user-name">${k}</div><div class="user-role">${v.role} · ${v.name || ''}</div></div></div>
           <div class="user-actions">
             <button class="ubtn edit" onclick="Admin.editUser('${k}')">Editar</button>
+            ${App.isAdmin() && k !== App.currentUser() ? `<button class="ubtn reset" onclick="Admin.resetUserPassword('${k}')">🔑</button>` : ''}
             ${k !== App.currentUser() ? `<button class="ubtn del" onclick="Admin.deleteUser('${k}')">×</button>` : ''}
           </div>
         </div>`).join('');
@@ -150,6 +151,37 @@ const Admin = (() => {
     await API.saveData(); buildAdminPanel();
   }
 
+  // --- Password Reset (admin only) ---
+  function generateTempPassword() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let pw = '';
+    for (let i = 0; i < 6; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+    return pw;
+  }
+
+  async function resetUserPassword(userId) {
+    if (!App.isAdmin()) return;
+    if (!confirm(`¿Restablecer la contraseña de ${userId}?`)) return;
+    const tempPw = generateTempPassword();
+    if (!DB.passwords) DB.passwords = {};
+    DB.passwords[userId] = tempPw;
+    const ok = await API.saveData();
+    if (ok) {
+      // Show the temporary password in a modal
+      document.getElementById('edit-modal-title').textContent = 'Contraseña restablecida';
+      document.getElementById('edit-form-content').innerHTML = `
+        <div class="temp-pw-display">
+          <div class="label">Contraseña temporal para ${userId}</div>
+          <div class="pw">${tempPw}</div>
+          <div class="note">Comparte esta contraseña con el usuario. Podrá cambiarla desde Ajustes.</div>
+        </div>
+        <button class="btn" onclick="Admin.closeEdit()">Cerrar</button>`;
+      document.getElementById('edit-modal').style.display = 'flex';
+    } else {
+      alert('Error al restablecer contraseña');
+    }
+  }
+
   // --- Pilot Roster ---
   function openAddPilot() {
     document.getElementById('edit-modal-title').textContent = 'Agregar piloto';
@@ -214,7 +246,7 @@ const Admin = (() => {
     document.getElementById('edit-modal-title').textContent = 'Agregar avión';
     document.getElementById('edit-form-content').innerHTML = `
       <div class="fs"><label class="fl">Matrícula (ID)</label><input type="text" id="np-id" placeholder="TG-XXX" oninput="this.value=this.value.toUpperCase()"></div>
-      <div class="fs"><label class="fl">Nombre</label><input type="text" id="np-name" placeholder="ej. Shenshi II"></div>
+      <div class="fs"><label class="fl">Nombre</label><input type="text" id="np-name" placeholder="ej. Senshi II"></div>
       <div class="fs"><label class="fl">Tipo</label><input type="text" id="np-type" placeholder="ej. Cessna 182"></div>
       <button class="btn" onclick="Admin.addPlane()">Crear avión</button>`;
     document.getElementById('edit-modal').style.display = 'flex';
@@ -272,6 +304,7 @@ const Admin = (() => {
     closeEdit, showSetupNeeded, hideSetupNeeded,
     buildAdminPanel,
     openAddUser, addUser, editUser, saveUser, deleteUser,
+    resetUserPassword,
     openAddPilot, addPilot, editPilot, savePilot, deletePilot,
     openAddPlane, addPlane, editPlane, savePlane,
     saveWorkerCfg

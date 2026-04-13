@@ -1,5 +1,5 @@
 // =====================================================================
-// TG-SHI v5.2 — js/dashboard.js
+// TG-SHI v6.0 — js/dashboard.js
 // Dashboard rendering, stats, recent flights, pending verification
 // =====================================================================
 
@@ -27,6 +27,21 @@ const Dashboard = (() => {
     document.getElementById('d-co').textContent = co.toFixed(1);
     document.getElementById('d-cu').textContent = cu.toFixed(1);
     document.getElementById('d-se').textContent = se.toFixed(1);
+
+    // Quick stats row
+    const curMonth = new Date().getMonth() + 1;
+    const monthFlights = f26.filter(f => +f.d.slice(5, 7) === curMonth);
+    const monthHrs = monthFlights.reduce((s, f) => s + f.h, 0);
+    const lastFlight = DB.flights.length > 0 ? DB.flights[DB.flights.length - 1].d : '—';
+    const qsArea = document.getElementById('d-quick-stats');
+    if (qsArea) {
+      qsArea.innerHTML = `<div class="qs-row">
+        <div class="qs"><div class="qs-l">Vuelos este mes</div><div class="qs-v">${monthFlights.length}</div><div class="qs-d">${MO[curMonth]}</div></div>
+        <div class="qs"><div class="qs-l">Horas este mes</div><div class="qs-v">${monthHrs.toFixed(1)}</div><div class="qs-d">hrs</div></div>
+        <div class="qs"><div class="qs-l">Último vuelo</div><div class="qs-v" style="font-size:12px">${lastFlight !== '—' ? lastFlight.slice(5) : '—'}</div><div class="qs-d">${lastFlight !== '—' ? lastFlight.slice(0, 4) : ''}</div></div>
+      </div>`;
+    }
+
     const mx = Math.max(...Object.values(mo).map(m => m.co + m.cu + m.se), 1);
     let bh = '';
     for (let m = 1; m <= 12; m++) {

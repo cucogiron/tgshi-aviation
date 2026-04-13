@@ -1,12 +1,37 @@
 // =====================================================================
-// TG-SHI v5.2 — js/fuel.js
-// Fuel log, new fuel form
+// TG-SHI v6.0 — js/fuel.js
+// Fuel log, new fuel form, year filters, running totals
 // =====================================================================
 
 const Fuel = (() => {
+  let fuelYearFilter = 'ALL';
 
   function buildFuel() {
-    const out = [...DB.fuel].reverse();
+    let out = [...DB.fuel].reverse();
+
+    // Apply year filter
+    if (/^\d{4}$/.test(fuelYearFilter)) {
+      out = out.filter(f => f.d.startsWith(fuelYearFilter));
+    }
+
+    // Calculate running totals per owner
+    const fuelForTotals = fuelYearFilter === 'ALL' ? DB.fuel : DB.fuel.filter(f => f.d.startsWith(fuelYearFilter));
+    let totalCOCO = 0, totalCUCO = 0;
+    fuelForTotals.forEach(f => {
+      totalCOCO += (f.ac || 0);
+      totalCUCO += (f.au || 0);
+    });
+    const totalAll = fuelForTotals.reduce((s, f) => s + f.m, 0);
+
+    const totalsArea = document.getElementById('fuel-totals-area');
+    if (totalsArea) {
+      totalsArea.innerHTML = `<div class="fuel-totals">
+        <div class="ft-item">Total: <b>Q${totalAll.toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</b></div>
+        <div class="ft-item" style="color:#1B4E8A">COCO: <b>Q${totalCOCO.toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</b></div>
+        <div class="ft-item" style="color:#1A6B3A">CUCO: <b>Q${totalCUCO.toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</b></div>
+      </div>`;
+    }
+
     if (!out.length) {
       document.getElementById('fuel-list').innerHTML = '<div class="empty"><div class="big">⛽</div>Sin registros</div>';
       return;
@@ -15,9 +40,16 @@ const Fuel = (() => {
       const ants = [];
       if ((f.ac || 0) > 0) ants.push(`COCO Q${f.ac.toLocaleString()}`);
       if ((f.au || 0) > 0) ants.push(`CUCO Q${f.au.toLocaleString()}`);
-      if ((f.as || 0) > 0) ants.push(`SENSHI Q${f.as.toLocaleString()}`);
+      if ((f.as || 0) > 0) ants.push(`Charter Q${f.as.toLocaleString()}`);
       return `<div class="fue"><div><div class="fue-l">Q${f.m.toLocaleString()} — ${f.py}</div><div class="fue-s">${ants.length ? ants.join(' · ') : 'Sin anticipo'}${f.no ? ' · ' + f.no : ''}</div></div><div class="fue-r"><div class="fue-d">${f.d.slice(5)}</div></div></div>`;
     }).join('');
+  }
+
+  function filtFuelYr(yr, el) {
+    fuelYearFilter = yr;
+    document.querySelectorAll('#fuel-yr-row .fp').forEach(p => p.classList.remove('on'));
+    el.classList.add('on');
+    buildFuel();
   }
 
   async function saveFu() {
@@ -49,5 +81,5 @@ const Fuel = (() => {
     if (t === 'admin') Admin.buildAdminPanel();
   }
 
-  return { buildFuel, saveFu, fTab };
+  return { buildFuel, filtFuelYr, saveFu, fTab };
 })();
