@@ -392,7 +392,10 @@ textarea{resize:vertical;min-height:60px}
 <!-- ===== VUELOS ===== -->
 
 <div class="pg" id="pg-vl">
-  <input type="text" class="search-input" id="vl-search" placeholder="Buscar ruta…" oninput="Flights.searchVL()" autocomplete="off">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+    <input type="text" class="search-input" id="vl-search" placeholder="Buscar ruta…" oninput="Flights.searchVL()" autocomplete="off" style="margin-bottom:0;flex:1">
+    <button class="btn sm" style="margin-left:8px;white-space:nowrap" onclick="Exports.openExportModal('flights')">📥 Excel</button>
+  </div>
   <div class="frow" id="flt-row">
     <div class="fp on" onclick="Flights.filtV('ALL',this)">Todos</div>
     <div class="fp" onclick="Flights.filtV('COCO',this)">COCO</div>
@@ -408,7 +411,10 @@ textarea{resize:vertical;min-height:60px}
 <!-- ===== COMBUSTIBLE ===== -->
 
 <div class="pg" id="pg-fuel">
-  <div class="stitle">Registro de combustible</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+    <div class="stitle" style="margin:0">Registro de combustible</div>
+    <button class="btn sm" onclick="Exports.openExportModal('fuel')">📥 Excel</button>
+  </div>
   <div id="fuel-totals-area"></div>
   <div class="frow" id="fuel-yr-row">
     <div class="fp on" onclick="Fuel.filtFuelYr('ALL',this)">Todos</div>
@@ -538,7 +544,10 @@ textarea{resize:vertical;min-height:60px}
 <div class="pg" id="pg-maint">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <div class="stitle" style="margin:0">Mantenimiento — <span id="maint-plane-label">TG-SHI</span></div>
-    <button class="btn sm" onclick="Maintenance.openAddMaint()" id="maint-add-btn" style="display:none">+ Agregar</button>
+    <div style="display:flex;gap:5px">
+      <button class="btn sm" onclick="Exports.openExportModal('maintenance')">📥 Excel</button>
+      <button class="btn sm" onclick="Maintenance.openAddMaint()" id="maint-add-btn" style="display:none">+ Agregar</button>
+    </div>
   </div>
   <div id="maint-content"></div>
 </div>
@@ -546,7 +555,10 @@ textarea{resize:vertical;min-height:60px}
 <!-- ===== BILLING ===== -->
 
 <div class="pg" id="pg-bil">
-  <div class="stitle">Período de facturación</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+    <div class="stitle" style="margin:0">Período de facturación</div>
+    <button class="btn sm" onclick="Exports.openExportModal('all')">📥 Excel</button>
+  </div>
   <div class="card"><div class="cb">
     <div class="row2" style="margin-bottom:10px">
       <div><label class="fl">Desde</label><input type="month" id="b-from" placeholder="YYYY-MM"></div>
@@ -574,7 +586,6 @@ textarea{resize:vertical;min-height:60px}
       <button class="pw-cancel" onclick="App.closeSettings()">Cerrar</button>
     </div>
     <button onclick="App.logout()" style="width:100%;padding:11px;background:#F0F2F6;color:#8B1A1A;border:none;border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">🚪 Cerrar sesión</button>
-    <button onclick="App.closeSettings();Exports.openExportModal()" style="width:100%;padding:11px;background:#E8F0FD;color:#1B4E8A;border:none;border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px">📥 Exportar a Excel</button>
   </div>
 </div>
 
