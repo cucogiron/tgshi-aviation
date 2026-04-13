@@ -87,6 +87,30 @@ const Admin = (() => {
       }
     }
 
+    // Rates / Tarifas
+    const curRate = DB.rates[DB.rates.length - 1] || {};
+    const rtDisp = document.getElementById('rates-display');
+    if (rtDisp) {
+      rtDisp.innerHTML = DB.rates.map((r, i) => {
+        const active = i === DB.rates.length - 1 ? ' <b>(vigente)</b>' : '';
+        return `<div style="font-size:10px;color:#8892A4;padding:3px 0">Desde ${r.d}: Piloto $${r.pilot}/hr · Espera $${r.gw}/hr · Admin $${r.admin}/mes · Reserva $${r.res}/hr · STD $${r.std} · FF $${r.ff}${active}</div>`;
+      }).join('');
+    }
+    const rpil = document.getElementById('rt-pilot');
+    if (rpil) rpil.value = curRate.pilot || '';
+    const rgw = document.getElementById('rt-gw');
+    if (rgw) rgw.value = curRate.gw || '';
+    const radm = document.getElementById('rt-admin');
+    if (radm) radm.value = curRate.admin || '';
+    const rres = document.getElementById('rt-res');
+    if (rres) rres.value = curRate.res || '';
+    const rstd = document.getElementById('rt-std');
+    if (rstd) rstd.value = curRate.std || '';
+    const rff = document.getElementById('rt-ff');
+    if (rff) rff.value = curRate.ff || '';
+    const rdt = document.getElementById('rt-date');
+    if (rdt) rdt.value = curRate.d || '';
+
     // Worker config
     const u = document.getElementById('cfg-url'), s = document.getElementById('cfg-secret');
     if (u) u.value = API.getWorkerUrl();
@@ -300,6 +324,39 @@ const Admin = (() => {
     } catch (e) { msg.textContent = 'Error: ' + e.message; msg.style.color = '#8B1A1A'; }
   }
 
+  // Rates save
+  async function saveRates() {
+    const msg = document.getElementById('rates-msg');
+    const pilot = parseFloat(document.getElementById('rt-pilot').value);
+    const gw = parseFloat(document.getElementById('rt-gw').value);
+    const admin = parseFloat(document.getElementById('rt-admin').value);
+    const res = parseFloat(document.getElementById('rt-res').value);
+    const std = parseFloat(document.getElementById('rt-std').value);
+    const ff = parseFloat(document.getElementById('rt-ff').value);
+    const d = document.getElementById('rt-date').value;
+    if (!pilot || !gw || !admin || !std || !ff || !d) { msg.textContent = 'Completa todos los campos'; msg.style.color = '#8B1A1A'; return; }
+    const newRate = { d, pilot, gw, admin, res: res || 0, std, ff };
+
+    // Check if same date exists — update in place; otherwise add new
+    const existing = DB.rates.findIndex(r => r.d === d);
+    if (existing >= 0) {
+      DB.rates[existing] = newRate;
+    } else {
+      DB.rates.push(newRate);
+      DB.rates.sort((a, b) => a.d.localeCompare(b.d));
+    }
+
+    const ok = await API.saveData();
+    if (ok) {
+      msg.textContent = '✓ Tarifas guardadas';
+      msg.style.color = '#1A6B3A';
+      buildAdminPanel();
+    } else {
+      msg.textContent = 'Error al guardar';
+      msg.style.color = '#8B1A1A';
+    }
+  }
+
   return {
     closeEdit, showSetupNeeded, hideSetupNeeded,
     buildAdminPanel,
@@ -307,6 +364,6 @@ const Admin = (() => {
     resetUserPassword,
     openAddPilot, addPilot, editPilot, savePilot, deletePilot,
     openAddPlane, addPlane, editPlane, savePlane,
-    saveWorkerCfg
+    saveWorkerCfg, saveRates
   };
 })();
