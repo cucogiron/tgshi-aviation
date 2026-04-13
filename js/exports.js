@@ -5,7 +5,6 @@
 
 var Exports = (function() {
 
-  // Load SheetJS from CDN on first use
   var sheetJSLoaded = false;
   function loadSheetJS(callback) {
     if (sheetJSLoaded) { callback(); return; }
@@ -17,63 +16,83 @@ var Exports = (function() {
   }
 
   // ---- Open export modal ----
-  function openExportModal() {
+  // section: 'flights', 'fuel', 'schedule', 'maintenance', 'all'
+  function openExportModal(section) {
     var now = new Date();
     var y = now.getFullYear();
     var m = App.pad2(now.getMonth() + 1);
     var defaultFrom = y + '-01-01';
     var defaultTo = y + '-' + m + '-' + App.pad2(now.getDate());
 
-    document.getElementById('book-modal-title').textContent = 'Exportar a Excel';
+    var titles = {
+      flights: 'Exportar Logbook',
+      fuel: 'Exportar Combustible',
+      schedule: 'Exportar Agenda',
+      maintenance: 'Exportar Mantenimiento',
+      all: 'Exportar Datos'
+    };
+
+    var checkboxes = '';
+    if (section === 'all') {
+      checkboxes = '<div class="fs"><label class="fl">Incluir</label>'
+        + '<div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">'
+        + '<label style="font-size:12px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="exp-flights" checked> Logbook (vuelos)</label>'
+        + '<label style="font-size:12px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="exp-fuel" checked> Combustible</label>'
+        + '<label style="font-size:12px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="exp-schedule" checked> Agenda (reservas)</label>'
+        + '<label style="font-size:12px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="exp-maintenance" checked> Mantenimiento</label>'
+        + '</div></div>';
+    }
+
+    document.getElementById('book-modal-title').textContent = titles[section] || 'Exportar';
     document.getElementById('book-form').innerHTML =
-      '<div class="fs"><label class="fl">Desde</label><input type="date" id="exp-from" value="' + defaultFrom + '"></div>'
+      '<div class="row2">'
+      + '<div class="fs"><label class="fl">Desde</label><input type="date" id="exp-from" value="' + defaultFrom + '"></div>'
       + '<div class="fs"><label class="fl">Hasta</label><input type="date" id="exp-to" value="' + defaultTo + '"></div>'
-      + '<div class="fs"><label class="fl">Que exportar</label>'
-      + '<div id="exp-checks" style="display:flex;flex-direction:column;gap:8px;margin-top:6px">'
-      + '<label style="font-size:12px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="exp-flights" checked> Logbook (vuelos)</label>'
-      + '<label style="font-size:12px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="exp-fuel" checked> Combustible</label>'
-      + '<label style="font-size:12px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="exp-schedule" checked> Agenda (reservas)</label>'
-      + '<label style="font-size:12px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="exp-maintenance" checked> Mantenimiento</label>'
-      + '</div></div>'
-      + '<button class="btn" onclick="Exports.doExport()">Descargar Excel</button>'
-      + '<div class="hint" style="text-align:center;margin-top:8px">Se genera un archivo .xlsx con las pestanas seleccionadas</div>';
+      + '</div>'
+      + checkboxes
+      + '<button class="btn" onclick="Exports.doExport(\'' + section + '\')">Descargar Excel</button>';
     document.getElementById('book-modal').style.display = 'flex';
   }
 
-  // ---- Main export function ----
-  function doExport() {
+  // ---- Main export ----
+  function doExport(section) {
     var from = document.getElementById('exp-from').value;
     var to = document.getElementById('exp-to').value;
     if (!from || !to) { alert('Selecciona rango de fechas'); return; }
 
-    var incFlights = document.getElementById('exp-flights').checked;
-    var incFuel = document.getElementById('exp-fuel').checked;
-    var incSchedule = document.getElementById('exp-schedule').checked;
-    var incMaint = document.getElementById('exp-maintenance').checked;
-
-    if (!incFlights && !incFuel && !incSchedule && !incMaint) {
-      alert('Selecciona al menos una seccion para exportar');
-      return;
-    }
-
     loadSheetJS(function() {
       var wb = XLSX.utils.book_new();
 
-      if (incFlights) addFlightsSheet(wb, from, to);
-      if (incFuel) addFuelSheet(wb, from, to);
-      if (incSchedule) addScheduleSheet(wb, from, to);
-      if (incMaint) addMaintenanceSheet(wb, from, to);
+      if (section === 'flights') {
+        addFlightsSheet(wb, from, to);
+      } else if (section === 'fuel') {
+        addFuelSheet(wb, from, to);
+      } else if (section === 'schedule') {
+        addScheduleSheet(wb, from, to);
+      } else if (section === 'maintenance') {
+        addMaintenanceSheet(wb, from, to);
+      } else {
+        var el;
+        el = document.getElementById('exp-flights');
+        if (!el || el.checked) addFlightsSheet(wb, from, to);
+        el = document.getElementById('exp-fuel');
+        if (!el || el.checked) addFuelSheet(wb, from, to);
+        el = document.getElementById('exp-schedule');
+        if (!el || el.checked) addScheduleSheet(wb, from, to);
+        el = document.getElementById('exp-maintenance');
+        if (!el || el.checked) addMaintenanceSheet(wb, from, to);
+      }
 
-      var filename = 'TG-SHI_' + from + '_' + to + '.xlsx';
+      var labels = { flights: 'Logbook', fuel: 'Combustible', schedule: 'Agenda', maintenance: 'Mantenimiento', all: 'TG-SHI' };
+      var filename = (labels[section] || 'TG-SHI') + '_' + from + '_' + to + '.xlsx';
       XLSX.writeFile(wb, filename);
 
-      // Close modal
       document.getElementById('book-modal').style.display = 'none';
-      API.showNotifyToast('Excel descargado: ' + filename);
+      API.showNotifyToast('Excel descargado');
     });
   }
 
-  // ---- Flights / Logbook sheet ----
+  // ---- Flights / Logbook ----
   function addFlightsSheet(wb, from, to) {
     var flights = DB.flights.filter(function(f) { return f.d >= from && f.d <= to; });
     flights.sort(function(a, b) { return a.d.localeCompare(b.d); });
@@ -113,7 +132,7 @@ var Exports = (function() {
     XLSX.utils.book_append_sheet(wb, ws, 'Logbook');
   }
 
-  // ---- Fuel sheet ----
+  // ---- Fuel ----
   function addFuelSheet(wb, from, to) {
     var fuels = DB.fuel.filter(function(f) { return f.d >= from && f.d <= to; });
     fuels.sort(function(a, b) { return a.d.localeCompare(b.d); });
@@ -136,19 +155,20 @@ var Exports = (function() {
     var ws = XLSX.utils.aoa_to_sheet(rows);
     formatSheet(ws, rows[0].length, rows.length);
 
-    // Add totals row
-    var totalRow = rows.length + 1;
-    ws['A' + totalRow] = { v: 'TOTALES', t: 's' };
-    ws['B' + totalRow] = { f: 'SUM(B2:B' + rows.length + ')' };
-    ws['D' + totalRow] = { f: 'SUM(D2:D' + rows.length + ')' };
-    ws['E' + totalRow] = { f: 'SUM(E2:E' + rows.length + ')' };
-    ws['F' + totalRow] = { f: 'SUM(F2:F' + rows.length + ')' };
-    ws['!ref'] = 'A1:G' + totalRow;
+    if (rows.length > 1) {
+      var totalRow = rows.length + 1;
+      ws['A' + totalRow] = { v: 'TOTALES', t: 's' };
+      ws['B' + totalRow] = { f: 'SUM(B2:B' + rows.length + ')' };
+      ws['D' + totalRow] = { f: 'SUM(D2:D' + rows.length + ')' };
+      ws['E' + totalRow] = { f: 'SUM(E2:E' + rows.length + ')' };
+      ws['F' + totalRow] = { f: 'SUM(F2:F' + rows.length + ')' };
+      ws['!ref'] = 'A1:G' + totalRow;
+    }
 
     XLSX.utils.book_append_sheet(wb, ws, 'Combustible');
   }
 
-  // ---- Schedule sheet ----
+  // ---- Schedule ----
   function addScheduleSheet(wb, from, to) {
     var scheds = (DB.schedule || []).filter(function(s) { return s.date >= from && s.date <= to; });
     scheds.sort(function(a, b) { return a.date.localeCompare(b.date) || a.start.localeCompare(b.start); });
@@ -186,7 +206,7 @@ var Exports = (function() {
     XLSX.utils.book_append_sheet(wb, ws, 'Agenda');
   }
 
-  // ---- Maintenance sheet ----
+  // ---- Maintenance ----
   function addMaintenanceSheet(wb, from, to) {
     var maints = (DB.maintenance || []).filter(function(m) { return m.date >= from && m.date <= to; });
     maints.sort(function(a, b) { return a.date.localeCompare(b.date); });
@@ -213,9 +233,8 @@ var Exports = (function() {
     XLSX.utils.book_append_sheet(wb, ws, 'Mantenimiento');
   }
 
-  // ---- Format sheet: column widths + header style ----
+  // ---- Column auto-width ----
   function formatSheet(ws, numCols, numRows) {
-    // Auto-size columns based on content
     var colWidths = [];
     for (var c = 0; c < numCols; c++) {
       var maxLen = 10;
