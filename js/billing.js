@@ -163,7 +163,7 @@ const Billing = (() => {
       const label = owner === 'SENSHI' ? 'CHARTER' : owner;
       const border = idx > 0 ? 'border-top:1px solid #E2E6EE;margin-top:6px;padding-top:6px' : '';
       const ownerFerUSD = pilFee(owner) + esp[owner];
-      const ownerAdminUSD = adminFee / 3;
+      const ownerAdminUSD = owner === 'SENSHI' ? adminFee : 0;
       const ownerResvUSD = resv(owner);
       const totalUSD = ownerFerUSD + ownerAdminUSD + ownerResvUSD;
       const totalQTZ = fuelNet[owner];
@@ -171,7 +171,7 @@ const Billing = (() => {
       h += `<div class="bil-row" style="${border}"><div class="bil-lbl" style="font-weight:700;font-size:11px">${label}</div><div class="bil-val"></div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Combustible neto (QTZ)</div><div class="bil-val ${sg(totalQTZ)}">${totalQTZ < 0 ? '(' + fQ(totalQTZ) + ')' : fQ(totalQTZ)}</div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Pilotaje + espera (USD)</div><div class="bil-val">${fD(ownerFerUSD)}</div></div>
-        <div class="bil-row"><div class="bil-lbl">↳ Admin fee (USD, ÷3)</div><div class="bil-val">${fD(ownerAdminUSD)}</div></div>
+        ${ownerAdminUSD > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Admin fee (USD, 100% Charter)</div><div class="bil-val">${fD(ownerAdminUSD)}</div></div>` : ''}
         <div class="bil-row"><div class="bil-lbl">↳ Reserva mante (USD)</div><div class="bil-val">${fD(ownerResvUSD)}</div></div>
         <div class="bil-row"><div class="bil-lbl"><b>↳ Total USD</b></div><div class="bil-val"><b>${fD(totalUSD)}</b></div></div>
         <div class="bil-row"><div class="bil-lbl"><b>↳ Total QTZ</b></div><div class="bil-val ${sg(totalQTZ)}"><b>${totalQTZ < 0 ? '(' + fQ(totalQTZ) + ')' : fQ(totalQTZ)}</b></div></div>`;
@@ -254,9 +254,10 @@ const Billing = (() => {
       if (d.espHrs[owner] > 0) {
         lines.push({ desc: `Espera en tierra (${d.espHrs[owner].toFixed(1)} hrs × $${d.rt.gw}/hr)`, amt: d.esp[owner] });
       }
-      // Admin fee split by 3 (three owners)
-      const adminShare = d.adminFee / 3;
-      lines.push({ desc: `Admin fee Fernando (${d.numMonths} mes × $${d.rt.admin}/mes ÷ 3)`, amt: adminShare });
+      // Admin fee — 100% charged to Charter (SENSHI)
+      if (owner === 'SENSHI') {
+        lines.push({ desc: `Admin fee Fernando (${d.numMonths} mes × $${d.rt.admin}/mes)`, amt: d.adminFee });
+      }
       // Reserva
       lines.push({ desc: `Reserva mantenimiento (${d.hrs[owner].toFixed(1)} hrs × $${d.rt.res}/hr)`, amt: d.resv[owner] });
     }
