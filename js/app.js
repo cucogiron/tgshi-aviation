@@ -127,9 +127,35 @@ const App = (() => {
     location.reload();
   }
 
-  // --- Forgot password ---
+  // --- Forgot password flow ---
   function showForgotPw() {
-    document.getElementById('login-err').innerHTML = '<span style="color:rgba(255,255,255,.6)">Contacta al administrador para restablecer tu contraseña.</span>';
+    document.getElementById('login-card-main').style.display = 'none';
+    document.getElementById('login-card-reset').style.display = 'block';
+    document.getElementById('reset-err').textContent = '';
+  }
+
+  function showLoginCard() {
+    document.getElementById('login-card-reset').style.display = 'none';
+    document.getElementById('login-card-main').style.display = 'block';
+    document.getElementById('login-err').textContent = '';
+  }
+
+  async function requestReset() {
+    const uid = document.getElementById('reset-uid').value.trim().toUpperCase();
+    const email = document.getElementById('reset-email').value.trim().toLowerCase();
+    const errEl = document.getElementById('reset-err');
+    if (!uid || !email) { errEl.textContent = 'Ingresa usuario y email'; return; }
+    errEl.innerHTML = '<span style="color:rgba(255,255,255,.6)">Enviando…</span>';
+    try {
+      const result = await API.requestPasswordReset(uid, email);
+      if (result.ok) {
+        errEl.innerHTML = '<span style="color:#4ADE80">✓ Email enviado. Revisa tu bandeja de entrada.</span>';
+      } else {
+        errEl.textContent = result.error || 'Error al enviar';
+      }
+    } catch (e) {
+      errEl.textContent = 'Error de conexión';
+    }
   }
 
   // --- Navigation ---
@@ -176,7 +202,7 @@ const App = (() => {
     isAdmin, isPilotAdmin, canManageSchedule,
     getUser, getPlane, getPilot, pad2, todayStr, fmtDate, getRateFD,
     initApp, onReady, buildAll,
-    doLogin, showUserBadge, logout, showForgotPw,
+    doLogin, showUserBadge, logout, showForgotPw, showLoginCard, requestReset,
     nav, openSettings, closeSettings, changePw
   };
 })();

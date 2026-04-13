@@ -27,7 +27,7 @@ const Admin = (() => {
     if (ul) {
       ul.innerHTML = Object.entries(DB.users).map(([k, v]) => `
         <div class="user-row">
-          <div class="user-info"><div class="user-icon">${v.icon || '👤'}</div><div><div class="user-name">${k}</div><div class="user-role">${v.role} · ${v.name || ''}</div></div></div>
+          <div class="user-info"><div class="user-icon">${v.icon || '👤'}</div><div><div class="user-name">${k}</div><div class="user-role">${v.role} · ${v.name || ''}${v.email ? ' · ' + v.email : ''}</div></div></div>
           <div class="user-actions">
             <button class="ubtn edit" onclick="Admin.editUser('${k}')">Editar</button>
             ${App.isAdmin() && k !== App.currentUser() ? `<button class="ubtn reset" onclick="Admin.resetUserPassword('${k}')">🔑</button>` : ''}
@@ -135,6 +135,7 @@ const Admin = (() => {
     document.getElementById('edit-form-content').innerHTML = `
       <div class="fs"><label class="fl">ID (username)</label><input type="text" id="nu-id" placeholder="ej. PEDRO" oninput="this.value=this.value.toUpperCase()"></div>
       <div class="fs"><label class="fl">Nombre completo</label><input type="text" id="nu-name" placeholder="Pedro García"></div>
+      <div class="fs"><label class="fl">Email</label><input type="email" id="nu-email" placeholder="pedro@email.com"></div>
       <div class="fs"><label class="fl">Rol</label><select id="nu-role"><option value="owner">Owner (dueño/copropietario)</option><option value="pilot">Piloto</option><option value="pilot_admin">Piloto Admin</option><option value="admin">Administrador</option></select></div>
       <div class="fs"><label class="fl">Ícono</label><input type="text" id="nu-icon" value="👤" style="max-width:60px"></div>
       <div class="fs"><label class="fl">Contraseña inicial</label><input type="text" id="nu-pass" placeholder="mínimo 4 caracteres"></div>
@@ -145,13 +146,14 @@ const Admin = (() => {
   async function addUser() {
     const id = document.getElementById('nu-id').value.trim().toUpperCase();
     const name = document.getElementById('nu-name').value.trim();
+    const email = (document.getElementById('nu-email').value || '').trim().toLowerCase();
     const role = document.getElementById('nu-role').value;
     const icon = document.getElementById('nu-icon').value || '👤';
     const pass = document.getElementById('nu-pass').value;
     if (!id || id.length < 2) { alert('ID debe tener al menos 2 caracteres'); return; }
     if (DB.users[id]) { alert('Usuario ya existe'); return; }
     if (!pass || pass.length < 4) { alert('Contraseña mínimo 4 caracteres'); return; }
-    DB.users[id] = { role, icon, name };
+    DB.users[id] = { role, icon, name, email };
     if (!DB.passwords) DB.passwords = {};
     DB.passwords[id] = pass;
     closeEdit();
@@ -164,6 +166,7 @@ const Admin = (() => {
     document.getElementById('edit-modal-title').textContent = 'Editar ' + id;
     document.getElementById('edit-form-content').innerHTML = `
       <div class="fs"><label class="fl">Nombre</label><input type="text" id="eu-name" value="${u.name || ''}"></div>
+      <div class="fs"><label class="fl">Email</label><input type="email" id="eu-email" value="${u.email || ''}" placeholder="user@email.com"></div>
       <div class="fs"><label class="fl">Rol</label><select id="eu-role"><option value="owner" ${u.role === 'owner' ? 'selected' : ''}>Owner</option><option value="pilot" ${u.role === 'pilot' ? 'selected' : ''}>Piloto</option><option value="pilot_admin" ${u.role === 'pilot_admin' ? 'selected' : ''}>Piloto Admin</option><option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrador</option></select></div>
       <div class="fs"><label class="fl">Ícono</label><input type="text" id="eu-icon" value="${u.icon || '👤'}" style="max-width:60px"></div>
       <div class="fs"><label class="fl">Nueva contraseña (dejar vacío para no cambiar)</label><input type="text" id="eu-pass" placeholder=""></div>
@@ -173,6 +176,7 @@ const Admin = (() => {
 
   async function saveUser(id) {
     DB.users[id].name = document.getElementById('eu-name').value;
+    DB.users[id].email = (document.getElementById('eu-email').value || '').trim().toLowerCase();
     DB.users[id].role = document.getElementById('eu-role').value;
     DB.users[id].icon = document.getElementById('eu-icon').value;
     const pw = document.getElementById('eu-pass').value;

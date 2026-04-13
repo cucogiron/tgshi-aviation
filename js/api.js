@@ -163,10 +163,38 @@ const API = (() => {
     } catch (e) { msg.textContent = 'Error: ' + e.message; }
   }
 
+  // --- Password reset ---
+  async function requestPasswordReset(uid, email) {
+    if (!WORKER_URL) return { ok: false, error: 'Worker no configurado' };
+    try {
+      const r = await fetch(WORKER_URL + '/reset-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, email })
+      });
+      const data = await r.json();
+      return data;
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  async function confirmPasswordReset(token, newPassword) {
+    if (!WORKER_URL) return { ok: false, error: 'Worker no configurado' };
+    try {
+      const r = await fetch(WORKER_URL + '/reset-confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password: newPassword })
+      });
+      const data = await r.json();
+      return data;
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
   return {
     getWorkerUrl, getWorkerSecret, isConnected,
     setWorkerConfig, setDot,
     preloadPasswords, loadData, saveData,
+    requestPasswordReset, confirmPasswordReset,
     testWorker, quickSetup
   };
 })();
