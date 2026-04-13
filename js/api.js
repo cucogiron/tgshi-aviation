@@ -4,8 +4,10 @@
 // =====================================================================
 
 const API = (() => {
-  let WORKER_URL = localStorage.getItem('tgshi_worker_url') || '';
-  let WORKER_SECRET = localStorage.getItem('tgshi_worker_secret') || '';
+  var DEFAULT_URL = 'https://tgshi-api.senshi-aviation.workers.dev';
+  var DEFAULT_SECRET = '2725f096717a5b648fb23bfa42d75eee26bb2dd11ae4fe23d392972330a6e7b1';
+  let WORKER_URL = localStorage.getItem('tgshi_worker_url') || DEFAULT_URL;
+  let WORKER_SECRET = localStorage.getItem('tgshi_worker_secret') || DEFAULT_SECRET;
   let API_OK = false;
   let SHA = '';
 
