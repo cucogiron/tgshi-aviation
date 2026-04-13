@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -8,7 +7,7 @@
 <meta name="apple-mobile-web-app-title" content="TG-SHI">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="color-scheme" content="light">
-<title>TG-SHI · Shenshi v5</title>
+<title>TG-SHI · Shenshi v5.2</title>
 <style>
 :root{color-scheme:light}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -128,7 +127,7 @@ textarea{resize:vertical;min-height:60px}
 .btn.gr{background:#1A6B3A}
 .btn.sm{padding:9px 14px;font-size:12px;width:auto;margin:0}
 .ok-bar{background:#1A6B3A;color:#fff;padding:10px 13px;border-radius:9px;font-size:12px;font-weight:600;margin-bottom:10px;display:none;align-items:center;gap:6px}
-.ok-bar::before{content:“✓”;font-size:14px}
+.ok-bar::before{content:"✓";font-size:14px}
 .err-bar{background:#C0392B;color:#fff;padding:10px 13px;border-radius:9px;font-size:12px;margin-bottom:10px;display:none}
 .empty{text-align:center;padding:24px;color:#8892A4;font-size:12px}
 .empty .big{font-size:26px;margin-bottom:5px}
@@ -136,7 +135,7 @@ textarea{resize:vertical;min-height:60px}
 .hint{font-size:10px;color:#8892A4;margin-top:3px}
 .stitle{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8892A4;margin:12px 0 7px;padding:0 2px}
 
-/* ===== CALENDAR / SCHEDULING ===== */
+/* Calendar / Scheduling */
 .cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 2px}
 .cal-title{font-size:15px;font-weight:700}
 .cal-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid #E2E6EE;background:#ffffff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1A1F2E}
@@ -276,7 +275,6 @@ textarea{resize:vertical;min-height:60px}
 .confirm-type-card .tn{font-size:10px;font-weight:700;color:#1A1F2E}
 .confirm-type-card .td{font-size:9px;color:#8892A4;margin-top:1px}
 </style>
-
 </head>
 <body>
 
@@ -284,7 +282,7 @@ textarea{resize:vertical;min-height:60px}
 
 <div id="edit-modal" class="modal-overlay" style="display:none">
   <div class="modal-box">
-    <button class="modal-close" onclick="closeEdit()">✕</button>
+    <button class="modal-close" onclick="Admin.closeEdit()">✕</button>
     <div class="modal-title" id="edit-modal-title">Editar</div>
     <div id="edit-form-content"></div>
   </div>
@@ -292,7 +290,7 @@ textarea{resize:vertical;min-height:60px}
 
 <div id="book-modal" class="modal-overlay" style="display:none">
   <div class="modal-box">
-    <button class="modal-close" onclick="closeBooking()">✕</button>
+    <button class="modal-close" onclick="Calendar.closeBooking()">✕</button>
     <div class="modal-title" id="book-modal-title">Reservar vuelo</div>
     <div id="book-form"></div>
   </div>
@@ -302,10 +300,10 @@ textarea{resize:vertical;min-height:60px}
 
 <div class="top">
   <div class="top-r">
-    <div><h1 id="app-title">TG-SHI</h1><div class="sub">Shenshi Aviation · v5</div></div>
+    <div><h1 id="app-title">TG-SHI</h1><div class="sub">Shenshi Aviation · v5.2</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="tach"><div><div class="tach-lb">TACH</div><span id="tachVal">—</span></div><div class="dot" id="dot"></div></div>
-      <button class="settings-btn" id="settings-btn" onclick="openSettings()">⚙️</button>
+      <button class="settings-btn" id="settings-btn" onclick="App.openSettings()">⚙️</button>
     </div>
   </div>
 </div>
@@ -313,12 +311,13 @@ textarea{resize:vertical;min-height:60px}
 <!-- ===== TAB BAR ===== -->
 
 <div class="btabs" id="btabs">
-  <button class="bt on" onclick="nav('dash',0)"><div class="bt-i">📊</div><div class="bt-l">Panel</div></button>
-  <button class="bt" onclick="nav('sched',1)"><div class="bt-i">📅</div><div class="bt-l">Agenda</div></button>
-  <button class="bt" onclick="nav('vl',2)"><div class="bt-i">✈️</div><div class="bt-l">Vuelos</div></button>
-  <button class="bt" onclick="nav('fuel',3)"><div class="bt-i">⛽</div><div class="bt-l">Comb.</div></button>
-  <button class="bt" onclick="nav('bil',4)"><div class="bt-i">🧾</div><div class="bt-l">Billing</div></button>
-  <button class="bt" onclick="nav('new',5)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
+  <button class="bt on" onclick="App.nav('dash',0)"><div class="bt-i">📊</div><div class="bt-l">Panel</div></button>
+  <button class="bt" onclick="App.nav('sched',1)"><div class="bt-i">📅</div><div class="bt-l">Agenda</div></button>
+  <button class="bt" onclick="App.nav('vl',2)"><div class="bt-i">✈️</div><div class="bt-l">Vuelos</div></button>
+  <button class="bt" onclick="App.nav('fuel',3)"><div class="bt-i">⛽</div><div class="bt-l">Comb.</div></button>
+  <button class="bt" onclick="App.nav('bil',4)"><div class="bt-i">🧾</div><div class="bt-l">Billing</div></button>
+  <button class="bt" onclick="App.nav('xch',5)"><div class="bt-i">🤝</div><div class="bt-l">Interc.</div></button>
+  <button class="bt" onclick="App.nav('new',6)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
 </div>
 
 <!-- ===== DASHBOARD ===== -->
@@ -337,10 +336,11 @@ textarea{resize:vertical;min-height:60px}
     <div class="cb" id="d-bars"></div>
   </div>
   <div class="card">
-    <div class="ch"><div class="ct">Últimos vuelos</div><a href="#" onclick="nav('vl',2);return false" style="font-size:10px;color:#4A9EE8;text-decoration:none;font-weight:600">Ver todos</a></div>
+    <div class="ch"><div class="ct">Últimos vuelos</div><a href="#" onclick="App.nav('vl',2);return false" style="font-size:10px;color:#4A9EE8;text-decoration:none;font-weight:600">Ver todos</a></div>
     <div id="d-rec"></div>
   </div>
   <div class="card"><div class="ch"><div class="ct">Resumen 2026</div></div><div class="cb" id="d-sum"></div></div>
+  <div class="card" id="d-xch-card" style="display:none"><div class="ch"><div class="ct">🤝 Intercambios</div><a href="#" onclick="App.nav('xch',5);return false" style="font-size:10px;color:#4A9EE8;text-decoration:none;font-weight:600">Ver todos</a></div><div class="cb" id="d-xch"></div></div>
 </div>
 
 <!-- ===== SCHEDULE / CALENDAR ===== -->
@@ -350,9 +350,9 @@ textarea{resize:vertical;min-height:60px}
   <div class="card">
     <div class="cb">
       <div class="cal-nav">
-        <button class="cal-btn" onclick="calNav(-1)">‹</button>
+        <button class="cal-btn" onclick="Calendar.calNav(-1)">‹</button>
         <div class="cal-title" id="cal-title"></div>
-        <button class="cal-btn" onclick="calNav(1)">›</button>
+        <button class="cal-btn" onclick="Calendar.calNav(1)">›</button>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
     </div>
@@ -364,13 +364,13 @@ textarea{resize:vertical;min-height:60px}
 
 <div class="pg" id="pg-vl">
   <div class="frow" id="flt-row">
-    <div class="fp on" onclick="filtV('ALL',this)">Todos</div>
-    <div class="fp" onclick="filtV('COCO',this)">COCO</div>
-    <div class="fp" onclick="filtV('CUCO',this)">CUCO</div>
-    <div class="fp" onclick="filtV('SENSHI',this)">Charter</div>
-    <div class="fp" onclick="filtV('2026',this)">2026</div>
-    <div class="fp" onclick="filtV('2025',this)">2025</div>
-    <div class="fp" onclick="filtV('2024',this)">2024</div>
+    <div class="fp on" onclick="Flights.filtV('ALL',this)">Todos</div>
+    <div class="fp" onclick="Flights.filtV('COCO',this)">COCO</div>
+    <div class="fp" onclick="Flights.filtV('CUCO',this)">CUCO</div>
+    <div class="fp" onclick="Flights.filtV('SENSHI',this)">Charter</div>
+    <div class="fp" onclick="Flights.filtV('2026',this)">2026</div>
+    <div class="fp" onclick="Flights.filtV('2025',this)">2025</div>
+    <div class="fp" onclick="Flights.filtV('2024',this)">2024</div>
   </div>
   <div class="card" id="vl-list"></div>
 </div>
@@ -382,13 +382,23 @@ textarea{resize:vertical;min-height:60px}
   <div class="card" id="fuel-list"></div>
 </div>
 
+<!-- ===== EXCHANGE ===== -->
+
+<div class="pg" id="pg-xch">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div class="stitle" style="margin:0">Intercambio de horas</div>
+    <button class="btn sm" onclick="Exchange.openNewExchange()">+ Registrar</button>
+  </div>
+  <div id="xch-content"></div>
+</div>
+
 <!-- ===== REGISTRAR ===== -->
 
 <div class="pg" id="pg-new">
   <div class="sc" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:12px" id="new-tabs">
-    <button class="sb on" onclick="fTab('flight',this)">✈ Vuelo</button>
-    <button class="sb" onclick="fTab('fuel',this)">⛽ Comb.</button>
-    <button class="sb" id="admin-tab" style="display:none" onclick="fTab('admin',this)">⚙ Admin</button>
+    <button class="sb on" onclick="Fuel.fTab('flight',this)">✈ Vuelo</button>
+    <button class="sb" onclick="Fuel.fTab('fuel',this)">⛽ Comb.</button>
+    <button class="sb" id="admin-tab" style="display:none" onclick="Fuel.fTab('admin',this)">⚙ Admin</button>
   </div>
   <div id="form-flight">
     <div class="ok-bar" id="ok-f">Vuelo guardado ✓</div>
@@ -404,17 +414,17 @@ textarea{resize:vertical;min-height:60px}
       </div>
       <div class="fs"><label class="fl">Tipo</label>
         <div class="tg">
-          <div class="tc on" data-t="PERSONAL" onclick="tipo('PERSONAL',this)"><div class="ti">✈</div><div class="tn">Personal</div><div class="td">Sin ingreso</div></div>
-          <div class="tc" data-t="STD" onclick="tipo('STD',this)"><div class="ti">💼</div><div class="tn">Charter STD</div><div class="td">$750/hr</div></div>
-          <div class="tc" data-t="FF" onclick="tipo('FF',this)"><div class="ti">👥</div><div class="tn">Charter FF</div><div class="td">$650/hr</div></div>
-          <div class="tc" data-t="MANTE" onclick="tipo('MANTE',this)"><div class="ti">🔧</div><div class="tn">Mante</div><div class="td">Sin ingreso</div></div>
+          <div class="tc on" data-t="PERSONAL" onclick="Flights.tipo('PERSONAL',this)"><div class="ti">✈</div><div class="tn">Personal</div><div class="td">Sin ingreso</div></div>
+          <div class="tc" data-t="STD" onclick="Flights.tipo('STD',this)"><div class="ti">💼</div><div class="tn">Charter STD</div><div class="td">$750/hr</div></div>
+          <div class="tc" data-t="FF" onclick="Flights.tipo('FF',this)"><div class="ti">👥</div><div class="tn">Charter FF</div><div class="td">$650/hr</div></div>
+          <div class="tc" data-t="MANTE" onclick="Flights.tipo('MANTE',this)"><div class="ti">🔧</div><div class="tn">Mante</div><div class="td">Sin ingreso</div></div>
         </div>
       </div>
       <div class="fs"><label class="fl">Usuario / Cliente</label><select id="ff-u"></select></div>
       <div class="fs"><label class="fl">Ruta</label><input type="text" id="ff-rt" placeholder="ej. AUR-MGPB" autocomplete="off" oninput="this.value=this.value.toUpperCase()"></div>
       <div class="row2">
-        <div><label class="fl">HRM Inicio</label><input type="number" id="ff-hi" step="0.1" inputmode="decimal" oninput="calcH()"></div>
-        <div><label class="fl">HRM Fin</label><input type="number" id="ff-hf" step="0.1" inputmode="decimal" oninput="calcH()"></div>
+        <div><label class="fl">HRM Inicio</label><input type="number" id="ff-hi" step="0.1" inputmode="decimal" oninput="Flights.calcH()"></div>
+        <div><label class="fl">HRM Fin</label><input type="number" id="ff-hf" step="0.1" inputmode="decimal" oninput="Flights.calcH()"></div>
       </div>
       <div class="hcalc" id="hcalc"></div>
       <div class="row2">
@@ -423,7 +433,7 @@ textarea{resize:vertical;min-height:60px}
       </div>
       <div id="rev-sec" style="display:none" class="fs"><label class="fl">Ingreso charter ($)</label><input type="number" id="ff-rv" placeholder="auto" step="0.01" inputmode="decimal"><div class="hint" id="rev-hint"></div></div>
       <div class="fs"><label class="fl">Notas</label><input type="text" id="ff-no" placeholder="opcional"></div>
-      <button class="btn" onclick="saveF()">Guardar vuelo</button>
+      <button class="btn" onclick="Flights.saveF()">Guardar vuelo</button>
     </div></div>
   </div>
 
@@ -437,33 +447,36 @@ textarea{resize:vertical;min-height:60px}
       <div class="stitle" style="margin:0 0 7px">Anticipo (quién pagó de su bolsillo)</div>
       <div id="fu-advances"></div>
       <div class="fs"><label class="fl">Notas</label><input type="text" id="fu-no" placeholder="opcional"></div>
-      <button class="btn gr" onclick="saveFu()">Guardar combustible</button>
+      <button class="btn gr" onclick="Fuel.saveFu()">Guardar combustible</button>
     </div></div>
   </div>
 
   <div id="form-admin" style="display:none">
-    <div class="card"><div class="ch"><div class="ct">Usuarios</div><button class="btn sm" onclick="openAddUser()">+ Agregar</button></div>
+    <div class="card"><div class="ch"><div class="ct">Usuarios</div><button class="btn sm" onclick="Admin.openAddUser()">+ Agregar</button></div>
       <div id="user-list"></div>
     </div>
-    <div class="card"><div class="ch"><div class="ct">Pilotos (roster)</div><button class="btn sm" onclick="openAddPilot()">+ Agregar</button></div>
+    <div class="card"><div class="ch"><div class="ct">Pilotos (roster)</div><button class="btn sm" onclick="Admin.openAddPilot()">+ Agregar</button></div>
       <div id="pilot-roster-list"></div>
     </div>
-    <div class="card"><div class="ch"><div class="ct">Aviones</div><button class="btn sm" onclick="openAddPlane()">+ Agregar</button></div>
+    <div class="card"><div class="ch"><div class="ct">Aviones</div><button class="btn sm" onclick="Admin.openAddPlane()">+ Agregar</button></div>
       <div id="plane-list"></div>
+    </div>
+    <div class="card"><div class="ch"><div class="ct">🤝 Socios de intercambio</div><button class="btn sm" onclick="Exchange.openAddPartner()">+ Agregar</button></div>
+      <div id="xp-list"></div>
     </div>
     <div class="card"><div class="ch"><div class="ct">Conexión Worker</div></div><div class="cb">
       <div class="fs"><label class="fl">Worker URL</label><input type="url" id="cfg-url" placeholder="https://tgshi-api.xxx.workers.dev"></div>
       <div class="fs"><label class="fl">Worker Secret</label><input type="password" id="cfg-secret" placeholder="secret"></div>
       <div style="display:flex;gap:7px">
-        <button class="btn sm" onclick="saveWorkerCfg()">Guardar</button>
-        <button class="btn sm" style="background:#E8F0FD;color:#1B4E8A" onclick="testWorker()">Probar</button>
+        <button class="btn sm" onclick="Admin.saveWorkerCfg()">Guardar</button>
+        <button class="btn sm" style="background:#E8F0FD;color:#1B4E8A" onclick="API.testWorker()">Probar</button>
       </div>
       <div id="cfg-msg" style="font-size:10px;color:#8892A4;margin-top:5px"></div>
     </div></div>
   </div>
 </div>
 
-<!-- ===== BILLING (accessible from nav) ===== -->
+<!-- ===== BILLING ===== -->
 
 <div class="pg" id="pg-bil">
   <div class="stitle">Período de facturación</div>
@@ -473,1238 +486,10 @@ textarea{resize:vertical;min-height:60px}
       <div><label class="fl">Hasta</label><input type="month" id="b-to"></div>
     </div>
     <div class="fs"><label class="fl">TC QTZ/USD</label><input type="number" id="b-tc" value="7.65" step="0.01" inputmode="decimal" style="max-width:110px"></div>
-    <button class="btn" onclick="calcBil()">Calcular</button>
+    <button class="btn" onclick="Billing.calcBil()">Calcular</button>
   </div></div>
   <div id="bil-out"></div>
 </div>
-
-<script>
-// =====================================================================
-// TG-SHI v5.1 — Batch 1: Password fix, Pilot roster, Scheduling flow
-// =====================================================================
-
-// --- Worker config ---
-let WORKER_URL = localStorage.getItem('tgshi_worker_url') || '';
-let WORKER_SECRET = localStorage.getItem('tgshi_worker_secret') || '';
-let API_OK = false;
-let SHA = '';
-
-// --- Session ---
-let CU = sessionStorage.getItem('tgshi_user') || null;
-let CR = sessionStorage.getItem('tgshi_role') || null;
-
-// --- DB ---
-// BATCH 1 FIX: Hardcoded defaults are ONLY used as fallback structure.
-// Passwords are NEVER hardcoded here. They live exclusively in DB.passwords
-// which is loaded from the server. On first deploy, set passwords via Admin.
-let DB = {
-  users: {
-    CUCO: { role:'admin', icon:'👨‍✈️', name:'Eduardo Girón' },
-    COCO: { role:'owner', icon:'👩‍✈️', name:'Coco' },
-    FERNANDO: { role:'pilot_admin', icon:'🧑‍✈️', name:'Fernando Méndez' }
-  },
-  passwords: {},  // <-- BATCH 1: No hardcoded passwords. Loaded from server.
-  planes: [{ id:'TG-SHI', name:'Shenshi', type:'Cessna 206', active:true }],
-  flights: [], fuel: [], schedule: [],
-  pilots: [],  // <-- BATCH 1: Pilot roster array { id, name, phone, active }
-  rates: [
-    { d:'2023-03-01', pilot:110, gw:15, std:750, ff:650, admin:300, res:2 },
-    { d:'2026-01-01', pilot:110, gw:15, std:750, ff:650, admin:350, res:2 }
-  ],
-  meta: { last_tach:0, last_flight_id:0, last_fuel_id:0, last_sched_id:0, last_pilot_id:0 }
-};
-
-// --- State ---
-const MO = ['','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-const DAYS_ES = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'];
-let selPlane = 'TG-SHI';
-let calDate = new Date();
-let calSelDate = null;
-let formType = 'PERSONAL';
-
-// --- Helpers ---
-const isAdmin = () => CR === 'admin';
-const isPilotAdmin = () => CR === 'pilot_admin';
-const canManageSchedule = () => isAdmin() || isPilotAdmin();
-const getUser = (id) => DB.users[id] || { icon:'👤', name:id, role:'owner' };
-const getPlane = (id) => DB.planes.find(p=>p.id===id) || DB.planes[0];
-const getPilot = (id) => (DB.pilots||[]).find(p=>p.id===id);
-const pad2 = n => String(n).padStart(2,'0');
-const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; };
-const fmtDate = ds => { const p=ds.split('-'); return `${+p[2]} ${MO[+p[1]]} ${p[0]}`; };
-
-function getRateFD(ds){
-  let r=DB.rates[0];
-  for(const x of DB.rates) if(new Date(x.d)<=new Date(ds)) r=x;
-  return r;
-}
-
-// =====================================================================
-// INIT
-// =====================================================================
-function initApp(){
-  // BATCH 1 FIX: We must load data from server BEFORE allowing login
-  // so that DB.passwords is populated from the server, not hardcoded.
-  // If we have stored worker config, try to pre-load passwords.
-  if(CU && CR){
-    // Session exists - show app, load data
-    document.getElementById('login-screen').style.display='none';
-    showUserBadge();
-    document.getElementById('settings-btn').style.display='block';
-    if(isAdmin()||isPilotAdmin()) document.getElementById('admin-tab').style.display='block';
-    onReady();
-  } else {
-    // Show login screen, but pre-fetch DB for passwords
-    document.getElementById('login-screen').style.display='flex';
-    preloadPasswords();
-  }
-}
-
-// BATCH 1: Pre-load passwords from server so login works against server data
-async function preloadPasswords(){
-  if(!WORKER_URL || !WORKER_SECRET) return; // Can't preload without config
-  try {
-    const r = await fetch(WORKER_URL+'/data', { headers:{'Authorization':'Bearer '+WORKER_SECRET}, cache:'no-store' });
-    if(!r.ok) return;
-    const res = await r.json();
-    if(res.data){
-      // Only merge passwords and users for login validation
-      if(res.data.passwords) DB.passwords = res.data.passwords;
-      if(res.data.users) DB.users = { ...DB.users, ...res.data.users };
-      SHA = res.sha;
-    }
-  } catch(e){ console.warn('[preloadPasswords]', e); }
-}
-
-async function onReady(){
-  setDot('sync');
-  await loadData();
-  buildAll();
-}
-
-function buildAll(){
-  render();
-  buildPending();
-  buildSchedPending();
-  setDates();
-  buildPilotSelect();
-  buildRespSelect();
-  buildPlaneSelectors();
-  buildUserOptions();
-  buildCalendar();
-}
-
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initApp);
-else initApp();
-
-// =====================================================================
-// LOGIN — BATCH 1 FIX: Uses DB.passwords from server, not hardcoded
-// =====================================================================
-function doLogin(){
-  const uid = document.getElementById('login-uid').value.trim().toUpperCase();
-  const pass = document.getElementById('login-pass').value;
-  if(!uid || !pass){ document.getElementById('login-err').textContent='Ingresa usuario y contraseña'; return; }
-
-  // BATCH 1 FIX: Check against DB.passwords which was loaded from the server
-  const pw = DB.passwords[uid];
-  if(!pw || pass !== pw){
-    document.getElementById('login-err').textContent='Usuario o contraseña incorrectos';
-    document.getElementById('login-pass').value='';
-    return;
-  }
-  const u = DB.users[uid];
-  if(!u){ document.getElementById('login-err').textContent='Usuario no existe'; return; }
-
-  CU = uid;
-  CR = u.role;
-  sessionStorage.setItem('tgshi_user', CU);
-  sessionStorage.setItem('tgshi_role', CR);
-  document.getElementById('login-screen').style.display='none';
-  showUserBadge();
-  document.getElementById('settings-btn').style.display='block';
-  if(isAdmin()||isPilotAdmin()) document.getElementById('admin-tab').style.display='block';
-  onReady();
-}
-
-function showUserBadge(){
-  const u = getUser(CU);
-  const badge = `badge-${CR}`;
-  const existing = document.querySelector('.user-badge');
-  if(existing) existing.remove();
-  document.querySelector('.tach').insertAdjacentHTML('beforebegin',
-    `<span class="user-badge ${badge}">${u.icon} ${CU}</span>`);
-}
-
-function logout(){
-  sessionStorage.removeItem('tgshi_user');
-  sessionStorage.removeItem('tgshi_role');
-  location.reload();
-}
-
-// =====================================================================
-// DATA LAYER (Cloudflare Worker)
-// =====================================================================
-async function loadData(){
-  if(!WORKER_URL || !WORKER_SECRET){ setDot('err'); showSetupNeeded(); return; }
-  try {
-    const r = await fetch(WORKER_URL+'/data', { headers:{'Authorization':'Bearer '+WORKER_SECRET}, cache:'no-store' });
-    if(!r.ok){
-      if(r.status===401){ setDot('err'); showSetupNeeded('Secret incorrecto'); return; }
-      throw new Error('HTTP '+r.status);
-    }
-    const res = await r.json();
-    if(res.data && res.data.flights){
-      DB = { ...DB, ...res.data };
-      if(!DB.users) DB.users = { CUCO:{role:'admin',icon:'👨‍✈️',name:'Eduardo'}, COCO:{role:'owner',icon:'👩‍✈️',name:'Coco'}, FERNANDO:{role:'pilot_admin',icon:'🧑‍✈️',name:'Fernando'} };
-      if(!DB.passwords) DB.passwords = {};
-      if(!DB.planes) DB.planes = [{ id:'TG-SHI', name:'Shenshi', type:'Cessna 206', active:true }];
-      if(!DB.schedule) DB.schedule = [];
-      if(!DB.pilots) DB.pilots = [];
-      if(!DB.meta) DB.meta = {};
-      SHA = res.sha;
-      API_OK = true;
-      // BATCH 1 FIX: Update role from loaded data (server is source of truth)
-      if(DB.users[CU]) CR = DB.users[CU].role;
-    }
-    setDot('ok');
-    hideSetupNeeded();
-  } catch(e){
-    console.error('[loadData]', e);
-    setDot('err');
-    if(DB.flights.length===0){
-      const bars=document.getElementById('d-bars');
-      if(bars) bars.innerHTML=`<div class="empty">⚠️ ${e.message}<br><br><button class="btn sm" onclick="loadData().then(buildAll)">🔄 Reintentar</button></div>`;
-    }
-  }
-}
-
-async function saveData(){
-  if(!API_OK){ alert('Sin conexión al servidor. Configura en Admin > Worker.'); return false; }
-  setDot('sync');
-  try {
-    const r = await fetch(WORKER_URL+'/data', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+WORKER_SECRET,'Content-Type':'application/json'},
-      body:JSON.stringify({ data:DB, sha:SHA, user:CU })
-    });
-    const res = await r.json();
-    if(!r.ok){
-      if(r.status===409){ alert('Conflicto: alguien más guardó. Recargando…'); await loadData(); buildAll(); return false; }
-      throw new Error(res.error||'HTTP '+r.status);
-    }
-    SHA = res.sha;
-    setDot('ok');
-    return true;
-  } catch(e){
-    console.error('[saveData]', e);
-    setDot('err');
-    return false;
-  }
-}
-const saveGH = saveData;
-
-function setDot(s){ const d=document.getElementById('dot'); d.className='dot'+(s==='sync'?' sync':s==='err'?' err':''); }
-
-function showSetupNeeded(msg){
-  const area=document.getElementById('token-setup-area');
-  if(!area)return;
-  area.innerHTML=`<div class="token-setup"><h3>🔗 Configurar conexión</h3><p>${msg||'Configura la conexión al servidor.'}</p>${isAdmin()?`
-    <div style="text-align:left;max-width:280px;margin:0 auto">
-      <div style="margin-bottom:8px"><label class="fl">Worker URL</label><input type="url" id="setup-url" value="${WORKER_URL}" placeholder="https://tgshi-api.xxx.workers.dev" style="font-size:12px"></div>
-      <div style="margin-bottom:8px"><label class="fl">Secret</label><input type="password" id="setup-secret" value="${WORKER_SECRET}" placeholder="secret" style="font-size:12px"></div>
-      <button onclick="quickSetup()">Conectar</button>
-      <div id="setup-msg" style="font-size:10px;color:#8892A4;margin-top:6px"></div>
-    </div>`:`<p style="font-size:11px;color:#92400E">Pide a CUCO que configure.</p>`}</div>`;
-}
-function hideSetupNeeded(){ const a=document.getElementById('token-setup-area'); if(a)a.innerHTML=''; }
-
-async function quickSetup(){
-  const url=document.getElementById('setup-url').value.trim().replace(/\/+$/,'');
-  const sec=document.getElementById('setup-secret').value.trim();
-  const msg=document.getElementById('setup-msg');
-  if(!url||!sec){msg.textContent='Completa ambos campos';return;}
-  msg.textContent='Verificando…';
-  try{
-    const r=await fetch(url+'/data',{headers:{'Authorization':'Bearer '+sec},cache:'no-store'});
-    if(r.status===401){msg.textContent='Secret incorrecto';return;}
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const res=await r.json();
-    WORKER_URL=url; WORKER_SECRET=sec;
-    localStorage.setItem('tgshi_worker_url',url);
-    localStorage.setItem('tgshi_worker_secret',sec);
-    DB={...DB,...res.data}; SHA=res.sha; API_OK=true;
-    if(!DB.users)DB.users={};if(!DB.passwords)DB.passwords={};if(!DB.planes)DB.planes=[];if(!DB.schedule)DB.schedule=[];if(!DB.pilots)DB.pilots=[];
-    msg.textContent='✓ Conectado';setDot('ok');buildAll();setTimeout(hideSetupNeeded,1000);
-  }catch(e){msg.textContent='Error: '+e.message;}
-}
-
-// =====================================================================
-// NAVIGATION
-// =====================================================================
-function nav(id,i){
-  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.bt').forEach(b=>b.classList.remove('on'));
-  document.getElementById('pg-'+id).classList.add('on');
-  document.querySelectorAll('.bt')[i].classList.add('on');
-  if(id==='vl') buildVL('ALL');
-  if(id==='fuel') buildFuel();
-  if(id==='bil'){ initBil(); setTimeout(calcBil,100); }
-  if(id==='sched') buildCalendar();
-  if(id==='new' && (isAdmin()||isPilotAdmin())) buildAdminPanel();
-}
-
-// =====================================================================
-// RENDER DASHBOARD
-// =====================================================================
-function render(){
-  const t=Math.max(...DB.flights.map(f=>f.hf||0),0);
-  document.getElementById('tachVal').textContent=t.toFixed(1);
-  document.getElementById('app-title').textContent = selPlane;
-  buildDash();
-}
-
-function buildDash(){
-  const yr=new Date().getFullYear().toString();
-  const f26=DB.flights.filter(f=>f.d.startsWith(yr) && (!f.plane_id || f.plane_id===selPlane));
-  let co=0,cu=0,se=0; const mo={};
-  f26.forEach(f=>{
-    const m=+f.d.slice(5,7);
-    if(!mo[m])mo[m]={co:0,cu:0,se:0};
-    if(f.r==='COCO'){co+=f.h;mo[m].co+=f.h;}
-    else if(f.r==='CUCO'){cu+=f.h;mo[m].cu+=f.h;}
-    else{se+=f.h;mo[m].se+=f.h;}
-  });
-  document.getElementById('d-co').textContent=co.toFixed(1);
-  document.getElementById('d-cu').textContent=cu.toFixed(1);
-  document.getElementById('d-se').textContent=se.toFixed(1);
-  const mx=Math.max(...Object.values(mo).map(m=>m.co+m.cu+m.se),1);
-  let bh='';
-  for(let m=1;m<=12;m++){
-    const d=mo[m];if(!d||(d.co+d.cu+d.se)===0)continue;
-    const t=d.co+d.cu+d.se,sc=100/mx;
-    bh+=`<div class="mr"><div class="ml">${MO[m]}</div><div class="bt2"><div class="bs b1" style="width:${d.co*sc}%"></div><div class="bs b2" style="width:${d.cu*sc}%"></div><div class="bs b3" style="width:${d.se*sc}%"></div></div><div class="mh">${t.toFixed(1)}</div></div>`;
-  }
-  document.getElementById('d-bars').innerHTML=bh||'<div class="empty">Sin vuelos '+yr+'</div>';
-  document.getElementById('d-rec').innerHTML=[...DB.flights].reverse().slice(0,5).map(fRow).join('');
-  const tot=co+cu+se,pct=v=>tot>0?` (${((v/tot)*100).toFixed(0)}%)`:'';
-  document.getElementById('d-sum').innerHTML=`
-    <div class="qr"><div class="ql">Total horas ${yr}</div><div class="qv">${tot.toFixed(1)} hrs</div></div>
-    <div class="qr"><div class="ql">COCO</div><div class="qv c1">${co.toFixed(1)}${pct(co)}</div></div>
-    <div class="qr"><div class="ql">CUCO</div><div class="qv c2">${cu.toFixed(1)}${pct(cu)}</div></div>
-    <div class="qr"><div class="ql">Charter</div><div class="qv c3">${se.toFixed(1)}${pct(se)}</div></div>
-    <div class="qr"><div class="ql">Total vuelos</div><div class="qv">${DB.flights.length}</div></div>`;
-}
-
-function fRow(f){
-  const dc=f.r==='COCO'?'c1':f.r==='CUCO'?'c2':'c3';
-  const bx=f.t==='STD'?'<span class="bx s">STD</span>':f.t==='FF'?'<span class="bx f">FF</span>':f.t==='MANTE'?'<span class="bx m">MANTE</span>':'<span class="bx p">Personal</span>';
-  const rv=(f.rv||0)>0?`<span>$${f.rv.toLocaleString()}</span>`:'';
-  const pendTag=f.verified===false?'<span class="pend-badge">⏳</span>':'';
-  // Show pilot name from roster if available
-  let pilotDisplay = f.p || '';
-  if(f.pilot_roster_id){
-    const rp = getPilot(f.pilot_roster_id);
-    if(rp) pilotDisplay = rp.name;
-  }
-  const editBtn=isAdmin()?`<button class="edit-btn" onclick="openEdit(${f.id})">editar</button>`:'';
-  return `<div class="fi"><div class="fdot ${dc}"></div><div class="fm"><div class="fr">${f.rt||'—'} ${bx}${pendTag}</div><div class="fme"><span>${f.r}</span>${pilotDisplay?`<span>🧑‍✈️ ${pilotDisplay}</span>`:''}${rv}${editBtn}</div></div><div class="frt"><div class="fh">${f.h.toFixed(1)}<small>hr</small></div><div class="fdt">${f.d.slice(5)}</div></div></div>`;
-}
-
-// =====================================================================
-// FLIGHT LOG
-// =====================================================================
-function buildVL(fil){
-  let out=[...DB.flights].reverse();
-  if(fil==='COCO')out=out.filter(f=>f.r==='COCO');
-  else if(fil==='CUCO')out=out.filter(f=>f.r==='CUCO');
-  else if(fil==='SENSHI')out=out.filter(f=>f.r==='SENSHI');
-  else if(/^\d{4}$/.test(fil))out=out.filter(f=>f.d.startsWith(fil));
-  document.getElementById('vl-list').innerHTML=out.length?out.slice(0,100).map(fRow).join(''):'<div class="empty"><div class="big">✈️</div>Sin vuelos</div>';
-}
-function filtV(f,el){ document.querySelectorAll('#flt-row .fp').forEach(p=>p.classList.remove('on')); el.classList.add('on'); buildVL(f); }
-
-// =====================================================================
-// FUEL LOG
-// =====================================================================
-function buildFuel(){
-  const out=[...DB.fuel].reverse();
-  if(!out.length){document.getElementById('fuel-list').innerHTML='<div class="empty"><div class="big">⛽</div>Sin registros</div>';return;}
-  document.getElementById('fuel-list').innerHTML=out.slice(0,60).map(f=>{
-    const ants=[];
-    if((f.ac||0)>0)ants.push(`COCO Q${f.ac.toLocaleString()}`);
-    if((f.au||0)>0)ants.push(`CUCO Q${f.au.toLocaleString()}`);
-    if((f.as||0)>0)ants.push(`SENSHI Q${f.as.toLocaleString()}`);
-    return `<div class="fue"><div><div class="fue-l">Q${f.m.toLocaleString()} — ${f.py}</div><div class="fue-s">${ants.length?ants.join(' · '):'Sin anticipo'}${f.no?' · '+f.no:''}</div></div><div class="fue-r"><div class="fue-d">${f.d.slice(5)}</div></div></div>`;
-  }).join('');
-}
-
-// =====================================================================
-// SCHEDULING / CALENDAR
-// =====================================================================
-function buildPlaneSelectors(){
-  const planes = DB.planes.filter(p=>p.active!==false);
-  const html = planes.map(p=>`<div class="plane-chip${p.id===selPlane?' on':''}" onclick="selectPlane('${p.id}',this)">${p.id}</div>`).join('');
-  document.getElementById('plane-sel-sched').innerHTML = html;
-}
-
-function selectPlane(id,el){
-  selPlane = id;
-  document.querySelectorAll('.plane-chip').forEach(c=>c.classList.remove('on'));
-  if(el) el.classList.add('on');
-  render();
-  buildCalendar();
-}
-
-function buildCalendar(){
-  const y=calDate.getFullYear(), m=calDate.getMonth();
-  document.getElementById('cal-title').textContent=`${MO[m+1]} ${y}`;
-
-  const first=new Date(y,m,1);
-  const startDay=first.getDay();
-  const daysInMonth=new Date(y,m+1,0).getDate();
-  const prevDays=new Date(y,m,0).getDate();
-
-  const monthStr=`${y}-${pad2(m+1)}`;
-  const schedMap={};
-  (DB.schedule||[]).filter(s=>s.date.startsWith(monthStr)&&s.plane_id===selPlane&&s.status!=='cancelled').forEach(s=>{
-    if(!schedMap[s.date])schedMap[s.date]=[];
-    schedMap[s.date].push(s);
-  });
-
-  let html=DAYS_ES.map(d=>`<div class="cal-dh">${d}</div>`).join('');
-  const today=todayStr();
-  const selStr=calSelDate;
-
-  for(let i=startDay-1;i>=0;i--){
-    html+=`<div class="cal-d other">${prevDays-i}</div>`;
-  }
-
-  for(let d=1;d<=daysInMonth;d++){
-    const ds=`${y}-${pad2(m+1)}-${pad2(d)}`;
-    const isToday=ds===today;
-    const isSel=ds===selStr;
-    const scheds=schedMap[ds]||[];
-    let dots='';
-    if(scheds.length){
-      dots='<div class="cal-dots">';
-      scheds.slice(0,3).forEach(s=>{
-        const cls=s.booked_by===CU?'mine':s.status==='confirmed'?'conf':'req';
-        dots+=`<div class="cd ${cls}"></div>`;
-      });
-      dots+='</div>';
-    } else {
-      dots='<div class="cal-dots"></div>';
-    }
-    html+=`<div class="cal-d${isToday?' today':''}${isSel?' sel':''}" onclick="selectDay('${ds}')">${d}${dots}</div>`;
-  }
-
-  const totalCells=startDay+daysInMonth;
-  const remaining=totalCells%7===0?0:7-totalCells%7;
-  for(let i=1;i<=remaining;i++){
-    html+=`<div class="cal-d other">${i}</div>`;
-  }
-
-  document.getElementById('cal-grid').innerHTML=html;
-  if(calSelDate) buildDayDetail(calSelDate);
-}
-
-function calNav(dir){
-  calDate.setMonth(calDate.getMonth()+dir);
-  calSelDate=null;
-  buildCalendar();
-  document.getElementById('day-detail').innerHTML='';
-}
-
-function selectDay(ds){
-  calSelDate=ds;
-  buildCalendar();
-}
-
-function buildDayDetail(ds){
-  const scheds=(DB.schedule||[]).filter(s=>s.date===ds&&s.plane_id===selPlane&&s.status!=='cancelled')
-    .sort((a,b)=>a.start.localeCompare(b.start));
-
-  let html=`<div class="day-detail">
-    <div class="dd-hd">
-      <div class="dd-title">📅 ${fmtDate(ds)}</div>
-      <button class="dd-add" onclick="openBooking('${ds}')">+ Reservar</button>
-    </div>`;
-
-  if(scheds.length===0){
-    html+=`<div class="empty" style="padding:20px">Sin reservas — disponible todo el día</div>`;
-  } else {
-    scheds.forEach(s=>{
-      const u=getUser(s.booked_by);
-      // BATCH 1: Show pilot from roster
-      let pilotDisplay = 'Sin asignar';
-      if(s.pilot_roster_id){
-        const rp = getPilot(s.pilot_roster_id);
-        if(rp) pilotDisplay = `${rp.name}${rp.phone?' · 📞'+rp.phone:''}`;
-      } else if(s.pilot){
-        pilotDisplay = getUser(s.pilot).name;
-      }
-      // BATCH 1: Show flight type on confirmed slots
-      let typeTag = '';
-      if(s.flight_type){
-        const tl = {PERSONAL:'Personal',STD:'Charter STD',FF:'Charter FF',MANTE:'Mante'};
-        const tc = {PERSONAL:'p',STD:'s',FF:'f',MANTE:'m'};
-        typeTag = ` <span class="bx ${tc[s.flight_type]||'p'}">${tl[s.flight_type]||s.flight_type}</span>`;
-      }
-      const canAct=isAdmin()||isPilotAdmin()||s.booked_by===CU;
-      let actions='';
-      if(s.status==='requested' && canManageSchedule()){
-        // BATCH 1: "Confirmar" button opens confirmation modal with pilot + type selection
-        actions+=`<button class="slot-confirm" onclick="openConfirmModal(${s.id})">✓ Confirmar</button>`;
-      }
-      if(canAct && s.status!=='completed'){
-        actions+=`<button class="slot-cancel" onclick="cancelSlot(${s.id})">Cancelar</button>`;
-      }
-      html+=`<div class="slot">
-        <div class="slot-time">${s.start}<br><span style="font-weight:400;font-size:9px">→${s.end}</span></div>
-        <div class="slot-body">
-          <div class="slot-route">${s.route||'Pendiente ruta'} <span class="slot-status ${s.status}">${s.status==='requested'?'⏳ Solicitado':s.status==='confirmed'?'✓ Confirmado':s.status==='completed'?'✈ Completado':'✕ Cancelado'}</span>${typeTag}</div>
-          <div class="slot-meta"><span>${u.icon} ${s.booked_by}</span><span>🧑‍✈️ ${pilotDisplay}</span>${s.notes?`<span>${s.notes}</span>`:''}</div>
-        </div>
-        <div class="slot-actions">${actions}</div>
-      </div>`;
-    });
-  }
-  html+='</div>';
-  document.getElementById('day-detail').innerHTML=html;
-}
-
-// --- Booking modal (user requests a flight — NO flight type selection) ---
-function openBooking(ds){
-  calSelDate=ds;
-  document.getElementById('book-modal-title').textContent='Reservar vuelo';
-
-  // Generate 30-min time options
-  let timeOpts='';
-  for(let h=5;h<=21;h++){
-    for(let m=0;m<60;m+=30){
-      const t=`${pad2(h)}:${pad2(m)}`;
-      timeOpts+=`<option value="${t}">${t}</option>`;
-    }
-  }
-
-  // BATCH 1: User booking form — NO flight type, NO pilot selection
-  // Fernando confirms and assigns those later
-  document.getElementById('book-form').innerHTML=`
-    <div class="fs"><label class="fl">Fecha</label><input type="date" id="bk-date" value="${ds}"></div>
-    <div class="fs"><label class="fl">Avión</label><div style="font-size:14px;font-weight:700;color:#1B2A4A">${selPlane}</div></div>
-    <div class="time-pick">
-      <div><label class="fl">Inicio</label><select id="bk-start">${timeOpts}</select></div>
-      <div class="sep">→</div>
-      <div><label class="fl">Fin</label><select id="bk-end">${timeOpts}</select></div>
-    </div>
-    <div class="fs"><label class="fl">Ruta</label><input type="text" id="bk-route" placeholder="AUR-MGPB" oninput="this.value=this.value.toUpperCase()"></div>
-    <div class="fs"><label class="fl">Pasajeros / Notas</label><input type="text" id="bk-notes" placeholder="opcional"></div>
-    <button class="btn" onclick="submitBooking()">Solicitar vuelo</button>
-    <div class="hint" style="text-align:center;margin-top:8px">Fernando confirmará y asignará piloto</div>`;
-
-  document.getElementById('bk-start').value='08:00';
-  document.getElementById('bk-end').value='10:00';
-  document.getElementById('book-modal').style.display='flex';
-}
-
-function closeBooking(){ document.getElementById('book-modal').style.display='none'; }
-
-async function submitBooking(){
-  const date=document.getElementById('bk-date').value;
-  const start=document.getElementById('bk-start').value;
-  const end=document.getElementById('bk-end').value;
-  const route=document.getElementById('bk-route').value.toUpperCase().trim();
-  const notes=document.getElementById('bk-notes').value;
-
-  if(!date||!start||!end){alert('Selecciona fecha y horario');return;}
-  if(start>=end){alert('La hora de fin debe ser mayor que el inicio');return;}
-
-  // Check conflicts
-  const existing=(DB.schedule||[]).filter(s=>s.date===date&&s.plane_id===selPlane&&s.status!=='cancelled');
-  const conflict=existing.find(s=>start<s.end&&end>s.start);
-  if(conflict){alert(`Conflicto con reserva de ${conflict.booked_by} (${conflict.start}-${conflict.end})`);return;}
-
-  if(!DB.schedule)DB.schedule=[];
-  if(!DB.meta)DB.meta={};
-  const id=(DB.meta.last_sched_id||0)+1;
-  DB.meta.last_sched_id=id;
-
-  // BATCH 1: All bookings start as 'requested'. Even admin/pilot_admin.
-  // Flight type and pilot are assigned during confirmation.
-  DB.schedule.push({
-    id, plane_id:selPlane, date, start, end,
-    booked_by:CU, pilot:null, pilot_roster_id:null,
-    status: 'requested',
-    flight_type: null,  // Set during confirmation
-    route, notes
-  });
-
-  closeBooking();
-  const ok=await saveData();
-  if(ok){ buildCalendar(); buildSchedPending(); }
-  else { alert('Error guardando reserva'); }
-}
-
-// BATCH 1: Confirmation modal — Fernando picks pilot from roster + flight type
-function openConfirmModal(schedId){
-  const s = (DB.schedule||[]).find(x=>x.id===schedId);
-  if(!s) return;
-
-  document.getElementById('book-modal-title').textContent='Confirmar vuelo';
-
-  // Build pilot roster options
-  const activePilots = (DB.pilots||[]).filter(p=>p.active!==false);
-  let pilotOpts = '<option value="">— Seleccionar piloto —</option>';
-  activePilots.forEach(p=>{
-    pilotOpts += `<option value="${p.id}">${p.name}${p.phone?' ('+p.phone+')':''}</option>`;
-  });
-
-  // Flight type selector
-  const types = [
-    { v:'PERSONAL', icon:'✈', label:'Personal', desc:'Sin ingreso' },
-    { v:'STD', icon:'💼', label:'Charter STD', desc:'$750/hr' },
-    { v:'FF', icon:'👥', label:'Charter FF', desc:'$650/hr' },
-    { v:'MANTE', icon:'🔧', label:'Mante', desc:'Sin ingreso' }
-  ];
-
-  document.getElementById('book-form').innerHTML=`
-    <div style="background:#F8F9FB;border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:12px">
-      <div style="font-weight:700;margin-bottom:3px">${s.route||'Sin ruta'} · ${fmtDate(s.date)}</div>
-      <div style="color:#8892A4;font-size:10px">${s.start} → ${s.end} · Solicitado por ${getUser(s.booked_by).name} (${s.booked_by})</div>
-      ${s.notes?`<div style="color:#8892A4;font-size:10px;margin-top:2px">📝 ${s.notes}</div>`:''}
-    </div>
-    <div class="fs"><label class="fl">Piloto asignado</label><select id="cfm-pilot">${pilotOpts}</select></div>
-    <div class="fs"><label class="fl">Tipo de vuelo</label>
-      <div class="confirm-type-grid" id="cfm-type-grid">
-        ${types.map(t=>`<div class="confirm-type-card" data-t="${t.v}" onclick="cfmTipo('${t.v}',this)"><div class="ti">${t.icon}</div><div class="tn">${t.label}</div><div class="td">${t.desc}</div></div>`).join('')}
-      </div>
-    </div>
-    <button class="btn gr" onclick="submitConfirmation(${schedId})">✓ Confirmar vuelo</button>`;
-
-  document.getElementById('book-modal').style.display='flex';
-}
-
-let cfmFlightType = null;
-function cfmTipo(v, el){
-  cfmFlightType = v;
-  document.querySelectorAll('#cfm-type-grid .confirm-type-card').forEach(c=>c.classList.remove('on'));
-  el.classList.add('on');
-}
-
-async function submitConfirmation(schedId){
-  const s = (DB.schedule||[]).find(x=>x.id===schedId);
-  if(!s) return;
-
-  const pilotId = parseInt(document.getElementById('cfm-pilot').value);
-  if(!pilotId){ alert('Selecciona un piloto del roster'); return; }
-  if(!cfmFlightType){ alert('Selecciona el tipo de vuelo'); return; }
-
-  s.status = 'confirmed';
-  s.pilot_roster_id = pilotId;
-  s.flight_type = cfmFlightType;
-
-  // Also set the pilot user reference if the roster pilot maps to a system user
-  const rp = getPilot(pilotId);
-  if(rp && rp.user_id) s.pilot = rp.user_id;
-
-  closeBooking();
-  cfmFlightType = null;
-  const ok = await saveData();
-  if(ok){ buildCalendar(); buildSchedPending(); }
-  else { alert('Error confirmando vuelo'); }
-}
-
-async function cancelSlot(id){
-  if(!confirm('¿Cancelar esta reserva?'))return;
-  const s=DB.schedule.find(x=>x.id===id);
-  if(s){s.status='cancelled'; await saveData(); buildDayDetail(s.date); buildCalendar();}
-}
-
-function buildSchedPending(){
-  const pends=(DB.schedule||[]).filter(s=>s.status==='requested');
-  const sec=document.getElementById('sched-pend-section');
-  if(!canManageSchedule()||pends.length===0){if(sec)sec.style.display='none';return;}
-  sec.style.display='block';
-  sec.innerHTML=`<div class="pend-section"><div class="pend-hd"><span class="pend-ht">📅 Reservas pendientes</span><span class="pend-count">${pends.length}</span></div>
-    ${pends.map(s=>`<div class="pend-item"><div><div class="pend-info"><b>${s.route||'Sin ruta'}</b> · ${s.plane_id} · ${s.start}-${s.end}</div><div class="pend-meta">${s.date} · ${getUser(s.booked_by).name}</div></div><div class="pend-actions"><button class="ver-btn" onclick="openConfirmModal(${s.id})">✓</button><button class="rej-btn" onclick="cancelSlot(${s.id})">✕</button></div></div>`).join('')}
-  </div>`;
-}
-
-// =====================================================================
-// FLIGHT VERIFICATION PENDING
-// =====================================================================
-function buildPending(){
-  const pends=DB.flights.filter(f=>f.verified===false);
-  const sec=document.getElementById('pend-section');
-  if(!isAdmin()||pends.length===0){sec.style.display='none';return;}
-  sec.style.display='block';
-  sec.innerHTML=`<div class="pend-section"><div class="pend-hd"><span class="pend-ht">✋ Vuelos pendientes</span><span class="pend-count">${pends.length}</span></div>
-    ${pends.map(f=>`<div class="pend-item"><div><div class="pend-info"><b>${f.rt||'—'}</b> · ${f.r} · <span class="bx ${f.t==='FF'?'f':'s'}">${f.t}</span></div><div class="pend-meta">${f.d} · ${f.h.toFixed(1)}hr · ${f.logged_by}</div></div><div class="pend-actions"><button class="ver-btn" onclick="verifyFlight(${f.id},'approve')">✓</button><button class="rej-btn" onclick="verifyFlight(${f.id},'reject')">✕</button></div></div>`).join('')}
-  </div>`;
-}
-
-async function verifyFlight(id,action){
-  const f=DB.flights.find(x=>x.id===id);
-  if(!f)return;
-  if(action==='approve'){f.verified=true;f.verified_by=CU;}
-  else{f.t='PERSONAL';f.rv=0;f.verified=true;f.verified_by=CU;}
-  await saveData(); buildAll();
-}
-
-// =====================================================================
-// EDIT FLIGHT
-// =====================================================================
-let editId=null;
-function openEdit(id){
-  if(!isAdmin())return;
-  const f=DB.flights.find(x=>x.id===id);if(!f)return;
-  editId=id;
-  const tipos=['PERSONAL','STD','FF','MANTE'];
-  const respOpts=Object.keys(DB.users).map(k=>`<option ${f.r===k?'selected':''}>${k}</option>`).join('');
-  document.getElementById('edit-modal-title').textContent='Editar vuelo #'+id;
-  document.getElementById('edit-form-content').innerHTML=`
-    <div class="fs"><label class="fl">Fecha</label><input type="date" id="ed-d" value="${f.d}"></div>
-    <div class="fs"><label class="fl">Ruta</label><input type="text" id="ed-rt" value="${f.rt||''}" style="text-transform:uppercase"></div>
-    <div class="fs"><label class="fl">Responsable</label><select id="ed-r">${respOpts}</select></div>
-    <div class="fs"><label class="fl">Tipo</label><select id="ed-t">${tipos.map(t=>`<option ${f.t===t?'selected':''}>${t}</option>`).join('')}</select></div>
-    <div class="row2"><div><label class="fl">HRM Ini</label><input type="number" id="ed-hi" value="${f.hi}" step="0.1"></div><div><label class="fl">HRM Fin</label><input type="number" id="ed-hf" value="${f.hf}" step="0.1"></div></div>
-    <div class="row2"><div><label class="fl">Espera</label><input type="number" id="ed-eh" value="${f.eh||0}" step="0.5"></div><div><label class="fl">Ingreso $</label><input type="number" id="ed-rv" value="${f.rv||0}" step="0.01"></div></div>
-    <div style="display:flex;gap:8px;margin-top:3px"><button class="btn" onclick="saveEdit()">Guardar</button><button class="btn" style="background:#8B1A1A" onclick="deleteFlight(${id})">Eliminar</button></div>`;
-  document.getElementById('edit-modal').style.display='flex';
-}
-function closeEdit(){document.getElementById('edit-modal').style.display='none';editId=null;}
-async function saveEdit(){
-  const f=DB.flights.find(x=>x.id===editId);if(!f)return;
-  f.d=document.getElementById('ed-d').value; f.rt=document.getElementById('ed-rt').value;
-  f.r=document.getElementById('ed-r').value; f.t=document.getElementById('ed-t').value;
-  const hi=parseFloat(document.getElementById('ed-hi').value),hf=parseFloat(document.getElementById('ed-hf').value);
-  f.hi=hi;f.hf=hf;f.h=parseFloat((hf-hi).toFixed(1));
-  f.eh=parseFloat(document.getElementById('ed-eh').value)||0;f.rv=parseFloat(document.getElementById('ed-rv').value)||0;
-  f.verified=true;f.verified_by=CU;
-  closeEdit(); await saveData(); buildAll();
-}
-async function deleteFlight(id){
-  if(!confirm('¿Eliminar vuelo?'))return;
-  DB.flights=DB.flights.filter(x=>x.id!==id);
-  closeEdit(); await saveData(); buildAll();
-}
-
-// =====================================================================
-// NEW FLIGHT FORM
-// =====================================================================
-function buildPilotSelect(){
-  const sel=document.getElementById('ff-pilot');if(!sel)return;
-  // Show roster pilots in the flight form dropdown too
-  const rosterPilots = (DB.pilots||[]).filter(p=>p.active!==false);
-  const userPilots = Object.entries(DB.users).filter(([k,v])=>v.role==='pilot_admin'||v.role==='pilot')
-    .map(([k,v])=>`<option value="${k}">${v.name||k}</option>`);
-  // Combine: user-based pilots first, then roster-only
-  let opts = userPilots.join('');
-  rosterPilots.forEach(rp=>{
-    // Don't duplicate if already a system user
-    if(!rp.user_id || !DB.users[rp.user_id]){
-      opts += `<option value="ROSTER_${rp.id}">${rp.name}</option>`;
-    }
-  });
-  sel.innerHTML = opts;
-}
-function buildRespSelect(){
-  const sel=document.getElementById('ff-resp');if(!sel)return;
-  sel.innerHTML=Object.entries(DB.users).filter(([k,v])=>v.role==='admin'||v.role==='owner')
-    .map(([k,v])=>`<option value="${k}">${k}</option>`).join('');
-}
-function buildUserOptions(){
-  const fuPy=document.getElementById('fu-py');
-  if(fuPy) fuPy.innerHTML=Object.keys(DB.users).map(k=>`<option>${k}</option>`).join('');
-  const adv=document.getElementById('fu-advances');
-  if(adv){
-    const owners=Object.entries(DB.users).filter(([k,v])=>v.role==='admin'||v.role==='owner');
-    adv.innerHTML=`<div class="row2">${owners.map(([k])=>`<div><label class="fl">Anticipo ${k}</label><input type="number" id="fu-adv-${k}" value="0" step="0.01" inputmode="decimal"></div>`).join('')}</div>`;
-  }
-}
-
-function tipo(v,el){
-  formType=v;
-  document.querySelectorAll('.tc').forEach(c=>c.classList.remove('on'));
-  el.classList.add('on');
-  document.getElementById('rev-sec').style.display=(v==='STD'||v==='FF')?'block':'none';
-  updRevH();
-}
-
-function setDates(){
-  const ds=todayStr();
-  ['ff-d','fu-d'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=ds;});
-  const lt=Math.max(...DB.flights.map(f=>f.hf||0),0);
-  const e=document.getElementById('ff-hi');
-  if(e&&lt>0){e.value=lt.toFixed(1);}
-}
-
-function calcH(){
-  const a=parseFloat(document.getElementById('ff-hi').value),b=parseFloat(document.getElementById('ff-hf').value);
-  const div=document.getElementById('hcalc');
-  if(!isNaN(a)&&!isNaN(b)&&b>a){
-    const h=(b-a).toFixed(1); div.textContent=`${h}hrs · fact: ${parseFloat(h)<1?'1.0 (roundup)':h}`;
-    div.style.display='block'; updRevH();
-  } else div.style.display='none';
-}
-function updRevH(){
-  const a=parseFloat(document.getElementById('ff-hi').value)||0,b=parseFloat(document.getElementById('ff-hf').value)||0;
-  const h=Math.max(0,b-a),rate=formType==='FF'?650:750;
-  const el=document.getElementById('rev-hint');
-  if(el&&h>0)el.textContent=`Auto: ${h.toFixed(1)}hr × $${rate} = $${(h*rate).toFixed(2)}`;
-}
-
-async function saveF(){
-  const d=document.getElementById('ff-d').value;
-  const hi=parseFloat(document.getElementById('ff-hi').value),hf=parseFloat(document.getElementById('ff-hf').value);
-  const rt=document.getElementById('ff-rt').value.toUpperCase().trim();
-  if(!d||!rt||isNaN(hi)||isNaN(hf)||hf<=hi){alert('Completa campos requeridos');return;}
-  const h=parseFloat((hf-hi).toFixed(1));
-  const pilot=document.getElementById('ff-pilot').value;
-  const resp=document.getElementById('ff-resp').value;
-  const u=document.getElementById('ff-u').value;
-  const cb=parseFloat(document.getElementById('ff-cb').value)||0;
-  const es=parseFloat(document.getElementById('ff-es').value)||0;
-  const rate=formType==='FF'?650:formType==='STD'?750:0;
-  const rv=document.getElementById('ff-rv').value?parseFloat(document.getElementById('ff-rv').value):(rate>0?parseFloat((h*rate).toFixed(2)):0);
-  const mid=(DB.meta.last_flight_id||0)+1;
-  DB.meta.last_flight_id=mid;
-  const needsVerify=!isAdmin()&&(formType==='STD'||formType==='FF');
-
-  // Handle roster pilot reference
-  let pilotUserId = pilot;
-  let pilotRosterId = null;
-  if(pilot && pilot.startsWith('ROSTER_')){
-    pilotRosterId = parseInt(pilot.replace('ROSTER_',''));
-    pilotUserId = null;
-  }
-
-  DB.flights.push({id:mid,d,r:resp,u:u||resp,rt,p:pilotUserId,pilot_roster_id:pilotRosterId,hi,hf,h,t:formType,rv,eh:es,no:document.getElementById('ff-no').value,
-    plane_id:selPlane,logged_by:CU,verified:!needsVerify,verified_by:needsVerify?null:CU});
-  DB.meta.last_tach=hf;
-  if(cb>0){
-    const fid=(DB.meta.last_fuel_id||0)+1;DB.meta.last_fuel_id=fid;
-    DB.fuel.push({id:fid,d,py:resp,m:cb,ac:resp==='COCO'?cb:0,au:resp==='CUCO'?cb:0,as:0,no:''});
-  }
-  const ok=await saveData();
-  document.getElementById('ok-f').style.display=ok?'flex':'none';
-  document.getElementById('err-f').textContent=ok?'':'Error guardando';
-  document.getElementById('err-f').style.display=ok?'none':'block';
-  if(ok){setTimeout(()=>document.getElementById('ok-f').style.display='none',3000);buildAll();}
-  document.getElementById('ff-hf').value='';document.getElementById('ff-rt').value='';
-  document.getElementById('ff-cb').value='';document.getElementById('ff-es').value='0';document.getElementById('ff-rv').value='';document.getElementById('ff-no').value='';
-  document.getElementById('hcalc').style.display='none';document.getElementById('ff-hi').value=hf;
-}
-
-async function saveFu(){
-  const d=document.getElementById('fu-d').value;
-  const m=parseFloat(document.getElementById('fu-m').value);
-  if(!d||isNaN(m)||m<=0){alert('Completa fecha y monto');return;}
-  const py=document.getElementById('fu-py').value;
-  const no=document.getElementById('fu-no').value;
-  let ac=0,au=0,as_=0;
-  const acEl=document.getElementById('fu-adv-COCO'); if(acEl)ac=parseFloat(acEl.value)||0;
-  const auEl=document.getElementById('fu-adv-CUCO'); if(auEl)au=parseFloat(auEl.value)||0;
-  const fid=(DB.meta.last_fuel_id||0)+1;DB.meta.last_fuel_id=fid;
-  DB.fuel.push({id:fid,d,py,m,ac,au,as:as_,no});
-  const ok=await saveData();
-  document.getElementById('ok-fu').style.display=ok?'flex':'none';
-  document.getElementById('err-fu').style.display=ok?'none':'block';
-  if(ok){setTimeout(()=>document.getElementById('ok-fu').style.display='none',3000);document.getElementById('fu-m').value='';document.getElementById('fu-no').value='';}
-}
-
-function fTab(t,el){
-  document.querySelectorAll('[id^="form-"]').forEach(d=>d.style.display='none');
-  document.getElementById('form-'+t).style.display='block';
-  el.closest('.sc').querySelectorAll('.sb').forEach(b=>b.classList.remove('on'));
-  el.classList.add('on');
-  if(t==='admin')buildAdminPanel();
-}
-
-// =====================================================================
-// ADMIN: Users, Pilots, Planes
-// =====================================================================
-function buildAdminPanel(){
-  // Users list
-  const ul=document.getElementById('user-list');
-  if(ul){
-    ul.innerHTML=Object.entries(DB.users).map(([k,v])=>`
-      <div class="user-row">
-        <div class="user-info"><div class="user-icon">${v.icon||'👤'}</div><div><div class="user-name">${k}</div><div class="user-role">${v.role} · ${v.name||''}</div></div></div>
-        <div class="user-actions">
-          <button class="ubtn edit" onclick="editUser('${k}')">Editar</button>
-          ${k!==CU?`<button class="ubtn del" onclick="deleteUser('${k}')">×</button>`:''}
-        </div>
-      </div>`).join('');
-  }
-
-  // BATCH 1: Pilot roster list
-  const pl2=document.getElementById('pilot-roster-list');
-  if(pl2){
-    const pilots = DB.pilots||[];
-    if(pilots.length===0){
-      pl2.innerHTML='<div class="empty">Sin pilotos registrados</div>';
-    } else {
-      pl2.innerHTML=pilots.map(p=>`
-        <div class="pilot-row">
-          <div class="pilot-info">
-            <div class="pilot-icon">🧑‍✈️</div>
-            <div>
-              <div class="pilot-name">${p.name}</div>
-              <div class="pilot-phone">${p.phone||'Sin teléfono'}${p.user_id?' · usuario: '+p.user_id:''}</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:5px">
-            <span class="pilot-active ${p.active!==false?'yes':'no'}">${p.active!==false?'Activo':'Inactivo'}</span>
-            <button class="ubtn edit" onclick="editPilot(${p.id})">Editar</button>
-          </div>
-        </div>`).join('');
-    }
-  }
-
-  // Planes list
-  const pl=document.getElementById('plane-list');
-  if(pl){
-    pl.innerHTML=DB.planes.map(p=>`
-      <div class="plane-row">
-        <div><div class="plane-name">${p.id}</div><div class="plane-type">${p.type||''} ${p.active===false?'(inactivo)':''}</div></div>
-        <button class="ubtn edit" onclick="editPlane('${p.id}')">Editar</button>
-      </div>`).join('');
-  }
-  // Worker config
-  const u=document.getElementById('cfg-url'),s=document.getElementById('cfg-secret');
-  if(u)u.value=WORKER_URL;if(s)s.value=WORKER_SECRET;
-}
-
-// --- Add User ---
-function openAddUser(){
-  document.getElementById('edit-modal-title').textContent='Agregar usuario';
-  document.getElementById('edit-form-content').innerHTML=`
-    <div class="fs"><label class="fl">ID (username)</label><input type="text" id="nu-id" placeholder="ej. PEDRO" oninput="this.value=this.value.toUpperCase()"></div>
-    <div class="fs"><label class="fl">Nombre completo</label><input type="text" id="nu-name" placeholder="Pedro García"></div>
-    <div class="fs"><label class="fl">Rol</label><select id="nu-role"><option value="owner">Owner (dueño/copropietario)</option><option value="pilot">Piloto</option><option value="pilot_admin">Piloto Admin</option><option value="admin">Administrador</option></select></div>
-    <div class="fs"><label class="fl">Ícono</label><input type="text" id="nu-icon" value="👤" style="max-width:60px"></div>
-    <div class="fs"><label class="fl">Contraseña inicial</label><input type="text" id="nu-pass" placeholder="mínimo 4 caracteres"></div>
-    <button class="btn" onclick="addUser()">Crear usuario</button>`;
-  document.getElementById('edit-modal').style.display='flex';
-}
-
-async function addUser(){
-  const id=document.getElementById('nu-id').value.trim().toUpperCase();
-  const name=document.getElementById('nu-name').value.trim();
-  const role=document.getElementById('nu-role').value;
-  const icon=document.getElementById('nu-icon').value||'👤';
-  const pass=document.getElementById('nu-pass').value;
-  if(!id||id.length<2){alert('ID debe tener al menos 2 caracteres');return;}
-  if(DB.users[id]){alert('Usuario ya existe');return;}
-  if(!pass||pass.length<4){alert('Contraseña mínimo 4 caracteres');return;}
-  DB.users[id]={role,icon,name};
-  if(!DB.passwords)DB.passwords={};
-  DB.passwords[id]=pass;
-  closeEdit();
-  const ok=await saveData();
-  if(ok){buildAdminPanel();alert('✓ Usuario '+id+' creado');}
-}
-
-function editUser(id){
-  const u=DB.users[id];if(!u)return;
-  document.getElementById('edit-modal-title').textContent='Editar '+id;
-  document.getElementById('edit-form-content').innerHTML=`
-    <div class="fs"><label class="fl">Nombre</label><input type="text" id="eu-name" value="${u.name||''}"></div>
-    <div class="fs"><label class="fl">Rol</label><select id="eu-role"><option value="owner" ${u.role==='owner'?'selected':''}>Owner</option><option value="pilot" ${u.role==='pilot'?'selected':''}>Piloto</option><option value="pilot_admin" ${u.role==='pilot_admin'?'selected':''}>Piloto Admin</option><option value="admin" ${u.role==='admin'?'selected':''}>Administrador</option></select></div>
-    <div class="fs"><label class="fl">Ícono</label><input type="text" id="eu-icon" value="${u.icon||'👤'}" style="max-width:60px"></div>
-    <div class="fs"><label class="fl">Nueva contraseña (dejar vacío para no cambiar)</label><input type="text" id="eu-pass" placeholder=""></div>
-    <button class="btn" onclick="saveUser('${id}')">Guardar</button>`;
-  document.getElementById('edit-modal').style.display='flex';
-}
-
-async function saveUser(id){
-  DB.users[id].name=document.getElementById('eu-name').value;
-  DB.users[id].role=document.getElementById('eu-role').value;
-  DB.users[id].icon=document.getElementById('eu-icon').value;
-  const pw=document.getElementById('eu-pass').value;
-  if(pw&&pw.length>=4){if(!DB.passwords)DB.passwords={};DB.passwords[id]=pw;}
-  closeEdit();await saveData();buildAdminPanel();
-}
-
-async function deleteUser(id){
-  if(!confirm('¿Eliminar usuario '+id+'?'))return;
-  delete DB.users[id];
-  if(DB.passwords)delete DB.passwords[id];
-  await saveData();buildAdminPanel();
-}
-
-// --- BATCH 1: Pilot Roster Management ---
-function openAddPilot(){
-  document.getElementById('edit-modal-title').textContent='Agregar piloto';
-  // Optional: link to a system user
-  const userOpts = '<option value="">— Ninguno —</option>' +
-    Object.entries(DB.users).filter(([k,v])=>v.role==='pilot_admin'||v.role==='pilot')
-    .map(([k,v])=>`<option value="${k}">${k} — ${v.name||''}</option>`).join('');
-
-  document.getElementById('edit-form-content').innerHTML=`
-    <div class="fs"><label class="fl">Nombre del piloto</label><input type="text" id="np2-name" placeholder="ej. Carlos Pérez"></div>
-    <div class="fs"><label class="fl">Teléfono</label><input type="tel" id="np2-phone" placeholder="+502 5555-1234"></div>
-    <div class="fs"><label class="fl">Vincular a usuario del sistema (opcional)</label><select id="np2-user">${userOpts}</select></div>
-    <button class="btn" onclick="addPilot()">Crear piloto</button>`;
-  document.getElementById('edit-modal').style.display='flex';
-}
-
-async function addPilot(){
-  const name=document.getElementById('np2-name').value.trim();
-  const phone=document.getElementById('np2-phone').value.trim();
-  const userId=document.getElementById('np2-user').value||null;
-  if(!name){alert('Ingresa nombre del piloto');return;}
-  if(!DB.pilots)DB.pilots=[];
-  if(!DB.meta)DB.meta={};
-  const id=(DB.meta.last_pilot_id||0)+1;
-  DB.meta.last_pilot_id=id;
-  DB.pilots.push({id, name, phone, user_id:userId, active:true});
-  closeEdit();
-  const ok=await saveData();
-  if(ok){buildAdminPanel();alert('✓ Piloto '+name+' creado');}
-}
-
-function editPilot(id){
-  const p=(DB.pilots||[]).find(x=>x.id===id);if(!p)return;
-  const userOpts = '<option value="">— Ninguno —</option>' +
-    Object.entries(DB.users).filter(([k,v])=>v.role==='pilot_admin'||v.role==='pilot')
-    .map(([k,v])=>`<option value="${k}" ${p.user_id===k?'selected':''}>${k} — ${v.name||''}</option>`).join('');
-
-  document.getElementById('edit-modal-title').textContent='Editar piloto';
-  document.getElementById('edit-form-content').innerHTML=`
-    <div class="fs"><label class="fl">Nombre</label><input type="text" id="ep2-name" value="${p.name}"></div>
-    <div class="fs"><label class="fl">Teléfono</label><input type="tel" id="ep2-phone" value="${p.phone||''}"></div>
-    <div class="fs"><label class="fl">Vincular a usuario</label><select id="ep2-user">${userOpts}</select></div>
-    <div class="fs"><label class="fl">Activo</label><select id="ep2-active"><option value="true" ${p.active!==false?'selected':''}>Sí</option><option value="false" ${p.active===false?'selected':''}>No</option></select></div>
-    <div style="display:flex;gap:8px"><button class="btn" onclick="savePilot(${id})">Guardar</button><button class="btn" style="background:#8B1A1A" onclick="deletePilot(${id})">Eliminar</button></div>`;
-  document.getElementById('edit-modal').style.display='flex';
-}
-
-async function savePilot(id){
-  const p=(DB.pilots||[]).find(x=>x.id===id);if(!p)return;
-  p.name=document.getElementById('ep2-name').value.trim();
-  p.phone=document.getElementById('ep2-phone').value.trim();
-  p.user_id=document.getElementById('ep2-user').value||null;
-  p.active=document.getElementById('ep2-active').value==='true';
-  closeEdit();await saveData();buildAdminPanel();
-}
-
-async function deletePilot(id){
-  if(!confirm('¿Eliminar piloto?'))return;
-  DB.pilots=(DB.pilots||[]).filter(x=>x.id!==id);
-  closeEdit();await saveData();buildAdminPanel();
-}
-
-// --- Plane Management ---
-function openAddPlane(){
-  document.getElementById('edit-modal-title').textContent='Agregar avión';
-  document.getElementById('edit-form-content').innerHTML=`
-    <div class="fs"><label class="fl">Matrícula (ID)</label><input type="text" id="np-id" placeholder="TG-XXX" oninput="this.value=this.value.toUpperCase()"></div>
-    <div class="fs"><label class="fl">Nombre</label><input type="text" id="np-name" placeholder="ej. Shenshi II"></div>
-    <div class="fs"><label class="fl">Tipo</label><input type="text" id="np-type" placeholder="ej. Cessna 182"></div>
-    <button class="btn" onclick="addPlane()">Crear avión</button>`;
-  document.getElementById('edit-modal').style.display='flex';
-}
-
-async function addPlane(){
-  const id=document.getElementById('np-id').value.trim().toUpperCase();
-  const name=document.getElementById('np-name').value;
-  const type=document.getElementById('np-type').value;
-  if(!id){alert('Ingresa matrícula');return;}
-  if(DB.planes.find(p=>p.id===id)){alert('Ya existe');return;}
-  DB.planes.push({id,name,type,active:true});
-  closeEdit();await saveData();buildAdminPanel();buildPlaneSelectors();
-}
-
-function editPlane(id){
-  const p=DB.planes.find(x=>x.id===id);if(!p)return;
-  document.getElementById('edit-modal-title').textContent='Editar '+id;
-  document.getElementById('edit-form-content').innerHTML=`
-    <div class="fs"><label class="fl">Nombre</label><input type="text" id="ep-name" value="${p.name||''}"></div>
-    <div class="fs"><label class="fl">Tipo</label><input type="text" id="ep-type" value="${p.type||''}"></div>
-    <div class="fs"><label class="fl">Activo</label><select id="ep-active"><option value="true" ${p.active!==false?'selected':''}>Sí</option><option value="false" ${p.active===false?'selected':''}>No</option></select></div>
-    <button class="btn" onclick="savePlane('${id}')">Guardar</button>`;
-  document.getElementById('edit-modal').style.display='flex';
-}
-
-async function savePlane(id){
-  const p=DB.planes.find(x=>x.id===id);
-  p.name=document.getElementById('ep-name').value;
-  p.type=document.getElementById('ep-type').value;
-  p.active=document.getElementById('ep-active').value==='true';
-  closeEdit();await saveData();buildAdminPanel();buildPlaneSelectors();
-}
-
-// Worker config save
-async function saveWorkerCfg(){
-  const url=document.getElementById('cfg-url').value.trim().replace(/\/+$/,'');
-  const sec=document.getElementById('cfg-secret').value.trim();
-  const msg=document.getElementById('cfg-msg');
-  if(!url||!sec){msg.textContent='Completa ambos campos';return;}
-  msg.textContent='Verificando…';
-  try{
-    const r=await fetch(url+'/data',{headers:{'Authorization':'Bearer '+sec},cache:'no-store'});
-    if(r.status===401){msg.textContent='Secret incorrecto';return;}
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    WORKER_URL=url;WORKER_SECRET=sec;
-    localStorage.setItem('tgshi_worker_url',url);
-    localStorage.setItem('tgshi_worker_secret',sec);
-    API_OK=true;
-    msg.textContent='✓ Guardado y verificado';
-    msg.style.color='#1A6B3A';
-    await loadData();buildAll();
-  }catch(e){msg.textContent='Error: '+e.message;msg.style.color='#8B1A1A';}
-}
-
-async function testWorker(){
-  const msg=document.getElementById('cfg-msg');
-  if(!WORKER_URL){msg.textContent='Configura URL primero';return;}
-  msg.textContent='Probando…';
-  try{
-    const r=await fetch(WORKER_URL+'/health');
-    if(r.ok){msg.textContent='✓ Worker respondió OK';msg.style.color='#1A6B3A';}
-    else msg.textContent='Error: HTTP '+r.status;
-  }catch(e){msg.textContent='Error: '+e.message;}
-}
-
-// =====================================================================
-// SETTINGS MODAL (password change + logout)
-// =====================================================================
-function openSettings(){
-  document.getElementById('pw-modal').style.display='flex';
-  document.getElementById('pw-err').textContent='';
-  document.getElementById('pw-ok').textContent='';
-  const lbl=document.getElementById('pw-user-label');
-  if(lbl)lbl.textContent=CU;
-}
-function closeSettings(){document.getElementById('pw-modal').style.display='none';}
-
-async function changePw(){
-  const old=document.getElementById('pw-old').value;
-  const np=document.getElementById('pw-new').value;
-  const cp=document.getElementById('pw-confirm').value;
-  const err=document.getElementById('pw-err'),ok=document.getElementById('pw-ok');
-  err.textContent='';ok.textContent='';
-  // BATCH 1 FIX: Check against DB.passwords (loaded from server)
-  if(old!==DB.passwords[CU]){err.textContent='Contraseña actual incorrecta';return;}
-  if(np.length<4){err.textContent='Mínimo 4 caracteres';return;}
-  if(np!==cp){err.textContent='No coinciden';return;}
-  DB.passwords[CU]=np;
-  const saved=await saveData();
-  if(saved){ok.textContent='✓ Actualizada';setTimeout(closeSettings,1500);}
-  else{err.textContent='Error guardando';}
-}
-
-// =====================================================================
-// BILLING (complete — sections A through F with roundup/espera/admin/reserva/QB)
-// =====================================================================
-function initBil(){
-  const n=new Date(),y=n.getFullYear(),m=n.getMonth()+1;
-  const pr=m===1?`${y-1}-12`:`${y}-${pad2(m-1)}`;
-  document.getElementById('b-from').value=pr;document.getElementById('b-to').value=pr;
-}
-function calcBil(){
-  const from=document.getElementById('b-from').value;
-  const to=document.getElementById('b-to').value;
-  const tc=parseFloat(document.getElementById('b-tc').value)||7.65;
-  if(!from||!to)return;
-  const fd=from+'-01',td=to+'-31';
-  const fls=DB.flights.filter(f=>f.d>=fd&&f.d<=td&&(f.verified!==false||(f.t!=='STD'&&f.t!=='FF')));
-  const fus=DB.fuel.filter(f=>f.d>=fd&&f.d<=td);
-  const rt=getRateFD(fd);
-  const hrs={COCO:0,CUCO:0,SENSHI:0};
-  const sub={COCO:{n:0,a:0},CUCO:{n:0,a:0},SENSHI:{n:0,a:0}};
-  const esp={COCO:0,CUCO:0,SENSHI:0};
-  const espHrs={COCO:0,CUCO:0,SENSHI:0};
-  let charterRev=0;
-  fls.forEach(f=>{
-    const r=f.r;if(hrs[r]===undefined)return;
-    hrs[r]+=f.h;
-    if(f.h>0&&f.h<1){sub[r].n++;sub[r].a+=f.h;}
-    if(espHrs[r]!==undefined){espHrs[r]+=(f.eh||0);esp[r]+=(f.eh||0)*rt.gw;}
-    if((f.rv||0)>0)charterRev+=f.rv;
-  });
-  let tfuel=0,acCO=0,acCU=0;
-  fus.forEach(f=>{tfuel+=f.m;acCO+=(f.ac||0);acCU+=(f.au||0);});
-  const th=hrs.COCO+hrs.CUCO+hrs.SENSHI;
-  const qph=th>0?tfuel/th:0;
-  const prCO=hrs.COCO*qph,prCU=hrs.CUCO*qph;
-  const bilH=r=>hrs[r]-sub[r].a+sub[r].n;
-  const pilFee=r=>bilH(r)*rt.pilot;
-  const ruAmt=r=>(sub[r].n-sub[r].a)*rt.pilot;
-  const resv=r=>hrs[r]*rt.res;
-  const fromParts=from.split('-'),toParts=to.split('-');
-  const numMonths=(+toParts[0]-+fromParts[0])*12+(+toParts[1]-+fromParts[1])+1;
-  const adminFee=rt.admin*numMonths;
-  const totFer=pilFee('COCO')+pilFee('CUCO')+pilFee('SENSHI')+esp.COCO+esp.CUCO+esp.SENSHI+adminFee;
-  const fQ=v=>`Q${Math.abs(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-  const fD=v=>`$${Math.abs(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-  const sg=v=>v<0?'neg':'';
-  const periodLbl=from===to?from:`${from} → ${to}`;
-  const ruCO=ruAmt('COCO'),ruCU=ruAmt('CUCO');
-  const espCO=esp.COCO,espCU=esp.CUCO,espSE=esp.SENSHI;
-  let h=`<div class="stitle">Período: ${periodLbl} · TC Q${tc}/USD · Piloto: $${rt.pilot}/hr · Admin: $${rt.admin}/mes</div>`;
-  // A — Hours
-  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">A — Horas</div></div><div class="bil-bd">
-    <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${hrs.COCO.toFixed(1)} hrs</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${hrs.CUCO.toFixed(1)} hrs</div></div>
-    <div class="bil-row"><div class="bil-lbl">Charter/Shenshi</div><div class="bil-val">${hrs.SENSHI.toFixed(1)} hrs</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>Total</b></div><div class="bil-val"><b>${th.toFixed(1)} hrs</b></div></div>
-  </div></div>`;
-  // B — Fuel
-  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">B — Combustible</div></div><div class="bil-bd">
-    <div class="bil-row"><div class="bil-lbl">Total QTZ</div><div class="bil-val">${fQ(tfuel)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">QTZ/hr promedio</div><div class="bil-val">${fQ(qph)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">COCO — prop. ${hrs.COCO.toFixed(1)}hr</div><div class="bil-val">${fQ(prCO)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">COCO — anticipo ya pagado</div><div class="bil-val">${fQ(acCO)}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>COCO neto a cobrar</b></div><div class="bil-val ${sg(prCO-acCO)}"><b>${fQ(prCO-acCO)}</b></div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO — prop. ${hrs.CUCO.toFixed(1)}hr</div><div class="bil-val">${fQ(prCU)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO — anticipo ya pagado</div><div class="bil-val">${fQ(acCU)}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>CUCO neto a cobrar</b></div><div class="bil-val ${sg(prCU-acCU)}"><b>${fQ(prCU-acCU)}</b></div></div>
-  </div></div>`;
-  // C — Pilotaje Fernando
-  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">C — Pilotaje Fernando ($${rt.pilot}/hr · Espera $${rt.gw}/hr)</div></div><div class="bil-bd">
-    <div class="bil-row"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:9px;text-transform:uppercase;letter-spacing:.06em">COCO</div><div class="bil-val" style="font-size:9px;color:#8892A4">${bilH('COCO').toFixed(1)} hrs fact.</div></div>
-    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('COCO'))}</div></div>
-    ${ruCO>0?`<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A">↳ Roundup (${sub.COCO.n} vuelo(s) &lt;1hr)</div><div class="bil-val pos">incl. +${fD(ruCO)}</div></div>`:''}
-    ${espHrs.COCO>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.COCO.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espCO)}</div></div>`:''}
-    <div class="bil-row" style="border-top:1px solid #E2E6EE;margin-top:2px"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:9px;text-transform:uppercase;letter-spacing:.06em">CUCO</div><div class="bil-val" style="font-size:9px;color:#8892A4">${bilH('CUCO').toFixed(1)} hrs fact.</div></div>
-    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('CUCO'))}</div></div>
-    ${ruCU>0?`<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A">↳ Roundup (${sub.CUCO.n} vuelo(s) &lt;1hr)</div><div class="bil-val pos">incl. +${fD(ruCU)}</div></div>`:''}
-    ${espHrs.CUCO>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.CUCO.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espCU)}</div></div>`:''}
-    <div class="bil-row" style="border-top:1px solid #E2E6EE;margin-top:2px"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:9px;text-transform:uppercase;letter-spacing:.06em">SHENSHI</div><div class="bil-val" style="font-size:9px;color:#8892A4">${bilH('SENSHI').toFixed(1)} hrs</div></div>
-    <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee('SENSHI'))}</div></div>
-    ${espHrs.SENSHI>0?`<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs.SENSHI.toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(espSE)}</div></div>`:''}
-    <div class="bil-row" style="border-top:2px solid #E2E6EE;margin-top:4px"><div class="bil-lbl">Admin fee Fernando (${numMonths} mes${numMonths>1?'es':''})</div><div class="bil-val">${fD(adminFee)}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>TOTAL A PAGAR FERNANDO</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
-  </div></div>`;
-  // D — Reserva
-  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">D — Reserva ($${rt.res}/hr)</div></div><div class="bil-bd">
-    <div class="bil-row"><div class="bil-lbl">COCO</div><div class="bil-val">${fD(resv('COCO'))}</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO</div><div class="bil-val">${fD(resv('CUCO'))}</div></div>
-    <div class="bil-row"><div class="bil-lbl">Shenshi</div><div class="bil-val">${fD(resv('SENSHI'))}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>Total reserva</b></div><div class="bil-val"><b>${fD(resv('COCO')+resv('CUCO')+resv('SENSHI'))}</b></div></div>
-  </div></div>`;
-  // F — QuickBooks Summary
-  h+=`<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">F — QuickBooks Summary</div></div><div class="bil-bd">
-    <div class="bil-row"><div class="bil-lbl">COCO — Comb. neto (QTZ)</div><div class="bil-val ${sg(prCO-acCO)}">${fQ(prCO-acCO)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">COCO — Pilotaje${espCO>0?' + espera':''}</div><div class="bil-val">${fD(pilFee('COCO')+espCO)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">COCO — Reserva mante</div><div class="bil-val">${fD(resv('COCO'))}</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO — Comb. neto (QTZ)</div><div class="bil-val ${sg(prCU-acCU)}">${fQ(prCU-acCU)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO — Pilotaje${espCU>0?' + espera':''}</div><div class="bil-val">${fD(pilFee('CUCO')+espCU)}</div></div>
-    <div class="bil-row"><div class="bil-lbl">CUCO — Reserva mante</div><div class="bil-val">${fD(resv('CUCO'))}</div></div>
-    <div class="bil-row"><div class="bil-lbl">Shenshi — Charter</div><div class="bil-val">${fD(charterRev)}</div></div>
-    <div class="bil-row"><div class="bil-lbl"><b>Total Fernando</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
-  </div></div>`;
-  const notes=[];
-  if(ruCO>0)notes.push(`COCO: Agregar ${fD(ruCO)} roundup (${sub.COCO.n} vuelo(s) &lt;1hr → 1hr)`);
-  if(ruCU>0)notes.push(`CUCO: Agregar ${fD(ruCU)} roundup (${sub.CUCO.n} vuelo(s) &lt;1hr → 1hr)`);
-  if(notes.length)h+=`<div class="qb-note">📋 Nota QB:<br>${notes.join('<br>')}</div>`;
-  document.getElementById('bil-out').innerHTML=h;
-}
-
-</script>
 
 <!-- ===== SETTINGS MODAL ===== -->
 
@@ -1718,10 +503,10 @@ function calcBil(){
     <div class="pw-err" id="pw-err"></div>
     <div class="pw-ok" id="pw-ok"></div>
     <div class="pw-btns" style="margin-bottom:12px">
-      <button class="pw-save" onclick="changePw()">Cambiar contraseña</button>
-      <button class="pw-cancel" onclick="closeSettings()">Cerrar</button>
+      <button class="pw-save" onclick="App.changePw()">Cambiar contraseña</button>
+      <button class="pw-cancel" onclick="App.closeSettings()">Cerrar</button>
     </div>
-    <button onclick="logout()" style="width:100%;padding:11px;background:#F0F2F6;color:#8B1A1A;border:none;border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">🚪 Cerrar sesión</button>
+    <button onclick="App.logout()" style="width:100%;padding:11px;background:#F0F2F6;color:#8B1A1A;border:none;border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">🚪 Cerrar sesión</button>
   </div>
 </div>
 
@@ -1732,20 +517,22 @@ function calcBil(){
   <div class="login-sub">Shenshi Aviation</div>
   <div class="login-card">
     <div class="login-field"><label>Usuario</label><input type="text" id="login-uid" placeholder="ej. CUCO" autocapitalize="characters" autocomplete="off"></div>
-    <div class="login-field"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="login-field"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')App.doLogin()"></div>
     <div class="login-err" id="login-err"></div>
-    <button class="login-btn" onclick="doLogin()">Ingresar</button>
+    <button class="login-btn" onclick="App.doLogin()">Ingresar</button>
   </div>
 </div>
 
-<script>
-// Click outside modals
-document.addEventListener('click',e=>{
-  if(e.target===document.getElementById('pw-modal'))closeSettings();
-  if(e.target===document.getElementById('edit-modal'))closeEdit();
-  if(e.target===document.getElementById('book-modal'))closeBooking();
-});
-</script>
+<!-- ===== JS MODULES (load order matters) ===== -->
+<script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/flights.js"></script>
+<script src="js/fuel.js"></script>
+<script src="js/billing.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/exchange.js"></script>
 
 </body>
 </html>
