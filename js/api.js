@@ -70,6 +70,7 @@ const API = (() => {
         if (!DB.pilots) DB.pilots = [];
         if (!DB.exchange_partners) DB.exchange_partners = [];
         if (!DB.exchange_log) DB.exchange_log = [];
+        if (!DB.maintenance) DB.maintenance = [];
         if (!DB.rates || DB.rates.length === 0) DB.rates = [
           { d: '2023-03-01', pilot: 110, gw: 15, std: 750, ff: 650, admin: 300, res: 2 },
           { d: '2026-01-01', pilot: 110, gw: 15, std: 750, ff: 650, admin: 350, res: 2 }
@@ -156,7 +157,7 @@ const API = (() => {
       if (!DB.pilots) DB.pilots = [];
       if (!DB.exchange_partners) DB.exchange_partners = [];
       if (!DB.exchange_log) DB.exchange_log = [];
-      msg.textContent = '✓ Conectado';
+      if (!DB.maintenance) DB.maintenance = [];
       setDot('ok');
       App.buildAll();
       setTimeout(Admin.hideSetupNeeded, 1000);
