@@ -1,6 +1,6 @@
 // =====================================================================
-// TG-SHI v5.2.1 — js/exchange.js
-// Exchange hours tracking — multi-partner, multi-plane, per-owner balances
+// TG-SHI v5.2.2 — js/exchange.js
+// Exchange hours tracking — multi-partner, multi-plane, per-owner
 //
 // Data model:
 //   DB.exchange_partners[] = { id, name, planes:['TG-ABC','TG-DEF'], exchange_rate, notes }
@@ -8,33 +8,49 @@
 //                         our_plane, their_plane, hours, paid_by, route,
 //                         fuel_cost, pilot_cost, notes }
 //
-// Backward compat: old partners with partner_plane (string) are migrated
-// on read to planes[] array. Old log entries without our_plane/their_plane
-// still display correctly.
+// Balance logic (rate 1:1 example):
+//   "given"    = partner flew on OUR plane, owner X paid costs → X earns credit
+//   "received" = we flew on THEIR plane, owner X benefits     → X spends credit
+//   balance = Σ(given * rate) - Σ(received)
+//   positive = partner owes US hours on their planes
+//   negative = WE owe partner hours on our planes
 // =====================================================================
 
 const Exchange = (() => {
 
   function getPartner(id) { return (DB.exchange_partners || []).find(p => p.id === id); }
 
-  // Migrate old single-plane partner format → planes[] array
+  // Migrate old single-plane format → planes[] array
   function migratePartner(p) {
     if (!p.planes) {
       p.planes = p.partner_plane ? [p.partner_plane] : [];
     }
     return p;
   }
-  function ensureMigrated() {
-    (DB.exchange_partners || []).forEach(migratePartner);
+  function ensureMigrated() { (DB.exchange_partners || []).forEach(migratePartner); }
+  function planesStr(p) { ensureMigrated(); return (p.planes || []).join(', ') || '—'; }
+
+  // --- Balance calculation ---
+  // Returns positive = partner owes us, negative = we owe partner
+  function calcBalance(entries, owner, rate) {
+    let balance = 0;
+    entries.filter(e => e.paid_by === owner).forEach(e => {
+      if (e.direction === 'given') balance += e.hours * rate;
+      else if (e.direction === 'received') balance -= e.hours;
+    });
+    return Math.round(balance * 100) / 100; // avoid float noise
   }
 
-  // Helper: get display string for partner planes
-  function planesStr(p) {
-    ensureMigrated();
-    return (p.planes || []).join(', ') || '—';
+  function calcGiven(entries, owner) {
+    return entries.filter(e => e.direction === 'given' && e.paid_by === owner)
+      .reduce((s, e) => s + e.hours, 0);
+  }
+  function calcReceived(entries, owner) {
+    return entries.filter(e => e.direction === 'received' && e.paid_by === owner)
+      .reduce((s, e) => s + e.hours, 0);
   }
 
-  // --- Dashboard widget ---
+  // --- Dashboard widget (clear "who owes whom") ---
   function renderDashboardWidget() {
     const container = document.getElementById('d-xch');
     const card = document.getElementById('d-xch-card');
@@ -55,28 +71,30 @@ const Exchange = (() => {
       const balCOCO = calcBalance(entries, 'COCO', p.exchange_rate);
       const balCUCO = calcBalance(entries, 'CUCO', p.exchange_rate);
 
-      html += `<div class="qr"><div class="ql">${p.name} <span style="font-size:9px;color:#8892A4">(${planesStr(p)})</span></div><div class="qv" style="font-size:10px">
-        <span class="c1" title="COCO">${balCOCO >= 0 ? '+' : ''}${balCOCO.toFixed(1)}h</span> · <span class="c2" title="CUCO">${balCUCO >= 0 ? '+' : ''}${balCUCO.toFixed(1)}h</span>
-      </div></div>`;
+      html += `<div style="padding:6px 0;border-bottom:1px solid #F5F6F8">
+        <div style="font-size:12px;font-weight:700;margin-bottom:4px">${p.name} <span style="font-size:9px;font-weight:400;color:#8892A4">${planesStr(p)} · ${p.exchange_rate}:1</span></div>
+        <div style="display:flex;gap:12px">
+          ${balanceChip('COCO', balCOCO, p.name)}
+          ${balanceChip('CUCO', balCUCO, p.name)}
+        </div>
+      </div>`;
     });
 
     container.innerHTML = html;
   }
 
-  // Calculate net balance for an owner with a partner
-  // Positive = we have credits ON their planes, negative = we owe them hours on ours
-  function calcBalance(entries, owner, rate) {
-    let balance = 0;
-    entries.filter(e => e.paid_by === owner).forEach(e => {
-      if (e.direction === 'given') {
-        // They flew on OUR plane → we earn credits on THEIR planes
-        balance += e.hours * rate;
-      } else if (e.direction === 'received') {
-        // We flew on THEIR plane → spend our credits
-        balance -= e.hours;
-      }
-    });
-    return balance;
+  function balanceChip(owner, bal, partnerName) {
+    if (bal === 0) {
+      return `<div style="font-size:10px;color:#8892A4"><b>${owner}</b> · A mano</div>`;
+    }
+    const abs = Math.abs(bal).toFixed(1);
+    if (bal > 0) {
+      // Partner owes us
+      return `<div style="font-size:10px"><b style="color:${owner === 'COCO' ? '#1B4E8A' : '#1A6B3A'}">${owner}</b> <span style="color:#1A6B3A">▲ ${abs}h</span> <span style="color:#8892A4">${partnerName} nos debe</span></div>`;
+    } else {
+      // We owe partner
+      return `<div style="font-size:10px"><b style="color:${owner === 'COCO' ? '#1B4E8A' : '#1A6B3A'}">${owner}</b> <span style="color:#8B1A1A">▼ ${abs}h</span> <span style="color:#8892A4">debemos a ${partnerName}</span></div>`;
+    }
   }
 
   // --- Exchange page ---
@@ -95,21 +113,31 @@ const Exchange = (() => {
     // Balance cards
     let balanceHtml = '';
     if (partners.length > 0) {
-      balanceHtml = '<div class="sg" style="grid-template-columns:1fr">';
       partners.forEach(p => {
         const entries = log.filter(e => e.partner_id === p.id);
-        const balCOCO = calcBalance(entries, 'COCO', p.exchange_rate);
-        const balCUCO = calcBalance(entries, 'CUCO', p.exchange_rate);
-        const givenH = entries.filter(e => e.direction === 'given').reduce((s, e) => s + e.hours, 0);
-        const recvH = entries.filter(e => e.direction === 'received').reduce((s, e) => s + e.hours, 0);
-        balanceHtml += `<div class="card"><div class="ch"><div class="ct">✈ ${p.name} — ${planesStr(p)}</div><div style="font-size:9px;color:#8892A4">Rate ${p.exchange_rate}:1</div></div><div class="cb">
-          <div class="qr"><div class="ql">Hrs dadas (en nuestras aeronaves)</div><div class="qv">${givenH.toFixed(1)}</div></div>
-          <div class="qr"><div class="ql">Hrs recibidas (en aeronaves de ${p.name})</div><div class="qv">${recvH.toFixed(1)}</div></div>
-          <div class="qr"><div class="ql">Balance COCO</div><div class="qv ${balCOCO >= 0 ? 'c2' : 'c3'}">${balCOCO >= 0 ? '+' : ''}${balCOCO.toFixed(1)} hrs crédito</div></div>
-          <div class="qr"><div class="ql">Balance CUCO</div><div class="qv ${balCUCO >= 0 ? 'c2' : 'c3'}">${balCUCO >= 0 ? '+' : ''}${balCUCO.toFixed(1)} hrs crédito</div></div>
+        const gCO = calcGiven(entries, 'COCO'), gCU = calcGiven(entries, 'CUCO');
+        const rCO = calcReceived(entries, 'COCO'), rCU = calcReceived(entries, 'CUCO');
+        const balCO = calcBalance(entries, 'COCO', p.exchange_rate);
+        const balCU = calcBalance(entries, 'CUCO', p.exchange_rate);
+        const totalGiven = gCO + gCU;
+        const totalRecv = rCO + rCU;
+
+        balanceHtml += `<div class="card"><div class="ch"><div class="ct">🤝 ${p.name}</div><div style="font-size:9px;color:#8892A4">${planesStr(p)} · Rate ${p.exchange_rate}:1</div></div><div class="cb">
+          <div class="stitle" style="margin:0 0 5px">Resumen global</div>
+          <div class="qr"><div class="ql">Hrs dadas (${p.name} voló en nuestras aeronaves)</div><div class="qv">${totalGiven.toFixed(1)}</div></div>
+          <div class="qr"><div class="ql">Hrs recibidas (nosotros en aeronaves de ${p.name})</div><div class="qv">${totalRecv.toFixed(1)}</div></div>
+
+          <div class="stitle" style="margin:10px 0 5px">Balance COCO</div>
+          <div class="qr"><div class="ql">Pagó por ${p.name} en TG-SHI</div><div class="qv">${gCO.toFixed(1)} hrs</div></div>
+          <div class="qr"><div class="ql">Usó en aeronaves de ${p.name}</div><div class="qv">${rCO.toFixed(1)} hrs</div></div>
+          <div class="qr"><div class="ql"><b>Saldo COCO</b></div><div class="qv ${balCO > 0 ? 'c2' : balCO < 0 ? 'c3' : ''}" style="font-size:13px"><b>${formatBal(balCO, p.name)}</b></div></div>
+
+          <div class="stitle" style="margin:10px 0 5px">Balance CUCO</div>
+          <div class="qr"><div class="ql">Pagó por ${p.name} en TG-SHI</div><div class="qv">${gCU.toFixed(1)} hrs</div></div>
+          <div class="qr"><div class="ql">Usó en aeronaves de ${p.name}</div><div class="qv">${rCU.toFixed(1)} hrs</div></div>
+          <div class="qr"><div class="ql"><b>Saldo CUCO</b></div><div class="qv ${balCU > 0 ? 'c2' : balCU < 0 ? 'c3' : ''}" style="font-size:13px"><b>${formatBal(balCU, p.name)}</b></div></div>
         </div></div>`;
       });
-      balanceHtml += '</div>';
     } else {
       balanceHtml = '<div class="card"><div class="empty"><div class="big">🤝</div>Sin socios de intercambio<br><span style="font-size:10px">Agrégalos en Admin > Socios</span></div></div>';
     }
@@ -118,6 +146,13 @@ const Exchange = (() => {
       '<div class="stitle">Registro de intercambios</div><div class="card" id="xch-log-list"></div>';
 
     buildXchLog('ALL');
+  }
+
+  function formatBal(bal, partnerName) {
+    const abs = Math.abs(bal).toFixed(1);
+    if (bal === 0) return 'A mano';
+    if (bal > 0) return `▲ ${abs}h — ${partnerName} nos debe`;
+    return `▼ ${abs}h — le debemos a ${partnerName}`;
   }
 
   function buildXchLog(filter) {
@@ -135,18 +170,15 @@ const Exchange = (() => {
       return;
     }
 
-    container.innerHTML = filtered.slice(0, 50).map(e => {
+    container.innerHTML = filtered.slice(0, 60).map(e => {
       const p = getPartner(e.partner_id);
       const pName = p ? p.name : '???';
       const arrow = e.direction === 'given' ? '→' : '←';
       const dirLabel = e.direction === 'given' ? 'Dado' : 'Recibido';
       const dirColor = e.direction === 'given' ? '#B8600A' : '#1A6B3A';
-      // Show which planes were involved
       const ourP = e.our_plane || '—';
-      const theirP = e.their_plane || (p ? (p.partner_plane || planesStr(p)) : '—');
-      const planeInfo = e.direction === 'given'
-        ? `en ${ourP}`
-        : `en ${theirP}`;
+      const theirP = e.their_plane || (p ? planesStr(p) : '—');
+      const planeInfo = e.direction === 'given' ? `en ${ourP}` : `en ${theirP}`;
       return `<div class="fi">
         <div class="fdot" style="background:${dirColor}"></div>
         <div class="fm">
@@ -172,11 +204,8 @@ const Exchange = (() => {
 
     document.getElementById('book-modal-title').textContent = 'Registrar intercambio';
     let partnerOpts = partners.map(p => `<option value="${p.id}">${p.name} (${planesStr(p)})</option>`).join('');
-
-    // Our planes
     const ourPlanes = DB.planes.filter(p => p.active !== false);
     const ourPlaneOpts = ourPlanes.map(p => `<option value="${p.id}">${p.id}${p.name ? ' — ' + p.name : ''}</option>`).join('');
-
     const ownerOpts = Object.entries(DB.users).filter(([k, v]) => v.role === 'admin' || v.role === 'owner')
       .map(([k]) => `<option>${k}</option>`).join('');
 
@@ -203,13 +232,10 @@ const Exchange = (() => {
       <div class="fs"><label class="fl">Notas</label><input type="text" id="xf-notes" placeholder="opcional"></div>
       <button class="btn gr" onclick="Exchange.saveExchange()">Guardar intercambio</button>`;
 
-    // Populate their planes for first partner
     onPartnerChange();
-
     document.getElementById('book-modal').style.display = 'flex';
   }
 
-  // When partner changes, update their plane dropdown
   function onPartnerChange() {
     const partnerId = parseInt(document.getElementById('xf-partner').value);
     const p = getPartner(partnerId);
@@ -318,7 +344,7 @@ const Exchange = (() => {
     p.planes = parsePlanes(document.getElementById('xpe-planes').value);
     p.exchange_rate = parseFloat(document.getElementById('xpe-rate').value) || 1;
     p.notes = document.getElementById('xpe-notes').value.trim();
-    delete p.partner_plane; // clean up old format
+    delete p.partner_plane;
     Admin.closeEdit(); await API.saveData(); Admin.buildAdminPanel();
   }
 
