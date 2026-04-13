@@ -1,5 +1,5 @@
 // =====================================================================
-// TG-SHI v6.0 — js/api.js
+// TG-SHI v6.0 -- js/api.js
 // Cloudflare Worker communication layer
 // =====================================================================
 
@@ -71,7 +71,6 @@ const API = (() => {
         if (!DB.exchange_partners) DB.exchange_partners = [];
         if (!DB.exchange_log) DB.exchange_log = [];
         if (!DB.maintenance) DB.maintenance = [];
-        if (!DB.flight_expenses) DB.flight_expenses = [];
         if (!DB.rates || DB.rates.length === 0) DB.rates = [
           { d: '2023-03-01', pilot: 110, gw: 15, std: 750, ff: 650, admin: 300, res: 2 },
           { d: '2026-01-01', pilot: 110, gw: 15, std: 750, ff: 650, admin: 350, res: 2 }
@@ -91,17 +90,17 @@ const API = (() => {
       setDot('err');
       if (DB.flights.length === 0) {
         const bars = document.getElementById('d-bars');
-        if (bars) bars.innerHTML = `<div class="empty">⚠️ ${e.message}<br><br><button class="btn sm" onclick="API.loadData().then(App.buildAll)">🔄 Reintentar</button></div>`;
+        if (bars) bars.innerHTML = '<div class="empty">Warning: ' + e.message + '<br><br><button class="btn sm" onclick="API.loadData().then(App.buildAll)">Reintentar</button></div>';
       }
     }
   }
 
   async function saveData() {
-    if (!API_OK) { alert('Sin conexión al servidor. Configura en Admin > Worker.'); return false; }
+    if (!API_OK) { alert('Sin conexion al servidor. Configura en Admin > Worker.'); return false; }
     // Safety: if we previously loaded data with flights, refuse to save an empty flights array
     // This prevents accidental data wipes from stale tabs or race conditions
     if (SHA && (!DB.flights || DB.flights.length === 0)) {
-      const proceed = confirm('⚠️ La base de datos de vuelos está vacía. ¿Guardar de todos modos? (Cancelar = recargar datos del servidor)');
+      const proceed = confirm('La base de datos de vuelos esta vacia. Guardar de todos modos? (Cancelar = recargar datos del servidor)');
       if (!proceed) {
         await loadData();
         App.buildAll();
@@ -118,7 +117,7 @@ const API = (() => {
       const res = await r.json();
       if (!r.ok) {
         if (r.status === 409) {
-          alert('Conflicto: alguien más guardó. Recargando…');
+          alert('Conflicto: alguien mas guardo. Recargando...');
           await loadData();
           App.buildAll();
           return false;
@@ -138,10 +137,10 @@ const API = (() => {
   async function testWorker() {
     const msg = document.getElementById('cfg-msg');
     if (!WORKER_URL) { msg.textContent = 'Configura URL primero'; return; }
-    msg.textContent = 'Probando…';
+    msg.textContent = 'Probando...';
     try {
       const r = await fetch(WORKER_URL + '/health');
-      if (r.ok) { msg.textContent = '✓ Worker respondió OK'; msg.style.color = '#1A6B3A'; }
+      if (r.ok) { msg.textContent = 'Worker respondio OK'; msg.style.color = '#1A6B3A'; }
       else msg.textContent = 'Error: HTTP ' + r.status;
     } catch (e) { msg.textContent = 'Error: ' + e.message; }
   }
@@ -151,7 +150,7 @@ const API = (() => {
     const sec = document.getElementById('setup-secret').value.trim();
     const msg = document.getElementById('setup-msg');
     if (!url || !sec) { msg.textContent = 'Completa ambos campos'; return; }
-    msg.textContent = 'Verificando…';
+    msg.textContent = 'Verificando...';
     try {
       const r = await fetch(url + '/data', { headers: { 'Authorization': 'Bearer ' + sec }, cache: 'no-store' });
       if (r.status === 401) { msg.textContent = 'Secret incorrecto'; return; }
@@ -169,7 +168,6 @@ const API = (() => {
       if (!DB.exchange_partners) DB.exchange_partners = [];
       if (!DB.exchange_log) DB.exchange_log = [];
       if (!DB.maintenance) DB.maintenance = [];
-      if (!DB.flight_expenses) DB.flight_expenses = [];
       setDot('ok');
       App.buildAll();
       setTimeout(Admin.hideSetupNeeded, 1000);
@@ -183,7 +181,7 @@ const API = (() => {
       const r = await fetch(WORKER_URL + '/reset-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid, email })
+        body: JSON.stringify({ uid: uid, email: email })
       });
       const data = await r.json();
       return data;
@@ -196,11 +194,55 @@ const API = (() => {
       const r = await fetch(WORKER_URL + '/reset-confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password: newPassword })
+        body: JSON.stringify({ token: token, password: newPassword })
       });
       const data = await r.json();
       return data;
     } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  // --- Flight notifications ---
+  async function notify(type, scheduleId) {
+    if (!WORKER_URL || !WORKER_SECRET) {
+      console.warn('[notify] Worker not configured, skipping notification');
+      return { ok: false, error: 'Worker not configured' };
+    }
+    try {
+      var r = await fetch(WORKER_URL + '/notify', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + WORKER_SECRET,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ type: type, schedule_id: scheduleId })
+      });
+      var data = await r.json();
+      if (data.ok && data.sent) {
+        var emailCount = (data.sent.email || []).length;
+        if (emailCount > 0) {
+          showNotifyToast('Notificacion enviada (' + emailCount + ' email' + (emailCount > 1 ? 's' : '') + ')');
+        }
+      }
+      return data;
+    } catch (e) {
+      console.warn('[notify] Error:', e.message);
+      return { ok: false, error: e.message };
+    }
+  }
+
+  function showNotifyToast(msg) {
+    var existing = document.getElementById('notify-toast');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.id = 'notify-toast';
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#065F46;color:#fff;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);opacity:0;transition:opacity .3s';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(function() { toast.style.opacity = '1'; }, 10);
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      setTimeout(function() { toast.remove(); }, 300);
+    }, 3000);
   }
 
   return {
@@ -208,6 +250,7 @@ const API = (() => {
     setWorkerConfig, setDot,
     preloadPasswords, loadData, saveData,
     requestPasswordReset, confirmPasswordReset,
+    notify, showNotifyToast,
     testWorker, quickSetup
   };
 })();
