@@ -36,8 +36,10 @@ var FlightExpenses = (function() {
   }
 
   function getFlightLabel(f) {
-    var displayR = f.r === 'SENSHI' ? 'Charter' : f.r;
-    return f.d.slice(5) + ' ' + (f.rt || '--') + ' ' + f.h.toFixed(1) + 'hr ' + displayR;
+    var displayR = f.r === 'SENSHI' ? 'Charter' : (f.r || '?');
+    var route = (f.rt || '--').replace(/</g, '').replace(/>/g, '');
+    var hrs = (f.h || 0).toFixed(1);
+    return f.d.slice(5) + ' ' + route + ' ' + hrs + 'hr ' + displayR;
   }
 
   function getExpenses() {
@@ -50,7 +52,13 @@ var FlightExpenses = (function() {
     var container = document.getElementById('fexp-content');
     if (!container) return;
 
+    var isPilotView = App.isPilotAdmin() && !App.isAdmin();
     var exps = getExpenses().slice().reverse();
+
+    // Pilot users only see expenses they logged
+    if (isPilotView) {
+      exps = exps.filter(function(e) { return e.logged_by === App.currentUser(); });
+    }
 
     // Year filter
     if (/^\d{4}$/.test(yearFilter)) {
@@ -62,35 +70,37 @@ var FlightExpenses = (function() {
       return;
     }
 
-    // Compute totals per owner and currency
-    var totals = {};
-    exps.forEach(function(e) {
-      var owner = getFlightOwner(e.flight_id);
-      if (!owner) return;
-      if (!totals[owner]) totals[owner] = { USD: 0, QTZ: 0 };
-      totals[owner][e.currency] += e.amount;
-    });
-
     var h = '';
 
-    // Summary card
-    h += '<div class="card"><div class="ch"><div class="ct">Resumen gastos de vuelo</div></div><div class="cb">';
-    var owners = ['COCO', 'CUCO', 'SENSHI'];
-    owners.forEach(function(owner) {
-      var t = totals[owner] || { USD: 0, QTZ: 0 };
-      var label = owner === 'SENSHI' ? 'CHARTER' : owner;
-      var dc = owner === 'COCO' ? 'c1' : owner === 'CUCO' ? 'c2' : 'c3';
-      var valStr = '';
-      if (t.USD > 0) valStr += fD(t.USD);
-      if (t.USD > 0 && t.QTZ > 0) valStr += ' + ';
-      if (t.QTZ > 0) valStr += fQ(t.QTZ);
-      if (!valStr) valStr = '$0.00';
-      h += '<div class="qr"><div class="ql">' + label + '</div><div class="qv ' + dc + '">' + valStr + '</div></div>';
-    });
-    h += '</div></div>';
+    // Summary card - only for admin/owner
+    if (!isPilotView) {
+      // Compute totals per owner and currency
+      var totals = {};
+      exps.forEach(function(e) {
+        var owner = getFlightOwner(e.flight_id);
+        if (!owner) return;
+        if (!totals[owner]) totals[owner] = { USD: 0, QTZ: 0 };
+        totals[owner][e.currency] += e.amount;
+      });
+
+      h += '<div class="card"><div class="ch"><div class="ct">Resumen gastos de vuelo</div></div><div class="cb">';
+      var owners = ['COCO', 'CUCO', 'SENSHI'];
+      owners.forEach(function(owner) {
+        var t = totals[owner] || { USD: 0, QTZ: 0 };
+        var label = owner === 'SENSHI' ? 'CHARTER' : owner;
+        var dc = owner === 'COCO' ? 'c1' : owner === 'CUCO' ? 'c2' : 'c3';
+        var valStr = '';
+        if (t.USD > 0) valStr += fD(t.USD);
+        if (t.USD > 0 && t.QTZ > 0) valStr += ' + ';
+        if (t.QTZ > 0) valStr += fQ(t.QTZ);
+        if (!valStr) valStr = '$0.00';
+        h += '<div class="qr"><div class="ql">' + label + '</div><div class="qv ' + dc + '">' + valStr + '</div></div>';
+      });
+      h += '</div></div>';
+    }
 
     // Expense list
-    h += '<div class="stitle">Gastos registrados</div>';
+    h += '<div class="stitle">' + (isPilotView ? 'Mis gastos registrados' : 'Gastos registrados') + '</div>';
     exps.forEach(function(e) {
       var flight = DB.flights.find(function(x) { return x.id === e.flight_id; });
       var owner = flight ? flight.r : '?';
@@ -135,6 +145,7 @@ var FlightExpenses = (function() {
   // ===== Add Expense =====
 
   function openAddExpense() {
+    try {
     // Build flight options from recent flights (last 50)
     var recent = DB.flights.slice().reverse().slice(0, 50);
     var flightOpts = '';
@@ -175,6 +186,7 @@ var FlightExpenses = (function() {
 
     // Set date from selected flight
     FlightExpenses.onFlightChange();
+    } catch(e) { console.error('openAddExpense error:', e); alert('Error: ' + e.message); }
   }
 
   function onFlightChange() {
