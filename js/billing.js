@@ -335,10 +335,8 @@ const Billing = (() => {
       // USD: all owners' pilotaje + espera, then admin (NO reserva)
       ['COCO', 'CUCO', 'SENSHI'].forEach(o => {
         const oLabel = o === 'SENSHI' ? 'Charter' : o;
-        usdLines.push({ desc: `Pilotaje ${oLabel} (${d.bilH[o].toFixed(1)} hrs × $${d.rt.pilot}/hr)`, amt: d.pilFee[o] });
-        if (d.ruAmt[o] > 0) {
-          usdLines.push({ desc: `↳ Roundup ${oLabel} (${d.sub[o].n} vuelo(s) <1hr)`, amt: 0, note: 'incluido en pilotaje' });
-        }
+        const ruNote = d.ruAmt[o] > 0 ? ` (incl. roundup ${fD(d.ruAmt[o])} por ${d.sub[o].n} vuelo(s) <1hr)` : '';
+        usdLines.push({ desc: `Pilotaje ${oLabel} (${d.bilH[o].toFixed(1)} hrs × $${d.rt.pilot}/hr)${ruNote}`, amt: d.pilFee[o] });
         if (d.espHrs[o] > 0) {
           usdLines.push({ desc: `Espera ${oLabel} (${d.espHrs[o].toFixed(1)} hrs × $${d.rt.gw}/hr)`, amt: d.esp[o] });
         }
@@ -353,10 +351,8 @@ const Billing = (() => {
       if (d.antic[owner] > 0) qtzLines.push({ desc: 'Menos: anticipo ya pagado', amt: -d.antic[owner] });
 
       // USD: pilotaje + espera (no admin — that's 100% Senshi)
-      usdLines.push({ desc: `Pilotaje Fernando (${d.bilH[owner].toFixed(1)} hrs × $${d.rt.pilot}/hr)`, amt: d.pilFee[owner] });
-      if (d.ruAmt[owner] > 0) {
-        usdLines.push({ desc: `↳ Roundup (${d.sub[owner].n} vuelo(s) <1hr → 1hr)`, amt: 0, note: 'incluido en pilotaje' });
-      }
+      const ruNote = d.ruAmt[owner] > 0 ? ` (incl. roundup ${fD(d.ruAmt[owner])} por ${d.sub[owner].n} vuelo(s) <1hr)` : '';
+      usdLines.push({ desc: `Pilotaje Fernando (${d.bilH[owner].toFixed(1)} hrs × $${d.rt.pilot}/hr)${ruNote}`, amt: d.pilFee[owner] });
       if (d.espHrs[owner] > 0) {
         usdLines.push({ desc: `Espera en tierra (${d.espHrs[owner].toFixed(1)} hrs × $${d.rt.gw}/hr)`, amt: d.esp[owner] });
       }
