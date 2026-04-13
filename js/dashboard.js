@@ -6,10 +6,12 @@
 const Dashboard = (() => {
 
   function render() {
+    try {
     const t = Math.max(...DB.flights.map(f => f.hf || 0), 0);
     document.getElementById('tachVal').textContent = t.toFixed(1);
     document.getElementById('app-title').textContent = selPlane;
     buildDash();
+    } catch(e) { console.error('Dashboard.render error:', e); }
   }
 
   function buildDash() {
