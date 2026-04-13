@@ -207,15 +207,12 @@ const Billing = (() => {
     });
     if (notes.length) h += `<div class="qb-note">📋 Nota QB:<br>${notes.join('<br>')}</div>`;
 
-    // ── Download buttons — per owner, QTZ and USD separate ──
+    // ── Download buttons — 3 invoices, each shows both QTZ and USD ──
     h += `<div class="stitle" style="margin-top:14px">Descargar facturas</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px">
-        <button class="btn sm" style="width:100%" onclick="Billing.downloadInvoice('COCO','QTZ')">📄 COCO — QTZ</button>
-        <button class="btn sm" style="width:100%" onclick="Billing.downloadInvoice('COCO','USD')">📄 COCO — USD</button>
-        <button class="btn sm" style="width:100%" onclick="Billing.downloadInvoice('CUCO','QTZ')">📄 CUCO — QTZ</button>
-        <button class="btn sm" style="width:100%" onclick="Billing.downloadInvoice('CUCO','USD')">📄 CUCO — USD</button>
-        <button class="btn sm" style="width:100%" onclick="Billing.downloadInvoice('SENSHI','QTZ')">📄 Charter — QTZ</button>
-        <button class="btn sm" style="width:100%" onclick="Billing.downloadInvoice('SENSHI','USD')">📄 Charter — USD</button>
+      <div style="display:grid;grid-template-columns:1fr;gap:7px;margin-bottom:10px">
+        <button class="btn sm" style="width:100%" onclick="Billing.downloadInvoice('COCO')">📄 COCO — lo que COCO debe a Senshi</button>
+        <button class="btn sm" style="width:100%" onclick="Billing.downloadInvoice('CUCO')">📄 CUCO — lo que CUCO debe a Senshi</button>
+        <button class="btn sm" style="width:100%" onclick="Billing.downloadInvoice('SENSHI')">📄 Senshi — lo que Senshi paga a Fernando</button>
       </div>`;
 
     document.getElementById('bil-out').innerHTML = h;
@@ -223,53 +220,77 @@ const Billing = (() => {
   }
 
   // --- Invoice generation ---
-  // QTZ invoice = fuel only (combustible is charged in QTZ)
-  // USD invoice = Fernando + reserva only (pilotaje, espera, admin, reserva are charged in USD)
-  function downloadInvoice(owner, currency) {
+  // COCO/CUCO invoice: what that owner owes Senshi (fuel QTZ + pilotaje/espera/reserva USD)
+  // SENSHI invoice: what Senshi pays Fernando (all 3 owners' pilotaje + espera + admin + all reserva USD) + Senshi's own fuel QTZ
+  function downloadInvoice(owner) {
     if (!lastBilData) { alert('Calcula el billing primero'); return; }
     const d = lastBilData;
-    const isQTZ = currency === 'QTZ';
-    const tc = d.tc;
-    const label = owner === 'SENSHI' ? 'Charter' : owner;
+    const fQ = v => `Q${Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const fD = v => `$${Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const fQs = v => v < 0 ? `-${fQ(v)}` : fQ(v);
+    const fDs = v => v < 0 ? `-${fD(v)}` : fD(v);
 
-    const lines = [];
-    const fmtAmt = v => {
-      const abs = Math.abs(v);
-      const prefix = v < 0 ? '-' : '';
-      if (isQTZ) return `${prefix}Q${abs.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      return `${prefix}$${abs.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    };
+    let qtzLines = []; // { desc, amt }
+    let usdLines = []; // { desc, amt, note? }
 
-    if (isQTZ) {
-      // ── QTZ INVOICE: Fuel only ──
-      lines.push({ desc: `Combustible proporcional (${d.hrs[owner].toFixed(1)} hrs × Q${d.qph.toFixed(2)}/hr)`, amt: d.fuelProp[owner] });
-      if (d.antic[owner] > 0) lines.push({ desc: 'Menos: anticipo ya pagado', amt: -d.antic[owner] });
+    if (owner === 'SENSHI') {
+      // ── SENSHI: pays Fernando for ALL three owners ──
+      const label = 'Senshi';
+
+      // QTZ section: Senshi's own fuel
+      qtzLines.push({ desc: `Combustible Charter (${d.hrs.SENSHI.toFixed(1)} hrs × Q${d.qph.toFixed(2)}/hr)`, amt: d.fuelProp.SENSHI });
+      if (d.antic.SENSHI > 0) qtzLines.push({ desc: 'Menos: anticipo Charter pagado', amt: -d.antic.SENSHI });
+
+      // USD section: all three owners' pilotaje + espera + reserva + admin
+      ['COCO', 'CUCO', 'SENSHI'].forEach(o => {
+        const oLabel = o === 'SENSHI' ? 'Charter' : o;
+        usdLines.push({ desc: `Pilotaje ${oLabel} (${d.bilH[o].toFixed(1)} hrs × $${d.rt.pilot}/hr)`, amt: d.pilFee[o] });
+        if (d.ruAmt[o] > 0) {
+          usdLines.push({ desc: `↳ Roundup ${oLabel} (${d.sub[o].n} vuelo(s) <1hr)`, amt: d.ruAmt[o], note: 'incluido en pilotaje' });
+        }
+        if (d.espHrs[o] > 0) {
+          usdLines.push({ desc: `Espera ${oLabel} (${d.espHrs[o].toFixed(1)} hrs × $${d.rt.gw}/hr)`, amt: d.esp[o] });
+        }
+      });
+      // Admin fee (100% Senshi)
+      usdLines.push({ desc: `Admin fee Fernando (${d.numMonths} mes × $${d.rt.admin}/mes)`, amt: d.adminFee });
+      // Reserva for all three
+      ['COCO', 'CUCO', 'SENSHI'].forEach(o => {
+        const oLabel = o === 'SENSHI' ? 'Charter' : o;
+        usdLines.push({ desc: `Reserva mante ${oLabel} (${d.hrs[o].toFixed(1)} hrs × $${d.rt.res}/hr)`, amt: d.resv[o] });
+      });
+
     } else {
-      // ── USD INVOICE: Fernando + Reserva ──
-      lines.push({ desc: `Pilotaje Fernando (${d.bilH[owner].toFixed(1)} hrs × $${d.rt.pilot}/hr)`, amt: d.pilFee[owner] });
-      const ru = d.ruAmt[owner];
-      if (ru > 0) {
-        lines.push({ desc: `↳ Roundup (${d.sub[owner].n} vuelo(s) <1hr → 1hr)`, amt: ru, note: 'incluido en pilotaje' });
+      // ── COCO / CUCO: what they owe Senshi ──
+
+      // QTZ section: their fuel
+      qtzLines.push({ desc: `Combustible proporcional (${d.hrs[owner].toFixed(1)} hrs × Q${d.qph.toFixed(2)}/hr)`, amt: d.fuelProp[owner] });
+      if (d.antic[owner] > 0) qtzLines.push({ desc: 'Menos: anticipo ya pagado', amt: -d.antic[owner] });
+
+      // USD section: their pilotaje + espera + reserva (no admin)
+      usdLines.push({ desc: `Pilotaje Fernando (${d.bilH[owner].toFixed(1)} hrs × $${d.rt.pilot}/hr)`, amt: d.pilFee[owner] });
+      if (d.ruAmt[owner] > 0) {
+        usdLines.push({ desc: `↳ Roundup (${d.sub[owner].n} vuelo(s) <1hr → 1hr)`, amt: d.ruAmt[owner], note: 'incluido en pilotaje' });
       }
       if (d.espHrs[owner] > 0) {
-        lines.push({ desc: `Espera en tierra (${d.espHrs[owner].toFixed(1)} hrs × $${d.rt.gw}/hr)`, amt: d.esp[owner] });
+        usdLines.push({ desc: `Espera en tierra (${d.espHrs[owner].toFixed(1)} hrs × $${d.rt.gw}/hr)`, amt: d.esp[owner] });
       }
-      // Admin fee — 100% charged to Charter (SENSHI)
-      if (owner === 'SENSHI') {
-        lines.push({ desc: `Admin fee Fernando (${d.numMonths} mes × $${d.rt.admin}/mes)`, amt: d.adminFee });
-      }
-      // Reserva
-      lines.push({ desc: `Reserva mantenimiento (${d.hrs[owner].toFixed(1)} hrs × $${d.rt.res}/hr)`, amt: d.resv[owner] });
+      usdLines.push({ desc: `Reserva mantenimiento (${d.hrs[owner].toFixed(1)} hrs × $${d.rt.res}/hr)`, amt: d.resv[owner] });
     }
 
-    const total = lines.reduce((s, l) => s + l.amt, 0);
+    const totalQTZ = qtzLines.reduce((s, l) => s + l.amt, 0);
+    const totalUSD = usdLines.reduce((s, l) => s + l.amt, 0);
+    const label = owner === 'SENSHI' ? 'Senshi' : owner;
+    const subtitle = owner === 'SENSHI'
+      ? 'Senshi paga a Fernando — pilotaje + espera + admin + reserva (todos los socios)'
+      : `${owner} debe a Senshi — combustible + pilotaje + espera + reserva`;
 
     const invoiceHTML = `<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Factura ${label} ${isQTZ ? 'QTZ' : 'USD'} — ${d.periodLbl}</title>
+<title>Factura ${label} — ${d.periodLbl}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;color:#1A1F2E;max-width:700px;margin:0 auto;padding:30px 24px}
@@ -279,17 +300,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;co
 .meta{text-align:right;font-size:11px;color:#8892A4;line-height:1.6}
 .meta b{color:#1A1F2E}
 .title{font-size:16px;font-weight:700;color:#1B2A4A;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
-.subtitle{font-size:11px;color:#8892A4;margin-bottom:16px}
-table{width:100%;border-collapse:collapse;margin-bottom:20px}
+.subtitle{font-size:11px;color:#8892A4;margin-bottom:20px}
+.sec-hd{font-size:12px;font-weight:700;color:#1B2A4A;text-transform:uppercase;letter-spacing:.04em;padding:10px 0 6px;border-bottom:2px solid #1B2A4A;margin-top:20px}
+table{width:100%;border-collapse:collapse;margin-bottom:4px}
 th{text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8892A4;padding:8px 10px;border-bottom:2px solid #E2E6EE}
 th:last-child{text-align:right}
 td{padding:10px;font-size:12px;border-bottom:1px solid #F0F2F6}
 td:last-child{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
-td.note{font-size:9px;color:#8892A4;font-style:italic}
+.note{font-size:9px;color:#8892A4;font-style:italic}
 tr.total td{border-top:2px solid #1B2A4A;font-size:14px;font-weight:800;padding-top:12px}
 .footer{margin-top:24px;padding-top:14px;border-top:1px solid #E2E6EE;font-size:10px;color:#8892A4;text-align:center}
 .neg{color:#1A6B3A}
-.pos{color:#8B1A1A}
+.grand{margin-top:24px;padding:14px;background:#F5F6F8;border-radius:8px}
+.grand-row{display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:4px 0}
 @media print{body{padding:10px}.no-print{display:none!important}}
 .print-btn{display:block;margin:0 auto 20px;padding:10px 28px;background:#1B2A4A;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
 </style>
@@ -301,19 +324,37 @@ tr.total td{border-top:2px solid #1B2A4A;font-size:14px;font-weight:800;padding-
   <div class="meta">
     <div><b>Factura — ${label}</b></div>
     <div>Período: ${d.periodLbl}</div>
-    <div>Moneda: ${currency}</div>
     <div>Generado: ${new Date().toLocaleDateString('es-GT')}</div>
   </div>
 </div>
-<div class="title">Detalle de costos — ${label} (${currency})</div>
-<div class="subtitle">${isQTZ ? 'Combustible' : 'Pilotaje Fernando + Reserva Mantenimiento'}</div>
+<div class="title">Factura — ${label}</div>
+<div class="subtitle">${subtitle}</div>
+
+${qtzLines.length > 0 ? `
+<div class="sec-hd">Combustible (QTZ)</div>
 <table>
   <thead><tr><th>Concepto</th><th>Monto</th></tr></thead>
   <tbody>
-    ${lines.map(l => `<tr><td>${l.desc}${l.note ? `<div class="note">${l.note}</div>` : ''}</td><td class="${l.amt < 0 ? 'neg' : ''}">${fmtAmt(l.amt)}</td></tr>`).join('')}
-    <tr class="total"><td><b>TOTAL ${currency}</b></td><td>${fmtAmt(total)}</td></tr>
+    ${qtzLines.map(l => `<tr><td>${l.desc}${l.note ? `<div class="note">${l.note}</div>` : ''}</td><td class="${l.amt < 0 ? 'neg' : ''}">${fQs(l.amt)}</td></tr>`).join('')}
+    <tr class="total"><td><b>TOTAL QTZ</b></td><td class="${totalQTZ < 0 ? 'neg' : ''}">${fQs(totalQTZ)}</td></tr>
   </tbody>
-</table>
+</table>` : ''}
+
+${usdLines.length > 0 ? `
+<div class="sec-hd">${owner === 'SENSHI' ? 'Pago a Fernando + Reserva (USD)' : 'Pilotaje + Reserva (USD)'}</div>
+<table>
+  <thead><tr><th>Concepto</th><th>Monto</th></tr></thead>
+  <tbody>
+    ${usdLines.map(l => `<tr><td>${l.desc}${l.note ? `<div class="note">${l.note}</div>` : ''}</td><td class="${l.amt < 0 ? 'neg' : ''}">${fDs(l.amt)}</td></tr>`).join('')}
+    <tr class="total"><td><b>TOTAL USD</b></td><td>${fDs(totalUSD)}</td></tr>
+  </tbody>
+</table>` : ''}
+
+<div class="grand">
+  <div class="grand-row"><span>Total QTZ</span><span class="${totalQTZ < 0 ? 'neg' : ''}">${fQs(totalQTZ)}</span></div>
+  <div class="grand-row"><span>Total USD</span><span>${fDs(totalUSD)}</span></div>
+</div>
+
 <div class="footer">
   TG-SHI · Senshi Aviation · Generado automáticamente
 </div>
