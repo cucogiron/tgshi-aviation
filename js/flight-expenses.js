@@ -36,10 +36,8 @@ var FlightExpenses = (function() {
   }
 
   function getFlightLabel(f) {
-    var displayR = f.r === 'SENSHI' ? 'Charter' : (f.r || '?');
-    var route = (f.rt || '--').replace(/</g, '').replace(/>/g, '');
-    var hrs = (f.h || 0).toFixed(1);
-    return f.d.slice(5) + ' ' + route + ' ' + hrs + 'hr ' + displayR;
+    var displayR = f.r === 'SENSHI' ? 'Charter' : f.r;
+    return f.d.slice(5) + ' ' + (f.rt || '--') + ' ' + f.h.toFixed(1) + 'hr ' + displayR;
   }
 
   function getExpenses() {
@@ -137,7 +135,6 @@ var FlightExpenses = (function() {
   // ===== Add Expense =====
 
   function openAddExpense() {
-    try {
     // Build flight options from recent flights (last 50)
     var recent = DB.flights.slice().reverse().slice(0, 50);
     var flightOpts = '';
@@ -178,7 +175,6 @@ var FlightExpenses = (function() {
 
     // Set date from selected flight
     FlightExpenses.onFlightChange();
-    } catch(e) { console.error('openAddExpense error:', e); alert('Error: ' + e.message); }
   }
 
   function onFlightChange() {

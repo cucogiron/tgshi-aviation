@@ -182,7 +182,7 @@ const Flights = (() => {
     const f = DB.flights.find(x => x.id === id);
     if (!f) return;
     // Navigate to the new flight form
-    App.nav('new', 7);
+    App.nav('new', 8);
     // Switch to flight tab
     const flightTabBtn = document.querySelector('#new-tabs .sb');
     if (flightTabBtn) Fuel.fTab('flight', flightTabBtn);

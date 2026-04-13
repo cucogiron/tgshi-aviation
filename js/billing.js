@@ -95,6 +95,17 @@ const Billing = (() => {
       });
     }
 
+    // --- Flight expenses data (compute before cache) ---
+    const fexpData = (typeof FlightExpenses !== 'undefined') ? FlightExpenses.billingForPeriod(from, to) : null;
+    const fexpUSD = { COCO: 0, CUCO: 0, SENSHI: 0 };
+    const fexpQTZ = { COCO: 0, CUCO: 0, SENSHI: 0 };
+    if (fexpData) {
+      ['COCO', 'CUCO', 'SENSHI'].forEach(o => {
+        fexpUSD[o] = fexpData[o].USD;
+        fexpQTZ[o] = fexpData[o].QTZ;
+      });
+    }
+
     // --- Cache ---
     lastBilData = {
       from, to, tc, periodLbl, rt, numMonths,
@@ -105,7 +116,8 @@ const Billing = (() => {
       ruAmt: { COCO: ruAmt('COCO'), CUCO: ruAmt('CUCO'), SENSHI: ruAmt('SENSHI') },
       resv: { COCO: resv('COCO'), CUCO: resv('CUCO'), SENSHI: resv('SENSHI') },
       adminFee, totFer, fQ, fD,
-      maintData, maintUSD, maintQTZ
+      maintData, maintUSD, maintQTZ,
+      fexpData, fexpUSD, fexpQTZ
     };
 
     // ========== BUILD REPORT ==========
@@ -169,8 +181,13 @@ const Billing = (() => {
       </div></div>`;
     }
 
-    // ── E — RESUMEN POR SOCIO ──
-    h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">E — Resumen por socio</div></div><div class="bil-bd">`;
+    // ── E — GASTOS DE VUELO ──
+    if (typeof FlightExpenses !== 'undefined') {
+      h += FlightExpenses.buildBillingSectionE(from, to);
+    }
+
+    // ── F — RESUMEN POR SOCIO ──
+    h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">F — Resumen por socio</div></div><div class="bil-bd">`;
 
     ['COCO', 'CUCO', 'SENSHI'].forEach((owner, idx) => {
       const label = owner === 'SENSHI' ? 'CHARTER' : owner;
@@ -181,11 +198,14 @@ const Billing = (() => {
       const ownerMaintUSD = maintData ? maintUSD[owner] : resv(owner);
       const ownerMaintQTZ = maintData ? maintQTZ[owner] : 0;
       const maintLabel = maintData ? 'Mantenimiento real' : 'Reserva mante';
+      // Flight expenses
+      const ownerFexpUSD = fexpData ? fexpUSD[owner] : 0;
+      const ownerFexpQTZ = fexpData ? fexpQTZ[owner] : 0;
       // Fernando portion (what goes to Fernando via Senshi)
       const ferTotal = ownerFerUSD + ownerAdminUSD;
-      // Total USD owed to Senshi = Fernando portion + maintenance USD
-      const totalUSD = ferTotal + ownerMaintUSD;
-      const totalQTZ = fuelNet[owner] + ownerMaintQTZ;
+      // Total USD owed to Senshi = Fernando portion + maintenance USD + flight expenses USD
+      const totalUSD = ferTotal + ownerMaintUSD + ownerFexpUSD;
+      const totalQTZ = fuelNet[owner] + ownerMaintQTZ + ownerFexpQTZ;
 
       h += `<div class="bil-row" style="${border}"><div class="bil-lbl" style="font-weight:700;font-size:11px">${label}</div><div class="bil-val"></div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Combustible neto (QTZ)</div><div class="bil-val ${sg(fuelNet[owner])}">${fuelNet[owner] < 0 ? '(' + fQ(fuelNet[owner]) + ')' : fQ(fuelNet[owner])}</div></div>
@@ -194,16 +214,20 @@ const Billing = (() => {
         ${ownerMaintUSD > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ ${maintLabel} (USD)</div><div class="bil-val">${fD(ownerMaintUSD)}</div></div>` : ''}
         ${ownerMaintQTZ > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ ${maintLabel} (QTZ)</div><div class="bil-val">${fQ(ownerMaintQTZ)}</div></div>` : ''}
         ${ownerMaintUSD === 0 && ownerMaintQTZ === 0 ? `<div class="bil-row"><div class="bil-lbl">↳ ${maintLabel}</div><div class="bil-val">$0.00</div></div>` : ''}
+        ${ownerFexpUSD > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Gastos de vuelo (USD)</div><div class="bil-val">${fD(ownerFexpUSD)}</div></div>` : ''}
+        ${ownerFexpQTZ > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Gastos de vuelo (QTZ)</div><div class="bil-val">${fQ(ownerFexpQTZ)}</div></div>` : ''}
         <div class="bil-row"><div class="bil-lbl"><b>↳ Total USD</b></div><div class="bil-val"><b>${fD(totalUSD)}</b></div></div>
         <div class="bil-row"><div class="bil-lbl"><b>↳ Total QTZ</b></div><div class="bil-val ${sg(totalQTZ)}"><b>${totalQTZ < 0 ? '(' + fQ(totalQTZ) + ')' : fQ(totalQTZ)}</b></div></div>`;
     });
     h += `</div></div>`;
 
-    // ── F — QuickBooks Summary ──
-    h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">F — QuickBooks Summary</div></div><div class="bil-bd">`;
+    // ── G — QuickBooks Summary ──
+    h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">G — QuickBooks Summary</div></div><div class="bil-bd">`;
 
     const totMaintUSD = maintUSD.COCO + maintUSD.CUCO + maintUSD.SENSHI;
     const totMaintQTZ = maintQTZ.COCO + maintQTZ.CUCO + maintQTZ.SENSHI;
+    const totFexpUSD = fexpUSD.COCO + fexpUSD.CUCO + fexpUSD.SENSHI;
+    const totFexpQTZ = fexpQTZ.COCO + fexpQTZ.CUCO + fexpQTZ.SENSHI;
 
     ['COCO', 'CUCO', 'SENSHI'].forEach((owner, idx) => {
       const label = owner === 'SENSHI' ? 'CHARTER' : owner;
@@ -211,11 +235,15 @@ const Billing = (() => {
       const ownerMUSD = maintData ? maintUSD[owner] : resv(owner);
       const ownerMQTZ = maintData ? maintQTZ[owner] : 0;
       const maintLbl = maintData ? 'Mante real' : 'Reserva mante';
+      const ownerFxUSD = fexpData ? fexpUSD[owner] : 0;
+      const ownerFxQTZ = fexpData ? fexpQTZ[owner] : 0;
       h += `<div class="bil-row" style="${border}"><div class="bil-lbl" style="font-weight:700;font-size:10px">${label}</div><div class="bil-val"></div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Combustible neto (QTZ)</div><div class="bil-val ${sg(fuelNet[owner])}">${fuelNet[owner] < 0 ? '(' + fQ(fuelNet[owner]) + ')' : fQ(fuelNet[owner])}</div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Pilotaje${esp[owner] > 0 ? ' + espera' : ''} (USD)</div><div class="bil-val">${fD(pilFee(owner) + esp[owner])}</div></div>
         ${ownerMUSD > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ ${maintLbl} (USD)</div><div class="bil-val">${fD(ownerMUSD)}</div></div>` : ''}
-        ${ownerMQTZ > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ ${maintLbl} (QTZ)</div><div class="bil-val">${fQ(ownerMQTZ)}</div></div>` : ''}`;
+        ${ownerMQTZ > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ ${maintLbl} (QTZ)</div><div class="bil-val">${fQ(ownerMQTZ)}</div></div>` : ''}
+        ${ownerFxUSD > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Gastos vuelo (USD)</div><div class="bil-val">${fD(ownerFxUSD)}</div></div>` : ''}
+        ${ownerFxQTZ > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Gastos vuelo (QTZ)</div><div class="bil-val">${fQ(ownerFxQTZ)}</div></div>` : ''}`;
     });
 
     h += `<div class="bil-row" style="border-top:1px solid #E2E6EE;margin-top:4px"><div class="bil-lbl">Admin fee Fernando (USD, 100% Senshi)</div><div class="bil-val">${fD(adminFee)}</div></div>`;
@@ -225,6 +253,8 @@ const Billing = (() => {
     h += `<div class="bil-row"><div class="bil-lbl"><b>Total Fernando (USD)</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
       <div class="bil-row"><div class="bil-lbl"><b>Total Mantenimiento (USD)</b></div><div class="bil-val"><b>${fD(maintData ? totMaintUSD : resv('COCO') + resv('CUCO') + resv('SENSHI'))}</b></div></div>
       ${(maintData && totMaintQTZ > 0) ? `<div class="bil-row"><div class="bil-lbl"><b>Total Mantenimiento (QTZ)</b></div><div class="bil-val"><b>${fQ(totMaintQTZ)}</b></div></div>` : ''}
+      ${totFexpUSD > 0 ? `<div class="bil-row"><div class="bil-lbl"><b>Total Gastos Vuelo (USD)</b></div><div class="bil-val"><b>${fD(totFexpUSD)}</b></div></div>` : ''}
+      ${totFexpQTZ > 0 ? `<div class="bil-row"><div class="bil-lbl"><b>Total Gastos Vuelo (QTZ)</b></div><div class="bil-val"><b>${fQ(totFexpQTZ)}</b></div></div>` : ''}
     </div></div>`;
 
     // QB notes
@@ -309,6 +339,15 @@ const Billing = (() => {
       } else {
         usdLines.push({ desc: `Reserva mantenimiento (${d.hrs[owner].toFixed(1)} hrs × $${d.rt.res}/hr) — fondo Senshi`, amt: d.resv[owner] });
       }
+
+      // Flight expenses
+      if (d.fexpData && d.fexpData.expenses.length > 0 && typeof FlightExpenses !== 'undefined') {
+        const fxLines = FlightExpenses.invoiceLinesForOwner(d.from, d.to, owner);
+        if (fxLines) {
+          fxLines.usdLines.forEach(l => usdLines.push(l));
+          fxLines.qtzLines.forEach(l => qtzLines.push(l));
+        }
+      }
     }
 
     const totalQTZ = qtzLines.reduce((s, l) => s + l.amt, 0);
@@ -316,7 +355,7 @@ const Billing = (() => {
     const label = owner === 'SENSHI' ? 'Senshi' : owner;
     const subtitle = owner === 'SENSHI'
       ? 'Senshi paga a Fernando — pilotaje + espera + admin (todos los socios)'
-      : `${owner} debe a Senshi — combustible + pilotaje + espera + mantenimiento`;
+      : `${owner} debe a Senshi — combustible + pilotaje + espera + mantenimiento + gastos`;
 
     const invoiceHTML = `<!DOCTYPE html>
 <html lang="es">
