@@ -88,26 +88,38 @@ const Admin = (() => {
     }
 
     // Rates / Tarifas
-    const curRate = DB.rates[DB.rates.length - 1] || {};
+    const curRate = (DB.rates && DB.rates.length > 0) ? DB.rates[DB.rates.length - 1] : {};
     const rtDisp = document.getElementById('rates-display');
     if (rtDisp) {
-      rtDisp.innerHTML = DB.rates.map((r, i) => {
-        const active = i === DB.rates.length - 1 ? ' <b>(vigente)</b>' : '';
-        return `<div style="font-size:10px;color:#8892A4;padding:3px 0">Desde ${r.d}: Piloto $${r.pilot}/hr · Espera $${r.gw}/hr · Admin $${r.admin}/mes · Reserva $${r.res}/hr · STD $${r.std} · FF $${r.ff}${active}</div>`;
-      }).join('');
+      let rhtml = '';
+      if (curRate.d) {
+        rhtml += `<div style="padding:8px 10px;background:#F0F7FF;border-radius:6px;margin-bottom:8px;font-size:11px;line-height:1.6">
+          <div style="font-weight:700;color:#1B2A4A;margin-bottom:2px">📌 Vigente desde ${curRate.d}</div>
+          <div>Piloto: <b>$${curRate.pilot}/hr</b> · Espera: <b>$${curRate.gw}/hr</b></div>
+          <div>Admin: <b>$${curRate.admin}/mes</b> · Reserva: <b>$${curRate.res}/hr</b></div>
+          <div>Charter STD: <b>$${curRate.std}/hr</b> · FF: <b>$${curRate.ff}/hr</b></div>
+        </div>`;
+      }
+      if (DB.rates.length > 1) {
+        rhtml += `<div style="font-size:9px;color:#8892A4;margin-bottom:4px">Historial:</div>`;
+        DB.rates.slice(0, -1).forEach(r => {
+          rhtml += `<div style="font-size:9px;color:#8892A4;padding:2px 0">Desde ${r.d}: $${r.pilot}/hr · Espera $${r.gw} · Admin $${r.admin} · Res $${r.res} · STD $${r.std} · FF $${r.ff}</div>`;
+        });
+      }
+      rtDisp.innerHTML = rhtml;
     }
     const rpil = document.getElementById('rt-pilot');
-    if (rpil) rpil.value = curRate.pilot || '';
+    if (rpil) rpil.value = curRate.pilot != null ? curRate.pilot : '';
     const rgw = document.getElementById('rt-gw');
-    if (rgw) rgw.value = curRate.gw || '';
+    if (rgw) rgw.value = curRate.gw != null ? curRate.gw : '';
     const radm = document.getElementById('rt-admin');
-    if (radm) radm.value = curRate.admin || '';
+    if (radm) radm.value = curRate.admin != null ? curRate.admin : '';
     const rres = document.getElementById('rt-res');
-    if (rres) rres.value = curRate.res || '';
+    if (rres) rres.value = curRate.res != null ? curRate.res : '';
     const rstd = document.getElementById('rt-std');
-    if (rstd) rstd.value = curRate.std || '';
+    if (rstd) rstd.value = curRate.std != null ? curRate.std : '';
     const rff = document.getElementById('rt-ff');
-    if (rff) rff.value = curRate.ff || '';
+    if (rff) rff.value = curRate.ff != null ? curRate.ff : '';
     const rdt = document.getElementById('rt-date');
     if (rdt) rdt.value = curRate.d || '';
 
