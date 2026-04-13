@@ -571,12 +571,20 @@ textarea{resize:vertical;min-height:60px}
 <div id="login-screen" class="login-screen">
   <div class="login-logo">TG-SHI</div>
   <div class="login-sub">Senshi Aviation</div>
-  <div class="login-card">
+  <div class="login-card" id="login-card-main">
     <div class="login-field"><label>Usuario</label><input type="text" id="login-uid" placeholder="ej. CUCO" autocapitalize="characters" autocomplete="off"></div>
     <div class="login-field"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')App.doLogin()"></div>
     <div class="login-err" id="login-err"></div>
     <button class="login-btn" onclick="App.doLogin()">Ingresar</button>
     <div class="login-forgot" onclick="App.showForgotPw()">¿Olvidaste tu contraseña?</div>
+  </div>
+  <div class="login-card" id="login-card-reset" style="display:none">
+    <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:10px;text-align:center">Restablecer contraseña</div>
+    <div class="login-field"><label>Usuario</label><input type="text" id="reset-uid" placeholder="ej. CUCO" autocapitalize="characters" autocomplete="off"></div>
+    <div class="login-field"><label>Email registrado</label><input type="email" id="reset-email" placeholder="tu@email.com" autocomplete="off"></div>
+    <div class="login-err" id="reset-err"></div>
+    <button class="login-btn" onclick="App.requestReset()">Enviar enlace de recuperación</button>
+    <div class="login-forgot" onclick="App.showLoginCard()">← Volver al login</div>
   </div>
 </div>
 
