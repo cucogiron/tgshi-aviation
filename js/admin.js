@@ -76,11 +76,13 @@ const Admin = (() => {
       if (partners.length === 0) {
         xpList.innerHTML = '<div class="empty">Sin socios de intercambio</div>';
       } else {
-        xpList.innerHTML = partners.map(p => `
-          <div class="plane-row">
-            <div><div class="plane-name">${p.name}</div><div class="plane-type">${p.partner_plane} · Rate ${p.exchange_rate}:1${p.notes ? ' · ' + p.notes : ''}</div></div>
+        xpList.innerHTML = partners.map(p => {
+          const planes = p.planes ? p.planes.join(', ') : (p.partner_plane || '—');
+          return `<div class="plane-row">
+            <div><div class="plane-name">${p.name}</div><div class="plane-type">${planes} · Rate ${p.exchange_rate}:1${p.notes ? ' · ' + p.notes : ''}</div></div>
             <button class="ubtn edit" onclick="Exchange.editPartner(${p.id})">Editar</button>
-          </div>`).join('');
+          </div>`;
+        }).join('');
       }
     }
 
