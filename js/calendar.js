@@ -122,6 +122,14 @@ const Calendar = (() => {
         if (s.status === 'requested' && App.canManageSchedule()) {
           actions += '<button class="slot-confirm" onclick="Calendar.openConfirmModal(' + s.id + ')">Confirmar</button>';
         }
+        // Assign or change pilot button for confirmed flights
+        if (s.status === 'confirmed' && App.canManageSchedule()) {
+          if (s.pilot_roster_id) {
+            actions += '<button class="slot-confirm" onclick="Calendar.openPilotModal(' + s.id + ')" style="background:#1B4E8A">Cambiar piloto</button>';
+          } else {
+            actions += '<button class="slot-confirm" onclick="Calendar.openPilotModal(' + s.id + ')">Asignar piloto</button>';
+          }
+        }
         if (canAct && s.status !== 'completed') {
           actions += '<button class="slot-cancel" onclick="Calendar.cancelSlot(' + s.id + ')">Cancelar</button>';
         }
@@ -251,15 +259,17 @@ const Calendar = (() => {
   async function submitConfirmation(schedId) {
     const s = (DB.schedule || []).find(function(x) { return x.id === schedId; });
     if (!s) return;
-    const pilotId = parseInt(document.getElementById('cfm-pilot').value);
-    if (!pilotId) { alert('Selecciona un piloto del roster'); return; }
+    var pilotVal = document.getElementById('cfm-pilot').value;
+    var pilotId = pilotVal ? parseInt(pilotVal) : null;
     if (!cfmFlightType) { alert('Selecciona el tipo de vuelo'); return; }
 
     s.status = 'confirmed';
-    s.pilot_roster_id = pilotId;
     s.flight_type = cfmFlightType;
-    const rp = App.getPilot(pilotId);
-    if (rp && rp.user_id) s.pilot = rp.user_id;
+    if (pilotId) {
+      s.pilot_roster_id = pilotId;
+      var rp = App.getPilot(pilotId);
+      if (rp && rp.user_id) s.pilot = rp.user_id;
+    }
 
     closeBooking();
     cfmFlightType = null;
@@ -267,10 +277,70 @@ const Calendar = (() => {
     if (ok) {
       buildCalendar();
       buildSchedPending();
-      // Fire-and-forget notification
       API.notify('flight_confirmed', schedId);
     } else {
       alert('Error confirmando vuelo');
+    }
+  }
+
+  // --- Pilot assignment / change modal ---
+  function openPilotModal(schedId) {
+    var s = (DB.schedule || []).find(function(x) { return x.id === schedId; });
+    if (!s) return;
+
+    var activePilots = (DB.pilots || []).filter(function(p) { return p.active !== false; });
+    var pilotOpts = '<option value="">-- Seleccionar piloto --</option>';
+    activePilots.forEach(function(p) {
+      var selected = (s.pilot_roster_id === p.id) ? ' selected' : '';
+      pilotOpts += '<option value="' + p.id + '"' + selected + '>' + p.name + (p.phone ? ' (' + p.phone + ')' : '') + '</option>';
+    });
+
+    var currentPilot = 'Sin asignar';
+    if (s.pilot_roster_id) {
+      var rp = App.getPilot(s.pilot_roster_id);
+      if (rp) currentPilot = rp.name;
+    }
+
+    document.getElementById('book-modal-title').textContent = s.pilot_roster_id ? 'Cambiar piloto' : 'Asignar piloto';
+    document.getElementById('book-form').innerHTML =
+      '<div style="background:#F8F9FB;border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:12px">'
+      + '<div style="font-weight:700;margin-bottom:3px">' + (s.route || 'Sin ruta') + ' - ' + App.fmtDate(s.date) + '</div>'
+      + '<div style="color:#8892A4;font-size:10px">' + s.start + ' - ' + s.end + ' - Solicitado por ' + App.getUser(s.booked_by).name + ' (' + s.booked_by + ')</div>'
+      + (s.pilot_roster_id ? '<div style="color:#8892A4;font-size:10px;margin-top:2px">Piloto actual: <b>' + currentPilot + '</b></div>' : '')
+      + '</div>'
+      + '<div class="fs"><label class="fl">Piloto asignado</label><select id="cfm-pilot">' + pilotOpts + '</select></div>'
+      + '<button class="btn gr" onclick="Calendar.submitPilotAssignment(' + schedId + ')">' + (s.pilot_roster_id ? 'Cambiar piloto' : 'Asignar piloto') + '</button>';
+    document.getElementById('book-modal').style.display = 'flex';
+  }
+
+  async function submitPilotAssignment(schedId) {
+    var s = (DB.schedule || []).find(function(x) { return x.id === schedId; });
+    if (!s) return;
+    var pilotVal = document.getElementById('cfm-pilot').value;
+    var pilotId = pilotVal ? parseInt(pilotVal) : null;
+    if (!pilotId) { alert('Selecciona un piloto'); return; }
+
+    // Check if pilot actually changed
+    if (s.pilot_roster_id === pilotId) {
+      closeBooking();
+      return;
+    }
+
+    s.pilot_roster_id = pilotId;
+    var rp = App.getPilot(pilotId);
+    if (rp && rp.user_id) {
+      s.pilot = rp.user_id;
+    } else {
+      s.pilot = null;
+    }
+
+    closeBooking();
+    var ok = await API.saveData();
+    if (ok) {
+      buildCalendar();
+      API.notify('pilot_assigned', schedId);
+    } else {
+      alert('Error asignando piloto');
     }
   }
 
@@ -310,6 +380,8 @@ const Calendar = (() => {
     openConfirmModal: openConfirmModal,
     cfmTipo: cfmTipo,
     submitConfirmation: submitConfirmation,
+    openPilotModal: openPilotModal,
+    submitPilotAssignment: submitPilotAssignment,
     cancelSlot: cancelSlot,
     buildSchedPending: buildSchedPending
   };
