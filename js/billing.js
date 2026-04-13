@@ -122,7 +122,42 @@ const Billing = (() => {
 
     // ========== BUILD REPORT ==========
 
+    const isPilotView = App.isPilotAdmin() && !App.isAdmin();
+
     let h = `<div class="stitle">Período: ${periodLbl} · TC Q${tc}/USD · Piloto: $${rt.pilot}/hr · Admin: $${rt.admin}/mes</div>`;
+
+    if (isPilotView) {
+      // ── PILOT VIEW: only show what Senshi owes Fernando ──
+      h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">Pago a Fernando (USD)</div></div><div class="bil-bd">`;
+
+      ['COCO', 'CUCO', 'SENSHI'].forEach((owner, idx) => {
+        const label = owner === 'SENSHI' ? 'CHARTER' : owner;
+        const ru = ruAmt(owner);
+        const border = idx > 0 ? 'border-top:1px solid #E2E6EE;margin-top:4px' : '';
+        h += `<div class="bil-row" style="${border}"><div class="bil-lbl" style="font-weight:600;color:#8892A4;font-size:9px;text-transform:uppercase;letter-spacing:.06em">${label}</div><div class="bil-val" style="font-size:9px;color:#8892A4">${bilH(owner).toFixed(1)} hrs fact.</div></div>
+          <div class="bil-row"><div class="bil-lbl">↳ Pilotaje</div><div class="bil-val">${fD(pilFee(owner))}</div></div>`;
+        if (ru > 0) {
+          h += `<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A">↳ Roundup (${sub[owner].n} vuelo(s) &lt;1hr)</div><div class="bil-val pos">incl. +${fD(ru)}</div></div>`;
+        }
+        if (espHrs[owner] > 0) {
+          h += `<div class="bil-row"><div class="bil-lbl">↳ Espera en tierra (${espHrs[owner].toFixed(1)}hr × $${rt.gw})</div><div class="bil-val">${fD(esp[owner])}</div></div>`;
+        }
+      });
+
+      h += `<div class="bil-row" style="border-top:2px solid #E2E6EE;margin-top:4px"><div class="bil-lbl">Admin fee (${numMonths} mes${numMonths > 1 ? 'es' : ''})</div><div class="bil-val">${fD(adminFee)}</div></div>
+        <div class="bil-row"><div class="bil-lbl"><b>TOTAL A COBRAR</b></div><div class="bil-val"><b>${fD(totFer)}</b></div></div>
+      </div></div>`;
+
+      // Download only the Senshi→Fernando invoice
+      h += `<div style="margin-top:10px">
+        <button class="btn sm" style="width:100%" onclick="Billing.downloadInvoice('SENSHI')">📄 Descargar factura</button>
+      </div>`;
+
+      document.getElementById('bil-out').innerHTML = h;
+      return;
+    }
+
+    // ========== FULL ADMIN/OWNER VIEW ==========
 
     // ── A — HORAS ──
     h += `<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">A — Horas</div></div><div class="bil-bd">
