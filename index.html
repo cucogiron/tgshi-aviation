@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-title" content="TG-SHI">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="color-scheme" content="light">
-<title>TG-SHI · Shenshi v5.2</title>
+<title>TG-SHI · Senshi v6.0</title>
 <style>
 :root{color-scheme:light}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -56,6 +56,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue"
 .sd{font-size:8px;color:#8892A4;margin-top:2px}
 .c1 .sv{color:#1B4E8A}.c2 .sv{color:#1A6B3A}.c3 .sv{color:#B8600A}
 
+/* Quick stats row */
+.qs-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.qs{background:#ffffff;border-radius:10px;border:1px solid #E2E6EE;padding:8px 7px;text-align:center}
+.qs-l{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8892A4}
+.qs-v{font-size:16px;font-weight:800;margin-top:1px;line-height:1;color:#1A1F2E;font-variant-numeric:tabular-nums}
+.qs-d{font-size:8px;color:#8892A4;margin-top:1px}
+
 /* Bar chart */
 .mr{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #F5F6F8}.mr:last-child{border:none}
 .ml{font-size:9px;color:#8892A4;width:24px;flex-shrink:0}
@@ -80,6 +87,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue"
 .bx.p{background:#F0F2F6;color:#4B5563}.bx.m{background:#FDE8E8;color:#8B1A1A}
 .pend-badge{background:#FEF3CD;color:#8B5E00;padding:1px 6px;border-radius:6px;font-size:8px;font-weight:700;margin-left:3px}
 .edit-btn{font-size:9px;font-weight:700;color:#4A9EE8;background:none;border:1px solid #4A9EE8;border-radius:5px;padding:1px 6px;cursor:pointer;margin-left:5px}
+.dup-btn{font-size:9px;font-weight:700;color:#1A6B3A;background:none;border:1px solid #1A6B3A;border-radius:5px;padding:1px 6px;cursor:pointer;margin-left:3px}
+.tach-sm{font-size:8px;color:#8892A4;font-weight:400;font-variant-numeric:tabular-nums}
 
 /* Fuel items */
 .fue{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #F5F6F8}.fue:last-child{border:none}
@@ -96,6 +105,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue"
 .frow::-webkit-scrollbar{display:none}
 .fp{padding:4px 12px;border-radius:14px;border:1.5px solid #E2E6EE;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;background:#ffffff;color:#8892A4;flex-shrink:0;transition:all .15s}
 .fp.on{background:#1B2A4A;color:#fff;border-color:#1B2A4A}
+
+/* Search input */
+.search-input{width:100%;padding:8px 12px 8px 32px;border:1.5px solid #E2E6EE;border-radius:9px;font-size:12px;font-family:inherit;color:#1A1F2E;background:#ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238892A4' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 10px center no-repeat;outline:none;margin-bottom:9px}
+.search-input:focus{border-color:#4A9EE8}
 
 /* Billing */
 .bil-sec{background:#ffffff;border-radius:10px;border:1px solid #E2E6EE;margin-bottom:9px;overflow:hidden}
@@ -134,6 +147,11 @@ textarea{resize:vertical;min-height:60px}
 .hcalc{text-align:center;font-size:11px;color:#8892A4;margin:-6px 0 10px;display:none}
 .hint{font-size:10px;color:#8892A4;margin-top:3px}
 .stitle{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8892A4;margin:12px 0 7px;padding:0 2px}
+
+/* Fuel totals bar */
+.fuel-totals{display:flex;gap:12px;padding:10px 14px;background:#F8F9FB;border-radius:10px;border:1px solid #E2E6EE;margin-bottom:10px}
+.fuel-totals .ft-item{font-size:11px;color:#1A1F2E}
+.fuel-totals .ft-item b{font-variant-numeric:tabular-nums}
 
 /* Calendar / Scheduling */
 .cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 2px}
@@ -209,6 +227,7 @@ textarea{resize:vertical;min-height:60px}
 .ubtn{padding:3px 8px;border-radius:5px;font-size:9px;font-weight:700;cursor:pointer;border:none;font-family:inherit}
 .ubtn.del{background:#FEE2E2;color:#991B1B}
 .ubtn.edit{background:#E8F0FD;color:#1B4E8A}
+.ubtn.reset{background:#FEF3CD;color:#92400E}
 
 /* Plane management */
 .plane-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #F5F6F8}
@@ -240,6 +259,8 @@ textarea{resize:vertical;min-height:60px}
 .login-err{font-size:11px;color:#FF6B6B;text-align:center;margin-bottom:10px;min-height:16px}
 .login-btn{width:100%;padding:13px;background:#2563EB;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.4);-webkit-appearance:none;appearance:none}
 .login-btn:active{opacity:.85}
+.login-forgot{font-size:11px;color:rgba(255,255,255,.45);text-align:center;margin-top:12px;cursor:pointer}
+.login-forgot:hover{color:rgba(255,255,255,.7)}
 
 /* Settings / password modals */
 .pw-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:flex;align-items:flex-end;justify-content:center}
@@ -274,6 +295,12 @@ textarea{resize:vertical;min-height:60px}
 .confirm-type-card .ti{font-size:16px;margin-bottom:2px}
 .confirm-type-card .tn{font-size:10px;font-weight:700;color:#1A1F2E}
 .confirm-type-card .td{font-size:9px;color:#8892A4;margin-top:1px}
+
+/* Temp password display */
+.temp-pw-display{background:#D1FAE5;border:2px solid #1A6B3A;border-radius:10px;padding:14px;text-align:center;margin:10px 0}
+.temp-pw-display .label{font-size:10px;color:#065F46;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.temp-pw-display .pw{font-size:22px;font-weight:900;color:#1A1F2E;letter-spacing:.1em;font-family:monospace}
+.temp-pw-display .note{font-size:10px;color:#8892A4;margin-top:6px}
 </style>
 </head>
 <body>
@@ -300,7 +327,7 @@ textarea{resize:vertical;min-height:60px}
 
 <div class="top">
   <div class="top-r">
-    <div><h1 id="app-title">TG-SHI</h1><div class="sub">Shenshi Aviation · v5.2</div></div>
+    <div><h1 id="app-title">TG-SHI</h1><div class="sub">Senshi Aviation · v6.0</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="tach"><div><div class="tach-lb">TACH</div><span id="tachVal">—</span></div><div class="dot" id="dot"></div></div>
       <button class="settings-btn" id="settings-btn" onclick="App.openSettings()">⚙️</button>
@@ -326,6 +353,7 @@ textarea{resize:vertical;min-height:60px}
   <div id="token-setup-area"></div>
   <div id="pend-section" style="display:none"></div>
   <div id="sched-pend-section" style="display:none"></div>
+  <div id="d-quick-stats"></div>
   <div class="sg">
     <div class="st c1"><div class="sl">COCO</div><div class="sv" id="d-co">—</div><div class="sd">hrs 2026</div></div>
     <div class="st c2"><div class="sl">CUCO</div><div class="sv" id="d-cu">—</div><div class="sd">hrs 2026</div></div>
@@ -340,7 +368,7 @@ textarea{resize:vertical;min-height:60px}
     <div id="d-rec"></div>
   </div>
   <div class="card"><div class="ch"><div class="ct">Resumen 2026</div></div><div class="cb" id="d-sum"></div></div>
-  <div class="card" id="d-xch-card" style="display:none"><div class="ch"><div class="ct">🤝 Intercambios</div><a href="#" onclick="App.nav('xch',5);return false" style="font-size:10px;color:#4A9EE8;text-decoration:none;font-weight:600">Ver todos</a></div><div class="cb" id="d-xch"></div></div>
+  <div class="card" id="d-xch-card" style="display:none;cursor:pointer" onclick="App.nav('xch',5)"><div class="ch"><div class="ct">🤝 Intercambios</div><a href="#" onclick="App.nav('xch',5);return false" style="font-size:10px;color:#4A9EE8;text-decoration:none;font-weight:600">Ver todos</a></div><div class="cb" id="d-xch"></div></div>
 </div>
 
 <!-- ===== SCHEDULE / CALENDAR ===== -->
@@ -363,6 +391,7 @@ textarea{resize:vertical;min-height:60px}
 <!-- ===== VUELOS ===== -->
 
 <div class="pg" id="pg-vl">
+  <input type="text" class="search-input" id="vl-search" placeholder="Buscar ruta…" oninput="Flights.searchVL()" autocomplete="off">
   <div class="frow" id="flt-row">
     <div class="fp on" onclick="Flights.filtV('ALL',this)">Todos</div>
     <div class="fp" onclick="Flights.filtV('COCO',this)">COCO</div>
@@ -379,6 +408,13 @@ textarea{resize:vertical;min-height:60px}
 
 <div class="pg" id="pg-fuel">
   <div class="stitle">Registro de combustible</div>
+  <div id="fuel-totals-area"></div>
+  <div class="frow" id="fuel-yr-row">
+    <div class="fp on" onclick="Fuel.filtFuelYr('ALL',this)">Todos</div>
+    <div class="fp" onclick="Fuel.filtFuelYr('2026',this)">2026</div>
+    <div class="fp" onclick="Fuel.filtFuelYr('2025',this)">2025</div>
+    <div class="fp" onclick="Fuel.filtFuelYr('2024',this)">2024</div>
+  </div>
   <div class="card" id="fuel-list"></div>
 </div>
 
@@ -387,7 +423,10 @@ textarea{resize:vertical;min-height:60px}
 <div class="pg" id="pg-xch">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <div class="stitle" style="margin:0">Intercambio de horas</div>
-    <button class="btn sm" onclick="Exchange.openNewExchange()">+ Registrar</button>
+    <div style="display:flex;gap:5px">
+      <button class="btn sm" onclick="Exchange.exportExchangeSummary()">📄 Exportar</button>
+      <button class="btn sm" onclick="Exchange.openNewExchange()">+ Registrar</button>
+    </div>
   </div>
   <div id="xch-content"></div>
 </div>
@@ -514,12 +553,13 @@ textarea{resize:vertical;min-height:60px}
 
 <div id="login-screen" class="login-screen">
   <div class="login-logo">TG-SHI</div>
-  <div class="login-sub">Shenshi Aviation</div>
+  <div class="login-sub">Senshi Aviation</div>
   <div class="login-card">
     <div class="login-field"><label>Usuario</label><input type="text" id="login-uid" placeholder="ej. CUCO" autocapitalize="characters" autocomplete="off"></div>
     <div class="login-field"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')App.doLogin()"></div>
     <div class="login-err" id="login-err"></div>
     <button class="login-btn" onclick="App.doLogin()">Ingresar</button>
+    <div class="login-forgot" onclick="App.showForgotPw()">¿Olvidaste tu contraseña?</div>
   </div>
 </div>
 
