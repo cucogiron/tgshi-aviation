@@ -503,6 +503,23 @@ textarea{resize:vertical;min-height:60px}
     <div class="card"><div class="ch"><div class="ct">🤝 Socios de intercambio</div><button class="btn sm" onclick="Exchange.openAddPartner()">+ Agregar</button></div>
       <div id="xp-list"></div>
     </div>
+    <div class="card"><div class="ch"><div class="ct">💰 Tarifas</div><button class="btn sm" onclick="Admin.saveRates()">Guardar</button></div><div class="cb">
+      <div id="rates-display"></div>
+      <div class="row2" style="margin-top:8px">
+        <div class="fs"><label class="fl">Piloto ($/hr)</label><input type="number" id="rt-pilot" step="1" inputmode="decimal"></div>
+        <div class="fs"><label class="fl">Espera ($/hr)</label><input type="number" id="rt-gw" step="1" inputmode="decimal"></div>
+      </div>
+      <div class="row2">
+        <div class="fs"><label class="fl">Admin fee ($/mes)</label><input type="number" id="rt-admin" step="1" inputmode="decimal"></div>
+        <div class="fs"><label class="fl">Reserva mante ($/hr)</label><input type="number" id="rt-res" step="0.5" inputmode="decimal"></div>
+      </div>
+      <div class="row2">
+        <div class="fs"><label class="fl">Charter STD ($/hr)</label><input type="number" id="rt-std" step="10" inputmode="decimal"></div>
+        <div class="fs"><label class="fl">Charter FF ($/hr)</label><input type="number" id="rt-ff" step="10" inputmode="decimal"></div>
+      </div>
+      <div class="fs"><label class="fl">Vigente desde (YYYY-MM-DD)</label><input type="date" id="rt-date"></div>
+      <div id="rates-msg" style="font-size:10px;color:#8892A4;margin-top:5px"></div>
+    </div></div>
     <div class="card"><div class="ch"><div class="ct">Conexión Worker</div></div><div class="cb">
       <div class="fs"><label class="fl">Worker URL</label><input type="url" id="cfg-url" placeholder="https://tgshi-api.xxx.workers.dev"></div>
       <div class="fs"><label class="fl">Worker Secret</label><input type="password" id="cfg-secret" placeholder="secret"></div>
