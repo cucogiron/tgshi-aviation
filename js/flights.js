@@ -9,8 +9,8 @@ const Flights = (() => {
   let searchQuery = '';
 
 function fRow(f) {
-  const dc = f.r === 'COCO' ? 'c1' : f.r === 'CUCO' ? 'c2' : 'c3';
-  const bx = f.t === 'STD'
+  var dc = f.r === 'COCO' ? 'c1' : f.r === 'CUCO' ? 'c2' : 'c3';
+  var bx = f.t === 'STD'
     ? '<span class="bx s">STD</span>'
     : f.t === 'FF'
       ? '<span class="bx f">FF</span>'
@@ -18,93 +18,113 @@ function fRow(f) {
         ? '<span class="bx m">MANTE</span>'
         : '<span class="bx p">Personal</span>';
 
-  const displayR = f.r === 'SENSHI' ? 'Charter' : f.r;
+  var displayR = f.r === 'SENSHI' ? 'Charter' : f.r;
+  var pendTag = f.verified === false ? '<span class="pend-badge">Pend</span>' : '';
 
-  const revenueUsd = Number(f.rv || 0);
-
-  const rv = revenueUsd > 0
-    ? '<span style="color:#1A6B3A">$' + revenueUsd.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span>'
-    : '';
-
-  // Flight expenses (landing fees, transport, etc.)
-  const relatedExpenses = Array.isArray(DB.flight_expenses)
-    ? DB.flight_expenses.filter(function(e) { return Number(e.flight_id) === Number(f.id); })
-    : [];
-
-  const expenseTotals = relatedExpenses.reduce(function(acc, e) {
-    var cur = String(e.currency || 'QTZ').toUpperCase();
-    var amt = Number(e.amount || 0);
-    if (cur === 'USD') acc.usd += amt;
-    else acc.qtz += amt;
-    return acc;
-  }, { usd: 0, qtz: 0 });
-
-  // Fuel cost for this flight (QTZ) -- based on month average
-  var fuelCostQtz = 0;
-  if (f.h > 0 && f.d) {
-    var flightMonth = f.d.slice(0, 7); // "YYYY-MM"
-    var monthFd = flightMonth + '-01';
-    var monthTd = flightMonth + '-31';
-    var monthFlights = DB.flights.filter(function(fl) { return fl.d >= monthFd && fl.d <= monthTd; });
-    var monthFuel = DB.fuel.filter(function(fu) { return fu.d >= monthFd && fu.d <= monthTd; });
-    var totalHrsMonth = monthFlights.reduce(function(s, fl) { return s + (fl.h || 0); }, 0);
-    var totalFuelMonth = monthFuel.reduce(function(s, fu) { return s + (fu.m || 0); }, 0);
-    var qph = totalHrsMonth > 0 ? totalFuelMonth / totalHrsMonth : 0;
-    fuelCostQtz = f.h * qph;
-  }
-
-  // Add fuel to QTZ expenses
-  var totalExpQtz = expenseTotals.qtz + fuelCostQtz;
-  var totalExpUsd = expenseTotals.usd;
-
-  // Expense display line
-  var exp = '';
-  var expParts = [];
-  if (totalExpUsd > 0) {
-    expParts.push('$' + totalExpUsd.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-  }
-  if (totalExpQtz > 0) {
-    expParts.push('Q' + totalExpQtz.toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
-  }
-  if (expParts.length > 0) {
-    exp = '<span style="color:#8B5E00">' + expParts.join(' + ') + '</span>';
-  }
-
-  // Net by currency
-  var netUsd = revenueUsd - totalExpUsd;
-  var netQtz = 0 - totalExpQtz;
-
-  var net = '';
-  if (revenueUsd > 0 || totalExpUsd > 0 || totalExpQtz > 0) {
-    var netParts = [];
-
-    if (revenueUsd > 0 || totalExpUsd > 0) {
-      var usdColor = netUsd >= 0 ? '#1A6B3A' : '#B42318';
-      netParts.push(
-        '<span style="color:' + usdColor + ';font-weight:700">Net $' + netUsd.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span>'
-      );
-    }
-
-    if (totalExpQtz > 0) {
-      netParts.push(
-        '<span style="color:#B42318;font-weight:700">Net Q' + netQtz.toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '</span>'
-      );
-    }
-
-    net = netParts.join(' ');
-  }
-
-  const pendTag = f.verified === false ? '<span class="pend-badge">⏳</span>' : '';
-  var pilotDisplay = f.p || '';
-
+  var pilotDisplay = '';
   if (f.pilot_roster_id) {
     var rp = App.getPilot(f.pilot_roster_id);
     if (rp) pilotDisplay = rp.name;
+  } else if (f.p) {
+    var pu = App.getUser(f.p);
+    pilotDisplay = pu.name || f.p;
   }
 
   var editBtn = App.isAdmin() ? '<button class="edit-btn" onclick="Flights.openEdit(' + f.id + ')">editar</button>' : '';
   var dupBtn = App.isAdmin() ? '<button class="dup-btn" onclick="Flights.duplicateFlight(' + f.id + ')">duplicar</button>' : '';
   var tachDisplay = f.hf ? '<div class="tach-sm">TACH ' + f.hf.toFixed(1) + '</div>' : '';
+
+  // --- Profitability / cost block ---
+  var profitBlock = '';
+  var revenueUsd = Number(f.rv || 0);
+
+  if (f.h > 0) {
+    // Fuel cost (QTZ) based on month average
+    var fuelCostQtz = 0;
+    if (f.h > 0 && f.d) {
+      var flightMonth = f.d.slice(0, 7);
+      var monthFd = flightMonth + '-01';
+      var monthTd = flightMonth + '-31';
+      var totalHrsMonth = 0;
+      var totalFuelMonth = 0;
+      for (var fi = 0; fi < DB.flights.length; fi++) {
+        var fl = DB.flights[fi];
+        if (fl.d >= monthFd && fl.d <= monthTd) totalHrsMonth += (fl.h || 0);
+      }
+      for (var fu = 0; fu < DB.fuel.length; fu++) {
+        var fue = DB.fuel[fu];
+        if (fue.d >= monthFd && fue.d <= monthTd) totalFuelMonth += (fue.m || 0);
+      }
+      var qph = totalHrsMonth > 0 ? totalFuelMonth / totalHrsMonth : 0;
+      fuelCostQtz = f.h * qph;
+    }
+
+    // Pilot cost (USD) based on rates
+    var rate = App.getRateFD(f.d);
+    var pilotCostUsd = f.h > 0 ? (f.h < 1 ? 1 : f.h) * rate.pilot : 0;
+    var waitCostUsd = (f.eh || 0) * rate.gw;
+
+    // Flight expenses
+    var expUsd = 0;
+    var expQtz = 0;
+    var expenses = DB.flight_expenses || [];
+    for (var ei = 0; ei < expenses.length; ei++) {
+      var e = expenses[ei];
+      if (Number(e.flight_id) === Number(f.id)) {
+        if (String(e.currency || 'QTZ').toUpperCase() === 'USD') expUsd += Number(e.amount || 0);
+        else expQtz += Number(e.amount || 0);
+      }
+    }
+
+    // Totals
+    var totalCostUsd = pilotCostUsd + waitCostUsd + expUsd;
+    var totalCostQtz = fuelCostQtz + expQtz;
+    var netUsd = revenueUsd - totalCostUsd;
+
+    // Format helpers
+    var fmtD = function(v) { return '$' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); };
+    var fmtQ = function(v) { return 'Q' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); };
+
+    // Build mini P&L
+    var lines = [];
+
+    // Revenue
+    if (revenueUsd > 0) {
+      lines.push('<div class="fp-row"><span class="fp-lbl">Ingreso</span><span class="fp-val" style="color:#1A6B3A">' + fmtD(revenueUsd) + '</span></div>');
+    }
+
+    // Costs
+    if (fuelCostQtz > 0) {
+      lines.push('<div class="fp-row"><span class="fp-lbl">Combustible</span><span class="fp-val">' + fmtQ(fuelCostQtz) + '</span></div>');
+    }
+    if (pilotCostUsd > 0) {
+      var pilotLabel = 'Piloto' + (waitCostUsd > 0 ? ' + espera' : '');
+      lines.push('<div class="fp-row"><span class="fp-lbl">' + pilotLabel + '</span><span class="fp-val">' + fmtD(pilotCostUsd + waitCostUsd) + '</span></div>');
+    }
+    if (expUsd > 0 || expQtz > 0) {
+      var expParts = [];
+      if (expUsd > 0) expParts.push(fmtD(expUsd));
+      if (expQtz > 0) expParts.push(fmtQ(expQtz));
+      lines.push('<div class="fp-row"><span class="fp-lbl">Gastos</span><span class="fp-val">' + expParts.join(' + ') + '</span></div>');
+    }
+
+    // Net line
+    if (revenueUsd > 0) {
+      var netColor = netUsd >= 0 ? '#1A6B3A' : '#B42318';
+      var netSign = netUsd < 0 ? '-' : '';
+      var netLine = '<div class="fp-net" style="border-top:1px solid #E2E6EE;margin-top:3px;padding-top:3px"><span class="fp-lbl" style="font-weight:700">Net USD</span><span class="fp-val" style="color:' + netColor + ';font-weight:800">' + netSign + fmtD(netUsd) + '</span></div>';
+
+      // If there are QTZ costs, show net QTZ too
+      if (totalCostQtz > 0) {
+        netLine += '<div class="fp-net"><span class="fp-lbl" style="font-weight:700">Costo QTZ</span><span class="fp-val" style="color:#B42318;font-weight:800">-' + fmtQ(totalCostQtz) + '</span></div>';
+      }
+      lines.push(netLine);
+    }
+
+    if (lines.length > 0) {
+      profitBlock = '<div class="f-profit">' + lines.join('') + '</div>';
+    }
+  }
 
   return '<div class="fi">'
     + '<div class="fdot ' + dc + '"></div>'
@@ -113,12 +133,10 @@ function fRow(f) {
     + '<div class="fme">'
     + '<span>' + displayR + '</span>'
     + (pilotDisplay ? '<span>' + pilotDisplay + '</span>' : '')
-    + rv
-    + exp
-    + net
     + editBtn
     + dupBtn
     + '</div>'
+    + profitBlock
     + '</div>'
     + '<div class="frt">'
     + '<div class="fh">' + f.h.toFixed(1) + '<small>hr</small></div>'
