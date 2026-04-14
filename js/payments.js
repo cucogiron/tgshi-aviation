@@ -11,13 +11,31 @@ var Payments = (function() {
   var stmtYear = new Date().getFullYear().toString();
 
   // Everything before this month is considered paid in full (clean slate).
-  // Charges and payments before this date are ignored.
+  // Charges and payments before this date are ignored — billing starts here.
   var TRACKING_START = '2026-01';
+
+  // QuickBooks opening balances as of Dec 31, 2025 (QTZ).
+  // Positive = owner owes Senshi, Negative = Senshi owes owner.
+  // USD balances start at $0 (pilot fees tracked separately from QB).
+  var OPENING_BALANCES = {
+    COCO:   { qtz:  7133.71, usd: 0 },
+    CUCO:   { qtz: -19949.02, usd: 0 },
+    SENSHI: { qtz: 0, usd: 0 }
+  };
 
   // --- Ensure DB.payments exists ---
   function ensureData() {
     if (!DB.payments) DB.payments = [];
     if (!DB.meta.last_payment_id) DB.meta.last_payment_id = 0;
+  }
+
+  // --- Payment sign: how a payment affects an owner's balance ---
+  // Returns -1 if payment reduces owner's balance (they paid or got reimbursed)
+  // Returns +1 if payment increases owner's balance (rare: another owner paid on their behalf)
+  function paymentSign(p, owner) {
+    if (p.from === owner) return -1;                          // owner paid
+    if (p.from === 'SENSHI' && p.to === owner) return -1;    // Senshi reimbursed owner
+    return 1;                                                  // owner-to-owner transfer, recipient
   }
 
   // ========== STATEMENT VIEW ==========
@@ -98,47 +116,38 @@ var Payments = (function() {
     var container = document.getElementById('pay-stmt');
     if (!container) return;
 
-    console.log('[Payments] buildStatement owner=' + owner + ' year=' + year + ' DB.payments.length=' + DB.payments.length);
-    DB.payments.forEach(function(p) {
-      console.log('[Payments]   payment #' + p.id + ': ' + p.date + ' from=' + p.from + ' to=' + p.to + ' qtz=' + p.amount_qtz + ' usd=' + p.amount_usd);
-    });
 
     var fQ = function(v) { return 'Q' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
     var fD = function(v) { return '$' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
     var fSQ = function(v) { return v < 0 ? '-' + fQ(v) : fQ(v); };
     var fSD = function(v) { return v < 0 ? '-' + fD(v) : fD(v); };
 
-    // Compute opening balance: sum all charges and payments BEFORE this year
-    // but only from TRACKING_START onwards (everything before is considered settled)
-    var openQTZ = 0, openUSD = 0;
+    // --- Opening balance ---
+    // Start from QB opening balances (Dec 31 2025),
+    // then accumulate charges + payments from TRACKING_START up to this year.
+    var ob = OPENING_BALANCES[owner] || { qtz: 0, usd: 0 };
+    var openQTZ = ob.qtz;
+    var openUSD = ob.usd;
     var cutoff = year + '-01-01';
-    var effectiveStart = TRACKING_START > year + '-01' ? TRACKING_START : year + '-01';
 
-    // Historical charges (from tracking start up to this year)
+    // If viewing a year after TRACKING_START year, accumulate prior year charges + payments
     if (year + '-01' > TRACKING_START) {
       var allMonths = getChargeMonths(owner, TRACKING_START, year + '-01');
       allMonths.forEach(function(mc) {
-        if (mc.month < year + '-01') {
-          openQTZ += mc.chargeQTZ;
-          openUSD += mc.chargeUSD;
-        }
+        openQTZ += mc.chargeQTZ;
+        openUSD += mc.chargeUSD;
       });
     }
 
-    // Historical payments before this year but from tracking start onwards
+    // All payments for this owner (used for opening balance + monthly rows)
     var ownerPayments = DB.payments.filter(function(p) {
       return (p.from === owner || p.to === owner);
     });
+
+    // Historical payments before this year but from tracking start onwards
     ownerPayments.forEach(function(p) {
       if (p.date < cutoff && p.date >= TRACKING_START + '-01') {
-        var sign;
-        if (p.from === owner) {
-          sign = -1; // owner paid → reduces balance
-        } else if (p.from === 'SENSHI' && p.to === owner) {
-          sign = -1; // Senshi reimbursed owner → reduces balance
-        } else {
-          sign = 1;  // another owner paid on their behalf
-        }
+        var sign = paymentSign(p, owner);
         openQTZ += sign * (p.amount_qtz || 0);
         openUSD += sign * (p.amount_usd || 0);
       }
@@ -158,8 +167,10 @@ var Payments = (function() {
       + (owner === 'SENSHI' ? 'Charter' : owner) + ' — ' + year + '</div></div><div class="bil-bd">';
 
     // Opening balance row
+    var trackingStartYear = TRACKING_START.slice(0, 4);
+    var openLabel = (year === trackingStartYear) ? 'Saldo QB Dic ' + (+trackingStartYear - 1) : 'Saldo inicial ' + year;
     h += '<div class="bil-row" style="background:#F5F6F8;border-radius:6px;margin-bottom:4px">'
-      + '<div class="bil-lbl" style="font-weight:700">Saldo inicial ' + year + '</div>'
+      + '<div class="bil-lbl" style="font-weight:700">' + openLabel + '</div>'
       + '<div class="bil-val" style="display:flex;gap:10px">'
       + '<span class="' + (runQTZ > 0 ? '' : 'neg') + '">' + fSQ(runQTZ) + '</span>'
       + '<span class="' + (runUSD > 0 ? '' : 'neg') + '">' + fSD(runUSD) + '</span>'
@@ -184,17 +195,7 @@ var Payments = (function() {
       var monthPayments = [];
       ownerPayments.forEach(function(p) {
         if (p.date.slice(0, 7) === mm) {
-          // Any payment where this owner is the payer (from) or the recipient of a
-          // reimbursement (to, from Senshi) reduces their balance.
-          // Only owner-to-owner transfers where this owner is the recipient increase balance.
-          var sign;
-          if (p.from === owner) {
-            sign = -1; // owner paid → balance decreases
-          } else if (p.from === 'SENSHI' && p.to === owner) {
-            sign = -1; // Senshi reimbursed owner → balance decreases
-          } else {
-            sign = 1;  // another owner paid on their behalf → balance increases (rare)
-          }
+          var sign = paymentSign(p, owner);
           monthPayQTZ += sign * (p.amount_qtz || 0);
           monthPayUSD += sign * (p.amount_usd || 0);
           monthPayments.push(p);
@@ -207,7 +208,6 @@ var Payments = (function() {
       runQTZ += mc.chargeQTZ + monthPayQTZ;
       runUSD += mc.chargeUSD + monthPayUSD;
 
-      console.log('[Payments] ' + mm + ': chargeQ=' + mc.chargeQTZ.toFixed(2) + ' chargeU=' + mc.chargeUSD.toFixed(2) + ' payQ=' + monthPayQTZ.toFixed(2) + ' payU=' + monthPayUSD.toFixed(2) + ' payments=' + monthPayments.length + ' | runQ=' + runQTZ.toFixed(2) + ' runU=' + runUSD.toFixed(2));
 
       h += '<div style="border-top:1px solid #E2E6EE;margin-top:6px;padding-top:6px">';
       h += '<div class="bil-row"><div class="bil-lbl" style="font-weight:700;font-size:11px">' + MO[monthNum] + ' ' + year + '</div><div class="bil-val" style="font-size:9px;color:#8892A4"></div></div>';
@@ -567,57 +567,35 @@ var Payments = (function() {
 
   function getOwnerBalances() {
     ensureData();
-    console.log('[Payments] getOwnerBalances: DB.payments.length=' + DB.payments.length);
-    var balances = { COCO: { qtz: 0, usd: 0 }, CUCO: { qtz: 0, usd: 0 }, SENSHI: { qtz: 0, usd: 0 } };
+    var balances = {};
 
-    // All charges up to today
     var now = new Date();
-    var toMonth = now.getFullYear() + '-' + App.pad2(now.getMonth() + 1);
+    var nextMonth = (function() {
+      var ny = now.getFullYear(), nm = now.getMonth() + 2;
+      if (nm > 12) { nm = 1; ny++; }
+      return ny + '-' + App.pad2(nm);
+    })();
 
     ['COCO', 'CUCO', 'SENSHI'].forEach(function(owner) {
-      var charges = getChargeMonths(owner, TRACKING_START, (function() {
-        // next month after current
-        var ny = now.getFullYear(), nm = now.getMonth() + 2;
-        if (nm > 12) { nm = 1; ny++; }
-        return ny + '-' + App.pad2(nm);
-      })());
+      // Start from QB opening balance
+      var ob = OPENING_BALANCES[owner] || { qtz: 0, usd: 0 };
+      balances[owner] = { qtz: ob.qtz, usd: ob.usd };
 
+      // Add all charges from tracking start to now
+      var charges = getChargeMonths(owner, TRACKING_START, nextMonth);
       charges.forEach(function(mc) {
         balances[owner].qtz += mc.chargeQTZ;
         balances[owner].usd += mc.chargeUSD;
       });
-    });
 
-    // All payments — a payment FROM an owner TO Senshi reduces that owner's balance
-    // A reimbursement FROM Senshi TO an owner also reduces that owner's balance (credit)
-    DB.payments.forEach(function(p) {
-      // Determine which owner this payment affects
-      // Case 1: Owner pays Senshi (from=owner, to=SENSHI) → owner's balance decreases
-      // Case 2: Senshi reimburses owner (from=SENSHI, to=owner) → owner's balance decreases
-      // Case 3: Owner-to-owner transfer → from's balance decreases, to's balance increases
-      if (p.from !== 'SENSHI' && p.to === 'SENSHI') {
-        // Owner paying Senshi — reduces what they owe
-        if (balances[p.from]) {
-          balances[p.from].qtz -= (p.amount_qtz || 0);
-          balances[p.from].usd -= (p.amount_usd || 0);
+      // Subtract all payments for this owner
+      DB.payments.forEach(function(p) {
+        if (p.from === owner || p.to === owner) {
+          var sign = paymentSign(p, owner);
+          balances[owner].qtz += sign * (p.amount_qtz || 0);
+          balances[owner].usd += sign * (p.amount_usd || 0);
         }
-      } else if (p.from === 'SENSHI' && p.to !== 'SENSHI') {
-        // Senshi reimbursing an owner — also reduces what they owe (credit)
-        if (balances[p.to]) {
-          balances[p.to].qtz -= (p.amount_qtz || 0);
-          balances[p.to].usd -= (p.amount_usd || 0);
-        }
-      } else if (p.from !== 'SENSHI' && p.to !== 'SENSHI') {
-        // Owner-to-owner (rare) — from pays on behalf, gets credit; to owes more
-        if (balances[p.from]) {
-          balances[p.from].qtz -= (p.amount_qtz || 0);
-          balances[p.from].usd -= (p.amount_usd || 0);
-        }
-        if (balances[p.to]) {
-          balances[p.to].qtz += (p.amount_qtz || 0);
-          balances[p.to].usd += (p.amount_usd || 0);
-        }
-      }
+      });
     });
 
     return balances;
