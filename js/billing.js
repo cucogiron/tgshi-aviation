@@ -301,6 +301,11 @@ const Billing = (() => {
     });
     if (notes.length) h += `<div class="qb-note">📋 Nota QB:<br>${notes.join('<br>')}</div>`;
 
+    // ── H — SALDOS PENDIENTES ──
+    if (typeof Payments !== 'undefined') {
+      h += Payments.buildBillingSectionH();
+    }
+
     // ── Download buttons — 3 invoices ──
     h += `<div class="stitle" style="margin-top:14px">Descargar facturas</div>
       <div style="display:grid;grid-template-columns:1fr;gap:7px;margin-bottom:10px">

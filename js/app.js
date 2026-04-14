@@ -22,6 +22,7 @@ const DB = {
   ],
   maintenance: [],
   flight_expenses: [],
+  payments: [],
   meta: { last_tach: 0, last_flight_id: 0, last_fuel_id: 0, last_sched_id: 0, last_pilot_id: 0, last_xp_id: 0, last_xl_id: 0, last_maint_id: 0 }
 };
 
@@ -174,6 +175,11 @@ const App = (() => {
     if (id === 'new' && (isAdmin() || isPilotAdmin())) Admin.buildAdminPanel();
     if (id === 'xch') Exchange.buildExchangePage();
     if (id === 'fexp' && typeof FlightExpenses !== 'undefined') FlightExpenses.buildExpensePage();
+    if (id === 'pay' && typeof Payments !== 'undefined') {
+      const addBtn = document.getElementById('pay-add-btn');
+      if (addBtn) addBtn.style.display = isAdmin() ? 'inline-block' : 'none';
+      Payments.buildPaymentsPage();
+    }
     if (id === 'maint' && typeof Maintenance !== 'undefined') {
       const addBtn = document.getElementById('maint-add-btn');
       if (addBtn) addBtn.style.display = isAdmin() ? 'block' : 'none';

@@ -74,6 +74,8 @@ var Exports = (function() {
         addMaintenanceSheet(wb, from, to);
       } else if (section === 'expenses') {
         addExpensesSheet(wb, from, to);
+      } else if (section === 'payments') {
+        addPaymentsSheet(wb, from, to);
       } else {
         var el;
         el = document.getElementById('exp-flights');
@@ -85,9 +87,10 @@ var Exports = (function() {
         el = document.getElementById('exp-maintenance');
         if (!el || el.checked) addMaintenanceSheet(wb, from, to);
         addExpensesSheet(wb, from, to);
+        addPaymentsSheet(wb, from, to);
       }
 
-      var labels = { flights: 'Logbook', fuel: 'Combustible', schedule: 'Agenda', maintenance: 'Mantenimiento', expenses: 'Gastos_Vuelo', all: 'TG-SHI' };
+      var labels = { flights: 'Logbook', fuel: 'Combustible', schedule: 'Agenda', maintenance: 'Mantenimiento', expenses: 'Gastos_Vuelo', payments: 'Pagos', all: 'TG-SHI' };
       var filename = (labels[section] || 'TG-SHI') + '_' + from + '_' + to + '.xlsx';
       XLSX.writeFile(wb, filename);
 
@@ -289,6 +292,43 @@ var Exports = (function() {
     }
 
     XLSX.utils.book_append_sheet(wb, ws, 'Gastos Vuelo');
+  }
+
+  // ---- Payments ----
+  function addPaymentsSheet(wb, from, to) {
+    var pays = (DB.payments || []).filter(function(p) { return p.date >= from && p.date <= to; });
+    pays.sort(function(a, b) { return a.date.localeCompare(b.date); });
+
+    if (pays.length === 0) return;
+
+    var rows = [];
+    rows.push(['Fecha', 'De', 'A', 'Monto QTZ', 'Monto USD', 'Tipo de Cambio', 'Registrado por', 'Notas']);
+
+    pays.forEach(function(p) {
+      rows.push([
+        p.date,
+        p.from === 'SENSHI' ? 'Charter' : p.from,
+        p.to === 'SENSHI' ? 'Charter' : p.to,
+        p.amount_qtz || 0,
+        p.amount_usd || 0,
+        p.exchange_rate || '',
+        p.recorded_by || '',
+        p.notes || ''
+      ]);
+    });
+
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    formatSheet(ws, rows[0].length, rows.length);
+
+    if (rows.length > 1) {
+      var totalRow = rows.length + 1;
+      ws['A' + totalRow] = { v: 'TOTALES', t: 's' };
+      ws['D' + totalRow] = { f: 'SUM(D2:D' + rows.length + ')' };
+      ws['E' + totalRow] = { f: 'SUM(E2:E' + rows.length + ')' };
+      ws['!ref'] = 'A1:H' + totalRow;
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Pagos');
   }
 
   // ---- Column auto-width ----
