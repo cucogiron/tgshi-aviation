@@ -585,9 +585,9 @@ textarea{resize:vertical;min-height:60px}
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <div class="stitle" style="margin:0">Pagos y saldos</div>
     <div style="display:flex;gap:5px" id="pay-admin-btns">
-      <button class="btn sm" onclick="Payments.openAddCharge()">+ Cargo</button>
-      <button class="btn sm" style="background:#1A6B3A" onclick="Payments.openAddPayment('credit')">+ Credito</button>
-      <button class="btn sm" onclick="Payments.openAddPayment('payment')">+ Pago</button>
+      <button class="btn sm" onclick="Payments.openTransaction('payment')">+ Pago</button>
+      <button class="btn sm" style="background:#1A6B3A" onclick="Payments.openTransaction('credit')">+ Credito</button>
+      <button class="btn sm" style="background:#8B1A1A" onclick="Payments.openTransaction('charge')">+ Cargo</button>
     </div>
   </div>
   <div id="pay-content"></div>
