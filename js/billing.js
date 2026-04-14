@@ -16,8 +16,9 @@ const Billing = (() => {
       const pr = m === 1 ? `${y - 1}-12` : `${y}-${App.pad2(m - 1)}`;
       const ef = document.getElementById('b-from');
       const et = document.getElementById('b-to');
-      if (ef) ef.value = pr;
-      if (et) et.value = pr;
+      // Only set defaults if empty — don't overwrite user's selection
+      if (ef && !ef.value) ef.value = pr;
+      if (et && !et.value) et.value = pr;
     } catch (e) { console.error('initBil error:', e); }
   }
 
@@ -99,10 +100,16 @@ const Billing = (() => {
     const fexpData = (typeof FlightExpenses !== 'undefined') ? FlightExpenses.billingForPeriod(from, to) : null;
     const fexpUSD = { COCO: 0, CUCO: 0, SENSHI: 0 };
     const fexpQTZ = { COCO: 0, CUCO: 0, SENSHI: 0 };
+    const fexpCreditUSD = { COCO: 0, CUCO: 0, SENSHI: 0 };
+    const fexpCreditQTZ = { COCO: 0, CUCO: 0, SENSHI: 0 };
     if (fexpData) {
       ['COCO', 'CUCO', 'SENSHI'].forEach(o => {
         fexpUSD[o] = fexpData[o].USD;
         fexpQTZ[o] = fexpData[o].QTZ;
+        if (fexpData.payer_credits && fexpData.payer_credits[o]) {
+          fexpCreditUSD[o] = fexpData.payer_credits[o].USD || 0;
+          fexpCreditQTZ[o] = fexpData.payer_credits[o].QTZ || 0;
+        }
       });
     }
 
@@ -236,11 +243,14 @@ const Billing = (() => {
       // Flight expenses
       const ownerFexpUSD = fexpData ? fexpUSD[owner] : 0;
       const ownerFexpQTZ = fexpData ? fexpQTZ[owner] : 0;
+      // Payer credits (out of pocket for other owners' flights)
+      const ownerCredUSD = fexpData ? fexpCreditUSD[owner] : 0;
+      const ownerCredQTZ = fexpData ? fexpCreditQTZ[owner] : 0;
       // Fernando portion (what goes to Fernando via Senshi)
       const ferTotal = ownerFerUSD + ownerAdminUSD;
-      // Total USD owed to Senshi = Fernando portion + maintenance USD + flight expenses USD
-      const totalUSD = ferTotal + ownerMaintUSD + ownerFexpUSD;
-      const totalQTZ = fuelNet[owner] + ownerMaintQTZ + ownerFexpQTZ;
+      // Total USD owed to Senshi = Fernando portion + maintenance USD + flight expenses USD - credits
+      const totalUSD = ferTotal + ownerMaintUSD + ownerFexpUSD - ownerCredUSD;
+      const totalQTZ = fuelNet[owner] + ownerMaintQTZ + ownerFexpQTZ - ownerCredQTZ;
 
       h += `<div class="bil-row" style="${border}"><div class="bil-lbl" style="font-weight:700;font-size:11px">${label}</div><div class="bil-val"></div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Combustible neto (QTZ)</div><div class="bil-val ${sg(fuelNet[owner])}">${fuelNet[owner] < 0 ? '(' + fQ(fuelNet[owner]) + ')' : fQ(fuelNet[owner])}</div></div>
@@ -251,6 +261,8 @@ const Billing = (() => {
         ${ownerMaintUSD === 0 && ownerMaintQTZ === 0 ? `<div class="bil-row"><div class="bil-lbl">↳ ${maintLabel}</div><div class="bil-val">$0.00</div></div>` : ''}
         ${ownerFexpUSD > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Gastos de vuelo (USD)</div><div class="bil-val">${fD(ownerFexpUSD)}</div></div>` : ''}
         ${ownerFexpQTZ > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Gastos de vuelo (QTZ)</div><div class="bil-val">${fQ(ownerFexpQTZ)}</div></div>` : ''}
+        ${ownerCredUSD > 0 ? `<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A">↳ Credito gastos pagados de bolsillo (USD)</div><div class="bil-val neg">(${fD(ownerCredUSD)})</div></div>` : ''}
+        ${ownerCredQTZ > 0 ? `<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A">↳ Credito gastos pagados de bolsillo (QTZ)</div><div class="bil-val neg">(${fQ(ownerCredQTZ)})</div></div>` : ''}
         <div class="bil-row"><div class="bil-lbl"><b>↳ Total USD</b></div><div class="bil-val"><b>${fD(totalUSD)}</b></div></div>
         <div class="bil-row"><div class="bil-lbl"><b>↳ Total QTZ</b></div><div class="bil-val ${sg(totalQTZ)}"><b>${totalQTZ < 0 ? '(' + fQ(totalQTZ) + ')' : fQ(totalQTZ)}</b></div></div>`;
     });
@@ -303,7 +315,7 @@ const Billing = (() => {
 
     // ── H — SALDOS PENDIENTES ──
     if (typeof Payments !== 'undefined') {
-      h += Payments.buildBillingSectionH();
+      h += Payments.buildBillingSectionH(from, to);
     }
 
     // ── Download buttons — 3 invoices ──
