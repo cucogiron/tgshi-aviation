@@ -345,6 +345,7 @@ textarea{resize:vertical;min-height:60px}
   <button class="bt" onclick="App.nav('bil',4)"><div class="bt-i">🧾</div><div class="bt-l">Billing</div></button>
   <button class="bt" onclick="App.nav('xch',5)"><div class="bt-i">🤝</div><div class="bt-l">Interc.</div></button>
   <button class="bt" onclick="App.nav('maint',6)"><div class="bt-i">🔧</div><div class="bt-l">Mante</div></button>
+  <button class="bt" onclick="App.nav('fexp',3)"><div class="bt-i">💸</div><div class="bt-l">Expenses</div></button>
   <button class="bt" onclick="App.nav('new',7)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
 </div>
 
@@ -425,6 +426,22 @@ textarea{resize:vertical;min-height:60px}
   <div class="card" id="fuel-list"></div>
 </div>
 
+<!-- ===== FLIGHT-EXPENSES ===== -->
+
+  <div id="pg-fexp" class="pg">
+  <div class="card">
+    <div class="ch">
+      <div class="ct">Gastos de vuelo</div>
+    </div>
+
+    <div class="cb">
+      <div id="fexp-content"></div>
+    </div>
+  </div>
+</div>
+  
+  
+  
 <!-- ===== EXCHANGE ===== -->
 
 <div class="pg" id="pg-xch">
@@ -618,6 +635,7 @@ textarea{resize:vertical;min-height:60px}
 <script src="js/calendar.js"></script>
 <script src="js/flights.js"></script>
 <script src="js/fuel.js"></script>
+<script src="js/flight-expenses.js"></script>
 <script src="js/billing.js"></script>
 <script src="js/maintenance.js"></script>
 <script src="js/admin.js"></script>
