@@ -39,14 +39,23 @@ const Billing = (() => {
     const esp = { COCO: 0, CUCO: 0, SENSHI: 0 };
     const espHrs = { COCO: 0, CUCO: 0, SENSHI: 0 };
     let charterRev = 0;
+    // FF revenue charged to the responsible owner (they owe Senshi this amount)
+    const ffRevenue = { COCO: 0, CUCO: 0, SENSHI: 0 };
 
     fls.forEach(f => {
       const r = f.r; if (hrs[r] === undefined) return;
-      hrs[r] += f.h;
-      if (f.h > 0 && f.h < 1) { sub[r].n++; sub[r].a += f.h; }
-      espHrs[r] += (f.eh || 0);
-      esp[r] += (f.eh || 0) * rt.gw;
-      if ((f.rv || 0) > 0) charterRev += f.rv;
+      // FF flights: costs go to SENSHI, revenue charged to responsible owner
+      const costOwner = (f.t === 'FF' && r !== 'SENSHI') ? 'SENSHI' : r;
+      hrs[costOwner] += f.h;
+      if (f.h > 0 && f.h < 1) { sub[costOwner].n++; sub[costOwner].a += f.h; }
+      espHrs[costOwner] += (f.eh || 0);
+      esp[costOwner] += (f.eh || 0) * rt.gw;
+      if ((f.rv || 0) > 0) {
+        if (f.t === 'FF' && r !== 'SENSHI') {
+          ffRevenue[r] += f.rv; // Owner owes Senshi the FF revenue
+        }
+        charterRev += f.rv;
+      }
     });
 
     // --- Fuel (QTZ) ---
@@ -116,7 +125,7 @@ const Billing = (() => {
     // --- Cache ---
     lastBilData = {
       from, to, tc, periodLbl, rt, numMonths,
-      hrs, sub, esp, espHrs, charterRev,
+      hrs, sub, esp, espHrs, charterRev, ffRevenue,
       tfuel, antic, th, qph, fuelProp, fuelNet,
       bilH: { COCO: bilH('COCO'), CUCO: bilH('CUCO'), SENSHI: bilH('SENSHI') },
       pilFee: { COCO: pilFee('COCO'), CUCO: pilFee('CUCO'), SENSHI: pilFee('SENSHI') },
@@ -246,10 +255,12 @@ const Billing = (() => {
       // Payer credits (out of pocket for other owners' flights)
       const ownerCredUSD = fexpData ? fexpCreditUSD[owner] : 0;
       const ownerCredQTZ = fexpData ? fexpCreditQTZ[owner] : 0;
+      // FF revenue — owner owes Senshi this amount for FF flights they arranged
+      const ownerFFRev = ffRevenue[owner] || 0;
       // Fernando portion (what goes to Fernando via Senshi)
       const ferTotal = ownerFerUSD + ownerAdminUSD;
-      // Total USD owed to Senshi = Fernando portion + maintenance USD + flight expenses USD - credits
-      const totalUSD = ferTotal + ownerMaintUSD + ownerFexpUSD - ownerCredUSD;
+      // Total USD owed to Senshi = Fernando portion + maintenance + expenses - credits + FF revenue
+      const totalUSD = ferTotal + ownerMaintUSD + ownerFexpUSD - ownerCredUSD + ownerFFRev;
       const totalQTZ = fuelNet[owner] + ownerMaintQTZ + ownerFexpQTZ - ownerCredQTZ;
 
       h += `<div class="bil-row" style="${border}"><div class="bil-lbl" style="font-weight:700;font-size:11px">${label}</div><div class="bil-val"></div></div>
@@ -263,6 +274,7 @@ const Billing = (() => {
         ${ownerFexpQTZ > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Gastos de vuelo (QTZ)</div><div class="bil-val">${fQ(ownerFexpQTZ)}</div></div>` : ''}
         ${ownerCredUSD > 0 ? `<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A">↳ Credito gastos pagados de bolsillo (USD)</div><div class="bil-val neg">(${fD(ownerCredUSD)})</div></div>` : ''}
         ${ownerCredQTZ > 0 ? `<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A">↳ Credito gastos pagados de bolsillo (QTZ)</div><div class="bil-val neg">(${fQ(ownerCredQTZ)})</div></div>` : ''}
+        ${ownerFFRev > 0 ? `<div class="bil-row"><div class="bil-lbl" style="color:#B8600A">↳ Ingreso FF por cobrar (USD)</div><div class="bil-val" style="color:#B8600A">${fD(ownerFFRev)}</div></div>` : ''}
         <div class="bil-row"><div class="bil-lbl"><b>↳ Total USD</b></div><div class="bil-val"><b>${fD(totalUSD)}</b></div></div>
         <div class="bil-row"><div class="bil-lbl"><b>↳ Total QTZ</b></div><div class="bil-val ${sg(totalQTZ)}"><b>${totalQTZ < 0 ? '(' + fQ(totalQTZ) + ')' : fQ(totalQTZ)}</b></div></div>`;
     });
@@ -392,6 +404,11 @@ const Billing = (() => {
           fxLines.usdLines.forEach(l => usdLines.push(l));
           fxLines.qtzLines.forEach(l => qtzLines.push(l));
         }
+      }
+
+      // FF revenue — owner owes Senshi for FF flights they arranged
+      if (d.ffRevenue && d.ffRevenue[owner] > 0) {
+        usdLines.push({ desc: `Ingreso FF por cobrar (vuelos Friends & Family)`, amt: d.ffRevenue[owner] });
       }
     }
 
