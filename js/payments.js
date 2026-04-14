@@ -977,7 +977,7 @@ var Payments = (function() {
     var effectiveFrom = periodFromMonth < TRACKING_START ? TRACKING_START : periodFromMonth;
     var effectiveFromDate = effectiveFrom + '-01';
 
-    var h = '<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">H — Saldos</div></div><div class="bil-bd">';
+    var h = '<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">H — Saldos (' + effectiveFrom + ' → ' + periodToMonth + ')</div></div><div class="bil-bd">';
 
     ['COCO', 'CUCO', 'SENSHI'].forEach(function(owner, idx) {
       var label = owner === 'SENSHI' ? 'CHARTER' : owner;
@@ -1005,7 +1005,7 @@ var Payments = (function() {
         }
       });
 
-      // --- Period charges (clamped to tracking start) ---
+      // --- Period charges ---
       var periodCharges = getChargeMonths(owner, effectiveFrom, periodEndExcl);
       var chgQTZ = 0, chgUSD = 0;
       periodCharges.forEach(function(mc) {
@@ -1027,11 +1027,17 @@ var Payments = (function() {
       var endQTZ = begQTZ + chgQTZ + payQTZ;
       var endUSD = begUSD + chgUSD + payUSD;
 
+      // Compute label for saldo inicial date
+      var prevMonthParts = effectiveFrom.split('-');
+      var pY = +prevMonthParts[0], pM = +prevMonthParts[1] - 1;
+      if (pM < 1) { pM = 12; pY--; }
+      var begLabel = (effectiveFrom === TRACKING_START) ? 'Saldo QB Dic ' + (pY) : 'Saldo al ' + App.pad2(pM) + '/' + pY;
+
       h += '<div style="' + border + '">';
       h += '<div class="bil-row"><div class="bil-lbl" style="font-weight:700;font-size:11px">' + label + '</div><div class="bil-val"></div></div>';
 
       // Beginning balance
-      h += '<div class="bil-row"><div class="bil-lbl" style="color:#8892A4;font-size:10px">Saldo inicial</div>'
+      h += '<div class="bil-row"><div class="bil-lbl" style="color:#8892A4;font-size:10px">' + begLabel + '</div>'
         + '<div class="bil-val" style="display:flex;gap:8px;font-size:10px">'
         + '<span class="' + sg(begQTZ) + '">' + fSQ(begQTZ) + '</span>'
         + '<span class="' + sg(begUSD) + '">' + fSD(begUSD) + '</span>'
@@ -1039,7 +1045,7 @@ var Payments = (function() {
 
       // Period charges
       if (chgQTZ !== 0 || chgUSD !== 0) {
-        h += '<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A;font-size:10px">+ Cargos del periodo</div>'
+        h += '<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A;font-size:10px">+ Cargos ' + effectiveFrom + ' → ' + periodToMonth + '</div>'
           + '<div class="bil-val" style="display:flex;gap:8px;font-size:10px;color:#8B1A1A">'
           + (chgQTZ !== 0 ? '<span>' + fSQ(chgQTZ) + '</span>' : '')
           + (chgUSD !== 0 ? '<span>' + fSD(chgUSD) + '</span>' : '')
@@ -1048,7 +1054,7 @@ var Payments = (function() {
 
       // Period payments
       if (payQTZ !== 0 || payUSD !== 0) {
-        h += '<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A;font-size:10px">- Pagos del periodo</div>'
+        h += '<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A;font-size:10px">- Pagos ' + effectiveFrom + ' → ' + periodToMonth + '</div>'
           + '<div class="bil-val" style="display:flex;gap:8px;font-size:10px;color:#1A6B3A">'
           + (payQTZ !== 0 ? '<span>' + fSQ(payQTZ) + '</span>' : '')
           + (payUSD !== 0 ? '<span>' + fSD(payUSD) + '</span>' : '')
@@ -1057,7 +1063,7 @@ var Payments = (function() {
 
       // Ending balance
       h += '<div class="bil-row" style="background:#F5F6F8;border-radius:4px;margin-top:2px">'
-        + '<div class="bil-lbl" style="font-weight:700;font-size:11px">Saldo final</div>'
+        + '<div class="bil-lbl" style="font-weight:700;font-size:11px">Saldo al ' + periodToMonth + '</div>'
         + '<div class="bil-val" style="display:flex;gap:8px;font-size:11px">'
         + '<span class="' + sg(endQTZ) + '" style="font-weight:700">' + fSQ(endQTZ) + '</span>'
         + '<span class="' + sg(endUSD) + '" style="font-weight:700">' + fSD(endUSD) + '</span>'
