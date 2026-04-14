@@ -16,13 +16,13 @@ const DB = {
   pilots: [],
   exchange_partners: [],
   exchange_log: [],
-  flight_expenses: [],
   rates: [
     { d: '2023-03-01', pilot: 110, gw: 15, std: 750, ff: 650, admin: 300, res: 2 },
     { d: '2026-01-01', pilot: 110, gw: 15, std: 750, ff: 650, admin: 350, res: 2 }
   ],
   maintenance: [],
-  meta: { last_tach: 0, last_flight_id: 0, last_fuel_id: 0, last_sched_id: 0, last_pilot_id: 0, last_xp_id: 0, last_xl_id: 0, last_maint_id: 0, last_fexp_id: 0 }
+  flight_expenses: [],
+  meta: { last_tach: 0, last_flight_id: 0, last_fuel_id: 0, last_sched_id: 0, last_pilot_id: 0, last_xp_id: 0, last_xl_id: 0, last_maint_id: 0 }
 };
 
 // --- Constants ---
@@ -89,7 +89,6 @@ const App = (() => {
     Calendar.buildCalendar();
     Exchange.renderDashboardWidget();
     if (typeof Maintenance !== 'undefined') Maintenance.buildMaintenancePage();
-    if (typeof FlightExpenses !== 'undefined') FlightExpenses.buildExpensePage();
   }
 
   // --- Login ---
@@ -174,15 +173,13 @@ const App = (() => {
     if (id === 'sched') Calendar.buildCalendar();
     if (id === 'new' && (isAdmin() || isPilotAdmin())) Admin.buildAdminPanel();
     if (id === 'xch') Exchange.buildExchangePage();
+    if (id === 'fexp' && typeof FlightExpenses !== 'undefined') FlightExpenses.buildExpensePage();
     if (id === 'maint' && typeof Maintenance !== 'undefined') {
       const addBtn = document.getElementById('maint-add-btn');
       if (addBtn) addBtn.style.display = isAdmin() ? 'block' : 'none';
       const lbl = document.getElementById('maint-plane-label');
       if (lbl) lbl.textContent = selPlane;
       Maintenance.buildMaintenancePage();
-    }
-    if (id === 'fexp' && typeof FlightExpenses !== 'undefined') {
-      FlightExpenses.buildExpensePage();
     }
   }
 
