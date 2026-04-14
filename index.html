@@ -428,12 +428,12 @@ textarea{resize:vertical;min-height:60px}
 
 <!-- ===== FLIGHT-EXPENSES ===== -->
 
-  <div id="pg-fexp" class="pg">
+ <div id="pg-fexp" class="pg">
   <div class="card">
-    <div class="ch">
+    <div class="ch" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
       <div class="ct">Gastos de vuelo</div>
+      <button class="btn sm" onclick="FlightExpenses.openAddExpense()">+ Agregar gasto</button>
     </div>
-
     <div class="cb">
       <div id="fexp-content"></div>
     </div>
