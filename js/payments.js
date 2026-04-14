@@ -1,671 +1,1043 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="TG-SHI">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="color-scheme" content="light">
-<title>TG-SHI · Senshi v6.0</title>
-<style>
-:root{color-scheme:light}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{--nv:#1B2A4A;--md:#2E4272;--sk:#4A9EE8;--gr:#1A6B3A;--am:#B8600A;--rd:#8B1A1A;--bg:#F1F3F7;--bd:#E2E6EE;--wh:#fff;--tx:#1A1F2E;--mu:#8892A4;--acc:#F59E0B}
-html{background:#F1F3F7}
-body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;background:#F1F3F7;color:#1A1F2E;max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:80px}
-.top{background:#1B2A4A;padding:50px 16px 10px;position:sticky;top:0;z-index:99}
-.top-r{display:flex;justify-content:space-between;align-items:center}
-.top h1{font-size:19px;font-weight:800;color:#fff;letter-spacing:.06em}
-.top .sub{font-size:8px;color:rgba(255,255,255,.4);letter-spacing:.14em;margin-top:1px;text-transform:uppercase}
-.tach{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:3px 10px;font-size:11px;color:#fff;display:flex;align-items:center;gap:5px}
-.tach-lb{font-size:8px;color:rgba(255,255,255,.45);letter-spacing:.06em}
-.dot{width:6px;height:6px;border-radius:50%;background:#2DA05A;flex-shrink:0}
-.dot.sync{background:#F59E0B;animation:pulse 1s infinite}
-.dot.err{background:#C0392B}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.user-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.03em}
-.badge-admin{background:#1B4E8A33;color:#7BB8F0}
-.badge-pilot_admin{background:#1A6B3A33;color:#4ADE80}
-.badge-owner{background:#B8600A33;color:#FBB040}
-.badge-pilot{background:#6B21A833;color:#C084FC}
-.settings-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:4px 9px;font-size:10px;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;display:none;align-items:center;gap:3px}
+// =====================================================================
+// TG-SHI v6.0 -- js/payments.js
+// Payments ledger & owner statements
+// Admin-only: track actual payments between owners and Senshi
+// Currency: QTZ and USD tracked separately, with optional exchange rate
+// =====================================================================
 
-/* Bottom tabs */
-.btabs{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;background:#ffffff;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid #E2E6EE;display:flex;z-index:99;padding-bottom:env(safe-area-inset-bottom)}
-.bt{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 2px 5px;cursor:pointer;color:#8892A4;border:none;background:none;font-family:inherit;gap:2px;transition:color .2s}
-.bt.on{color:#1B2A4A}
-.bt-i{font-size:18px;line-height:1}
-.bt-l{font-size:8px;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+var Payments = (function() {
 
-/* Pages */
-.pg{display:none;padding:12px}
-.pg.on{display:block}
+  var stmtOwner = 'COCO';
+  var stmtYear = new Date().getFullYear().toString();
 
-/* Cards */
-.card{background:#ffffff;border-radius:12px;border:1px solid #E2E6EE;margin-bottom:10px;overflow:hidden}
-.ch{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #F0F2F6}
-.ct{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8892A4}
-.cb{padding:12px 14px}
+  // Everything before this month is considered paid in full (clean slate).
+  // Charges and payments before this date are ignored — billing starts here.
+  var TRACKING_START = '2026-01';
 
-/* Stats grid */
-.sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
-.st{background:#ffffff;border-radius:10px;border:1px solid #E2E6EE;padding:10px 7px;text-align:center}
-.sl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#8892A4}
-.sv{font-size:22px;font-weight:800;margin-top:2px;line-height:1;font-variant-numeric:tabular-nums}
-.sd{font-size:8px;color:#8892A4;margin-top:2px}
-.c1 .sv{color:#1B4E8A}.c2 .sv{color:#1A6B3A}.c3 .sv{color:#B8600A}
+  // QuickBooks opening balances as of Dec 31, 2025 (QTZ).
+  // Positive = owner owes Senshi, Negative = Senshi owes owner.
+  // USD balances start at $0 (pilot fees tracked separately from QB).
+  var OPENING_BALANCES = {
+    COCO:   { qtz:  7133.71, usd: 0 },
+    CUCO:   { qtz: -22129.57, usd: 0 },
+    SENSHI: { qtz: 0, usd: 0 }
+  };
 
-/* Quick stats row */
-.qs-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
-.qs{background:#ffffff;border-radius:10px;border:1px solid #E2E6EE;padding:8px 7px;text-align:center}
-.qs-l{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8892A4}
-.qs-v{font-size:16px;font-weight:800;margin-top:1px;line-height:1;color:#1A1F2E;font-variant-numeric:tabular-nums}
-.qs-d{font-size:8px;color:#8892A4;margin-top:1px}
+  // --- Ensure DB collections exist ---
+  function ensureData() {
+    if (!DB.payments) DB.payments = [];
+    if (!DB.misc_charges) DB.misc_charges = [];
+    if (!DB.meta.last_payment_id) DB.meta.last_payment_id = 0;
+    if (!DB.meta.last_misc_charge_id) DB.meta.last_misc_charge_id = 0;
+  }
 
-/* Bar chart */
-.mr{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #F5F6F8}.mr:last-child{border:none}
-.ml{font-size:9px;color:#8892A4;width:24px;flex-shrink:0}
-.bt2{flex:1;height:6px;background:#E8EAF0;border-radius:3px;overflow:hidden;display:flex}
-.bs{height:100%}
-.b1{background:#4A7CC7}.b2{background:#2DA05A}.b3{background:#E08B20}
-.mh{font-size:9px;color:#8892A4;width:30px;text-align:right;flex-shrink:0}
+  // --- Payment sign: how a payment affects an owner's balance ---
+  // Returns -1 if payment reduces owner's balance (they paid or got reimbursed)
+  // Returns +1 if payment increases owner's balance (rare: another owner paid on their behalf)
+  function paymentSign(p, owner) {
+    if (p.from === owner) return -1;                          // owner paid
+    if (p.from === 'SENSHI' && p.to === owner) return -1;    // Senshi reimbursed owner
+    return 1;                                                  // owner-to-owner transfer, recipient
+  }
 
-/* Flight items */
-.fi{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-bottom:1px solid #F5F6F8}.fi:last-child{border:none}
-.fdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
-.fdot.c1{background:#4A7CC7}.fdot.c2{background:#2DA05A}.fdot.c3{background:#E08B20}
-.fm{flex:1;min-width:0}
-.fr{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1A1F2E}
-.fme{font-size:10px;color:#8892A4;margin-top:1px;display:flex;gap:5px;flex-wrap:wrap}
-.frt{text-align:right;flex-shrink:0}
-.fh{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:#1A1F2E}
-.fh small{font-size:8px;font-weight:400;color:#8892A4}
-.fdt{font-size:9px;color:#8892A4;margin-top:1px}
-.bx{display:inline-block;padding:1px 5px;border-radius:6px;font-size:8px;font-weight:700}
-.bx.s{background:#E8F0FD;color:#1B4E8A}.bx.f{background:#FEF3CD;color:#8B5E00}
-.bx.p{background:#F0F2F6;color:#4B5563}.bx.m{background:#FDE8E8;color:#8B1A1A}
-.pend-badge{background:#FEF3CD;color:#8B5E00;padding:1px 6px;border-radius:6px;font-size:8px;font-weight:700;margin-left:3px}
-.edit-btn{font-size:9px;font-weight:700;color:#4A9EE8;background:none;border:1px solid #4A9EE8;border-radius:5px;padding:1px 6px;cursor:pointer;margin-left:5px}
-.dup-btn{font-size:9px;font-weight:700;color:#1A6B3A;background:none;border:1px solid #1A6B3A;border-radius:5px;padding:1px 6px;cursor:pointer;margin-left:3px}
-.tach-sm{font-size:8px;color:#8892A4;font-weight:400;font-variant-numeric:tabular-nums}
+  // ========== STATEMENT VIEW ==========
 
-/* Flight profitability mini P&L */
-.f-profit{background:#F8F9FB;border:1px solid #E8EAF0;border-radius:6px;padding:5px 8px;margin-top:4px;font-size:10px}
-.fp-row,.fp-net{display:flex;justify-content:space-between;padding:1px 0}
-.fp-lbl{color:#8892A4}
-.fp-val{font-weight:600;font-variant-numeric:tabular-nums;color:#1A1F2E}
+  function buildPaymentsPage() {
+    ensureData();
+    if (!App.isAdmin()) {
+      var el = document.getElementById('pay-content');
+      if (el) el.innerHTML = '<div class="empty">Solo administradores pueden ver esta seccion</div>';
+      return;
+    }
 
-/* Fuel items */
-.fue{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #F5F6F8}.fue:last-child{border:none}
-.fue-l{font-size:12px;font-weight:500;color:#1A1F2E}.fue-s{font-size:10px;color:#8892A4;margin-top:1px}
-.fue-r{text-align:right}.fue-m{font-size:14px;font-weight:700;color:#1B4E8A}.fue-d{font-size:9px;color:#8892A4}
+    try {
 
-/* Summary rows */
-.qr{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #F5F6F8}.qr:last-child{border:none}
-.ql{font-size:12px;color:#1A1F2E}.qv{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:#1A1F2E}
-.qv.c1{color:#1B4E8A}.qv.c2{color:#1A6B3A}.qv.c3{color:#B8600A}
+    var years = {};
+    DB.payments.forEach(function(p) { years[p.date.slice(0, 4)] = true; });
+    DB.flights.forEach(function(f) { years[f.d.slice(0, 4)] = true; });
+    DB.fuel.forEach(function(f) { years[f.d.slice(0, 4)] = true; });
+    var yr = new Date().getFullYear().toString();
+    if (!years[yr]) years[yr] = true;
+    var trackingStartYear = TRACKING_START.slice(0, 4);
+    var sortedYears = Object.keys(years).filter(function(y) { return y >= trackingStartYear; }).sort().reverse();
 
-/* Filters */
-.frow{display:flex;gap:5px;margin-bottom:9px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
-.frow::-webkit-scrollbar{display:none}
-.fp{padding:4px 12px;border-radius:14px;border:1.5px solid #E2E6EE;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;background:#ffffff;color:#8892A4;flex-shrink:0;transition:all .15s}
-.fp.on{background:#1B2A4A;color:#fff;border-color:#1B2A4A}
+    var h = '';
 
-/* Search input */
-.search-input{width:100%;padding:8px 12px 8px 32px;border:1.5px solid #E2E6EE;border-radius:9px;font-size:12px;font-family:inherit;color:#1A1F2E;background:#ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238892A4' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 10px center no-repeat;outline:none;margin-bottom:9px}
-.search-input:focus{border-color:#4A9EE8}
+    // Owner selector
+    h += '<div class="frow" id="pay-owner-row">';
+    ['COCO', 'CUCO', 'SENSHI'].forEach(function(o) {
+      var label = o === 'SENSHI' ? 'CHARTER' : o;
+      h += '<div class="fp' + (o === stmtOwner ? ' on' : '') + '" onclick="Payments.setOwner(\'' + o + '\',this)">' + label + '</div>';
+    });
+    h += '</div>';
 
-/* Billing */
-.bil-sec{background:#ffffff;border-radius:10px;border:1px solid #E2E6EE;margin-bottom:9px;overflow:hidden}
-.bil-hd{background:#1B2A4A;padding:8px 13px}
-.bil-ht{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em}
-.bil-bd{padding:3px 13px}
-.bil-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #F5F6F8;align-items:flex-start}.bil-row:last-child{border:none}
-.bil-lbl{font-size:11px;color:#1A1F2E}.bil-val{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
-.bil-val.neg{color:#1A6B3A}.bil-val.pos{color:#8B1A1A}
-.qb-note{background:#FFF8E1;border:1px solid #FFE082;border-radius:7px;padding:8px 11px;font-size:10px;color:#5D4037;margin-top:7px;font-style:italic}
+    // Year selector
+    h += '<div class="frow" id="pay-yr-row">';
+    sortedYears.forEach(function(y) {
+      h += '<div class="fp' + (y === stmtYear ? ' on' : '') + '" onclick="Payments.setYear(\'' + y + '\',this)">' + y + '</div>';
+    });
+    h += '</div>';
 
-/* Forms */
-.fs{margin-bottom:13px}
-.fl{display:block;font-size:9px;font-weight:700;color:#8892A4;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
-input,select,textarea{width:100%;padding:11px 12px;border:1.5px solid #E2E6EE;border-radius:9px;font-size:14px;font-family:inherit;color:#1A1F2E;background:#ffffff;-webkit-appearance:none;outline:none}
-input:focus,select:focus,textarea:focus{border-color:#4A9EE8}
-textarea{resize:vertical;min-height:60px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:13px}
-.sc{display:grid;background:#E8EAF0;border-radius:9px;padding:3px;gap:2px}
-.sb{padding:8px 3px;border:none;border-radius:7px;background:transparent;font-family:inherit;font-size:11px;font-weight:500;color:#8892A4;cursor:pointer;transition:all .15s;text-align:center}
-.sb.on{background:#ffffff;color:#1A1F2E;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.tg{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.tc{padding:10px 7px;border:2px solid #E2E6EE;border-radius:9px;cursor:pointer;transition:all .15s;text-align:center;background:#ffffff}
-.tc.on{border-color:#4A9EE8;background:#EAF4FD}
-.ti{font-size:16px;margin-bottom:2px}.tn{font-size:10px;font-weight:700;color:#1A1F2E}.td{font-size:9px;color:#8892A4;margin-top:1px}
-.btn{width:100%;padding:14px;background:#1B2A4A;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:3px}
-.btn:active{opacity:.85}
-.btn.gr{background:#1A6B3A}
-.btn.sm{padding:9px 14px;font-size:12px;width:auto;margin:0}
-.ok-bar{background:#1A6B3A;color:#fff;padding:10px 13px;border-radius:9px;font-size:12px;font-weight:600;margin-bottom:10px;display:none;align-items:center;gap:6px}
-.ok-bar::before{content:"✓";font-size:14px}
-.err-bar{background:#C0392B;color:#fff;padding:10px 13px;border-radius:9px;font-size:12px;margin-bottom:10px;display:none}
-.empty{text-align:center;padding:24px;color:#8892A4;font-size:12px}
-.empty .big{font-size:26px;margin-bottom:5px}
-.hcalc{text-align:center;font-size:11px;color:#8892A4;margin:-6px 0 10px;display:none}
-.hint{font-size:10px;color:#8892A4;margin-top:3px}
-.stitle{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8892A4;margin:12px 0 7px;padding:0 2px}
+    // Statement
+    h += '<div id="pay-stmt"></div>';
 
-/* Fuel totals bar */
-.fuel-totals{display:flex;gap:12px;padding:10px 14px;background:#F8F9FB;border-radius:10px;border:1px solid #E2E6EE;margin-bottom:10px}
-.fuel-totals .ft-item{font-size:11px;color:#1A1F2E}
-.fuel-totals .ft-item b{font-variant-numeric:tabular-nums}
+    // Recent payments list
+    h += '<div class="stitle" style="margin-top:14px">Pagos registrados</div>';
+    h += '<div id="pay-list"></div>';
 
-/* Calendar / Scheduling */
-.cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 2px}
-.cal-title{font-size:15px;font-weight:700}
-.cal-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid #E2E6EE;background:#ffffff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1A1F2E}
-.cal-btn:active{background:#F1F3F7}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:10px}
-.cal-dh{text-align:center;font-size:8px;font-weight:700;color:#8892A4;padding:4px 0;text-transform:uppercase;letter-spacing:.06em}
-.cal-d{text-align:center;padding:8px 2px;border-radius:8px;font-size:12px;cursor:pointer;transition:all .12s;position:relative;font-weight:500;color:#1A1F2E}
-.cal-d:hover{background:#E8F0FD}
-.cal-d.today{font-weight:800;color:#4A9EE8}
-.cal-d.sel{background:#1B2A4A;color:#fff;font-weight:700}
-.cal-d.sel.today{background:#4A9EE8}
-.cal-d.other{color:#C8CED8}
-.cal-d .cal-dots{display:flex;gap:2px;justify-content:center;margin-top:2px;min-height:5px}
-.cal-d .cd{width:4px;height:4px;border-radius:50%}
-.cd.req{background:#F59E0B}.cd.conf{background:#4A9EE8}.cd.mine{background:#1A6B3A}
+    var el = document.getElementById('pay-content');
+    if (el) el.innerHTML = h;
 
-/* Day detail */
-.day-detail{background:#ffffff;border-radius:12px;border:1px solid #E2E6EE;overflow:hidden}
-.dd-hd{background:#1B2A4A;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
-.dd-title{color:#fff;font-size:13px;font-weight:700}
-.dd-add{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:7px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit}
-.slot{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #F5F6F8}
-.slot:last-child{border:none}
-.slot-time{font-size:11px;font-weight:700;color:#8892A4;width:44px;flex-shrink:0;padding-top:1px;font-variant-numeric:tabular-nums}
-.slot-body{flex:1;min-width:0}
-.slot-route{font-size:13px;font-weight:600;color:#1A1F2E}
-.slot-meta{font-size:10px;color:#8892A4;margin-top:1px;display:flex;gap:5px;flex-wrap:wrap}
-.slot-status{display:inline-block;padding:1px 6px;border-radius:5px;font-size:8px;font-weight:700}
-.slot-status.requested{background:#FEF3CD;color:#92400E}
-.slot-status.confirmed{background:#DBEAFE;color:#1E40AF}
-.slot-status.completed{background:#D1FAE5;color:#065F46}
-.slot-status.cancelled{background:#FEE2E2;color:#991B1B}
-.slot-actions{flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap}
-.slot-actions button{padding:4px 8px;border-radius:5px;font-size:9px;font-weight:700;cursor:pointer;border:none;font-family:inherit}
-.slot-confirm{background:#1A6B3A;color:#fff}
-.slot-cancel{background:#FEE2E2;color:#991B1B}
-.slot-assign{background:#DBEAFE;color:#1E40AF}
+    buildStatement();
+    buildPaymentsList();
+    } catch(e) {
+      console.error('[Payments] buildPaymentsPage error:', e);
+      var el2 = document.getElementById('pay-content');
+      if (el2) el2.innerHTML = '<div class="empty" style="color:#8B1A1A">Error: ' + e.message + '</div>';
+    }
+  }
 
-/* Booking modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:flex-end}
-.modal-box{background:#ffffff;border-radius:18px 18px 0 0;padding:22px 18px 32px;width:100%;max-width:520px;margin:0 auto;max-height:85vh;overflow-y:auto}
-.modal-title{font-size:16px;font-weight:700;margin-bottom:14px;color:#1A1F2E}
-.modal-close{float:right;background:none;border:none;font-size:18px;cursor:pointer;color:#8892A4}
+  function setOwner(o, el) {
+    stmtOwner = o;
+    document.querySelectorAll('#pay-owner-row .fp').forEach(function(p) { p.classList.remove('on'); });
+    el.classList.add('on');
+    buildStatement();
+    buildPaymentsList();
+  }
 
-/* Plane selector */
-.plane-sel{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none}
-.plane-sel::-webkit-scrollbar{display:none}
-.plane-chip{padding:6px 14px;border-radius:10px;border:2px solid #E2E6EE;font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;background:#ffffff;color:#8892A4;flex-shrink:0;transition:all .15s}
-.plane-chip.on{border-color:#1B2A4A;background:#1B2A4A;color:#fff}
+  function setYear(y, el) {
+    stmtYear = y;
+    document.querySelectorAll('#pay-yr-row .fp').forEach(function(p) { p.classList.remove('on'); });
+    el.classList.add('on');
+    buildStatement();
+    buildPaymentsList();
+  }
 
-/* Pending section */
-.pend-section{background:#FFF8E1;border:1px solid #FFE082;border-radius:10px;margin-bottom:10px;overflow:hidden}
-.pend-hd{background:#F59E0B;padding:9px 13px;display:flex;justify-content:space-between;align-items:center}
-.pend-ht{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em}
-.pend-count{background:rgba(255,255,255,.3);color:#fff;border-radius:9px;padding:1px 7px;font-size:10px;font-weight:700}
-.pend-item{padding:10px 13px;border-bottom:1px solid #FDE68A;display:flex;justify-content:space-between;align-items:flex-start}
-.pend-item:last-child{border:none}
-.pend-info{font-size:11px}.pend-meta{font-size:9px;color:#92400E;margin-top:1px}
-.pend-actions{display:flex;gap:5px;flex-shrink:0;margin-left:8px}
-.ver-btn{padding:5px 10px;background:#1A6B3A;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer}
-.rej-btn{padding:5px 10px;background:#8B1A1A;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer}
+  // ========== STATEMENT BUILDER ==========
+  // Build a month-by-month running ledger for the selected owner/year.
+  // Charges come from billing logic (fuel QTZ, pilot/admin/maint/expenses USD).
+  // Payments come from DB.payments.
 
-/* Admin user management */
-.user-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #F5F6F8}
-.user-row:last-child{border:none}
-.user-info{display:flex;align-items:center;gap:8px}
-.user-icon{font-size:20px}
-.user-name{font-size:13px;font-weight:600;color:#1A1F2E}
-.user-role{font-size:10px;color:#8892A4}
-.user-actions{display:flex;gap:4px}
-.ubtn{padding:3px 8px;border-radius:5px;font-size:9px;font-weight:700;cursor:pointer;border:none;font-family:inherit}
-.ubtn.del{background:#FEE2E2;color:#991B1B}
-.ubtn.edit{background:#E8F0FD;color:#1B4E8A}
-.ubtn.reset{background:#FEF3CD;color:#92400E}
+  function buildStatement() {
+    ensureData();
+    var owner = stmtOwner;
+    var year = stmtYear;
+    var container = document.getElementById('pay-stmt');
+    if (!container) return;
 
-/* Plane management */
-.plane-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #F5F6F8}
-.plane-row:last-child{border:none}
-.plane-name{font-size:14px;font-weight:700;color:#1A1F2E}
-.plane-type{font-size:10px;color:#8892A4}
 
-/* Pilot roster */
-.pilot-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #F5F6F8}
-.pilot-row:last-child{border:none}
-.pilot-info{display:flex;align-items:center;gap:8px}
-.pilot-icon{font-size:18px}
-.pilot-name{font-size:13px;font-weight:600;color:#1A1F2E}
-.pilot-phone{font-size:10px;color:#8892A4}
-.pilot-active{font-size:8px;padding:1px 6px;border-radius:5px;font-weight:700}
-.pilot-active.yes{background:#D1FAE5;color:#065F46}
-.pilot-active.no{background:#FEE2E2;color:#991B1B}
+    var fQ = function(v) { return 'Q' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    var fD = function(v) { return '$' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    var fSQ = function(v) { return v < 0 ? '-' + fQ(v) : fQ(v); };
+    var fSD = function(v) { return v < 0 ? '-' + fD(v) : fD(v); };
 
-/* Login */
-.login-screen{position:fixed;inset:0;background:#0F1A2E!important;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;padding:28px;isolation:isolate}
-.login-logo{font-size:44px;font-weight:900;color:#fff;letter-spacing:.06em;margin-bottom:3px}
-.login-sub{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.16em;text-transform:uppercase;margin-bottom:36px}
-.login-card{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:22px;width:100%;max-width:300px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-.login-field{margin-bottom:14px}
-.login-field label{display:block;font-size:9px;font-weight:700;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
-.login-field input{width:100%;padding:12px 14px;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);border-radius:9px;font-size:15px;color:#fff;font-family:inherit;outline:none}
-.login-field input::placeholder{color:rgba(255,255,255,.35)}
-.login-field input:focus{border-color:#4A9EE8;background:rgba(255,255,255,.16)}
-.login-err{font-size:11px;color:#FF6B6B;text-align:center;margin-bottom:10px;min-height:16px}
-.login-btn{width:100%;padding:13px;background:#2563EB;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.4);-webkit-appearance:none;appearance:none}
-.login-btn:active{opacity:.85}
-.login-forgot{font-size:11px;color:rgba(255,255,255,.45);text-align:center;margin-top:12px;cursor:pointer}
-.login-forgot:hover{color:rgba(255,255,255,.7)}
+    // --- Opening balance ---
+    // Start from QB opening balances (Dec 31 2025),
+    // then accumulate charges + payments from TRACKING_START up to this year.
+    var ob = OPENING_BALANCES[owner] || { qtz: 0, usd: 0 };
+    var openQTZ = ob.qtz;
+    var openUSD = ob.usd;
+    var cutoff = year + '-01-01';
 
-/* Settings / password modals */
-.pw-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:flex;align-items:flex-end;justify-content:center}
-.pw-box{background:#ffffff;border-radius:18px 18px 0 0;padding:24px 20px 36px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto}
-.pw-title{font-size:16px;font-weight:700;margin-bottom:3px;color:#1A1F2E}
-.pw-sub{font-size:11px;color:#8892A4;margin-bottom:18px}
-.pw-field{margin-bottom:12px}
-.pw-field label{display:block;font-size:9px;font-weight:700;color:#8892A4;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
-.pw-field input,.pw-field select{width:100%;padding:11px 13px;border:1.5px solid #E2E6EE;border-radius:9px;font-size:14px;font-family:inherit;outline:none;background:#ffffff;color:#1A1F2E}
-.pw-field input:focus,.pw-field select:focus{border-color:#4A9EE8}
-.pw-err{font-size:11px;color:#C0392B;margin-bottom:10px;min-height:14px}
-.pw-ok{font-size:11px;color:#1A6B3A;margin-bottom:10px;min-height:14px;font-weight:600}
-.pw-btns{display:flex;gap:9px}
-.pw-save{flex:1;padding:12px;background:#1B2A4A;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
-.pw-cancel{padding:12px 16px;background:#E8EAF0;color:#1A1F2E;border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+    // If viewing a year after TRACKING_START year, accumulate prior year charges + payments
+    if (year + '-01' > TRACKING_START) {
+      var allMonths = getChargeMonths(owner, TRACKING_START, year + '-01');
+      allMonths.forEach(function(mc) {
+        openQTZ += mc.chargeQTZ;
+        openUSD += mc.chargeUSD;
+      });
+    }
 
-/* Token setup */
-.token-setup{background:#FFF8E1;border:1px solid #FFE082;border-radius:12px;padding:16px;margin-bottom:12px;text-align:center}
-.token-setup h3{font-size:13px;color:#5D4037;margin-bottom:6px}
-.token-setup p{font-size:11px;color:#8D6E63;margin-bottom:10px}
-.token-setup input{max-width:280px;margin:0 auto 8px;display:block;font-size:12px;padding:9px 11px}
-.token-setup button{padding:9px 18px;background:#1B2A4A;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+    // All payments for this owner (used for opening balance + monthly rows)
+    var ownerPayments = DB.payments.filter(function(p) {
+      return (p.from === owner || p.to === owner);
+    });
 
-/* Time slot picker */
-.time-pick{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:12px}
-.time-pick .sep{font-size:14px;font-weight:700;color:#8892A4;text-align:center}
+    // Historical payments before this year but from tracking start onwards
+    ownerPayments.forEach(function(p) {
+      if (p.date < cutoff && p.date >= TRACKING_START + '-01') {
+        var sign = paymentSign(p, owner);
+        openQTZ += sign * (p.amount_qtz || 0);
+        openUSD += sign * (p.amount_usd || 0);
+      }
+    });
 
-/* Confirm modal extras */
-.confirm-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
-.confirm-type-card{padding:10px 7px;border:2px solid #E2E6EE;border-radius:9px;cursor:pointer;transition:all .15s;text-align:center;background:#ffffff}
-.confirm-type-card.on{border-color:#4A9EE8;background:#EAF4FD}
-.confirm-type-card .ti{font-size:16px;margin-bottom:2px}
-.confirm-type-card .tn{font-size:10px;font-weight:700;color:#1A1F2E}
-.confirm-type-card .td{font-size:9px;color:#8892A4;margin-top:1px}
+    // Build monthly rows for this year
+    var months = [];
+    for (var m = 1; m <= 12; m++) {
+      var mm = year + '-' + App.pad2(m);
+      months.push(mm);
+    }
 
-/* Temp password display */
-.temp-pw-display{background:#D1FAE5;border:2px solid #1A6B3A;border-radius:10px;padding:14px;text-align:center;margin:10px 0}
-.temp-pw-display .label{font-size:10px;color:#065F46;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-.temp-pw-display .pw{font-size:22px;font-weight:900;color:#1A1F2E;letter-spacing:.1em;font-family:monospace}
-.temp-pw-display .note{font-size:10px;color:#8892A4;margin-top:6px}
-</style>
-</head>
-<body>
+    var runQTZ = openQTZ;
+    var runUSD = openUSD;
 
-<!-- ===== MODALS ===== -->
+    var h = '<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">Estado de cuenta — '
+      + (owner === 'SENSHI' ? 'Charter' : owner) + ' — ' + year + '</div></div><div class="bil-bd">';
 
-<div id="edit-modal" class="modal-overlay" style="display:none">
-  <div class="modal-box">
-    <button class="modal-close" onclick="Admin.closeEdit()">✕</button>
-    <div class="modal-title" id="edit-modal-title">Editar</div>
-    <div id="edit-form-content"></div>
-  </div>
-</div>
+    // Opening balance row
+    var trackingStartYear = TRACKING_START.slice(0, 4);
+    var openLabel = (year === trackingStartYear) ? 'Saldo QB Dic ' + (+trackingStartYear - 1) : 'Saldo inicial ' + year;
+    h += '<div class="bil-row" style="background:#F5F6F8;border-radius:6px;margin-bottom:4px">'
+      + '<div class="bil-lbl" style="font-weight:700">' + openLabel + '</div>'
+      + '<div class="bil-val" style="display:flex;gap:10px">'
+      + '<span class="' + (runQTZ > 0 ? '' : 'neg') + '">' + fSQ(runQTZ) + '</span>'
+      + '<span class="' + (runUSD > 0 ? '' : 'neg') + '">' + fSD(runUSD) + '</span>'
+      + '</div></div>';
 
-<div id="book-modal" class="modal-overlay" style="display:none">
-  <div class="modal-box">
-    <button class="modal-close" onclick="Calendar.closeBooking()">✕</button>
-    <div class="modal-title" id="book-modal-title">Reservar vuelo</div>
-    <div id="book-form"></div>
-  </div>
-</div>
+    var monthCharges = getChargeMonths(owner, year + '-01', year + '-13');
+    var chargeMap = {};
+    monthCharges.forEach(function(mc) { chargeMap[mc.month] = mc; });
 
-<!-- ===== TOP BAR ===== -->
+    var curMonth = new Date().getMonth() + 1;
+    var curYear = new Date().getFullYear().toString();
 
-<div class="top">
-  <div class="top-r">
-    <div><h1 id="app-title">TG-SHI</h1><div class="sub">Senshi Aviation · v6.0</div></div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div class="tach"><div><div class="tach-lb">TACH</div><span id="tachVal">—</span></div><div class="dot" id="dot"></div></div>
-      <button class="settings-btn" id="settings-btn" onclick="App.openSettings()">⚙️</button>
-    </div>
-  </div>
-</div>
+    months.forEach(function(mm, idx) {
+      var monthNum = idx + 1;
+      // Stop after current month if current year
+      if (year === curYear && monthNum > curMonth) return;
 
-<!-- ===== TAB BAR ===== -->
+      var mc = chargeMap[mm] || { chargeQTZ: 0, chargeUSD: 0, details: [] };
 
-<div class="btabs" id="btabs">
-  <button class="bt on" onclick="App.nav('dash',0)"><div class="bt-i">📊</div><div class="bt-l">Panel</div></button>
-  <button class="bt" onclick="App.nav('sched',1)"><div class="bt-i">📅</div><div class="bt-l">Agenda</div></button>
-  <button class="bt" onclick="App.nav('vl',2)"><div class="bt-i">✈️</div><div class="bt-l">Vuelos</div></button>
-  <button class="bt" onclick="App.nav('fuel',3)"><div class="bt-i">⛽</div><div class="bt-l">Comb.</div></button>
-  <button class="bt" onclick="App.nav('bil',4)"><div class="bt-i">🧾</div><div class="bt-l">Billing</div></button>
-  <button class="bt" onclick="App.nav('xch',5)"><div class="bt-i">🤝</div><div class="bt-l">Interc.</div></button>
-  <button class="bt" onclick="App.nav('maint',6)"><div class="bt-i">🔧</div><div class="bt-l">Mante</div></button>
-  <button class="bt" onclick="App.nav('fexp',7)"><div class="bt-i">💸</div><div class="bt-l">Expenses</div></button>
-  <button class="bt" onclick="App.nav('pay',8)"><div class="bt-i">💳</div><div class="bt-l">Pagos</div></button>
-  <button class="bt" onclick="App.nav('new',9)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
-</div>
+      // Payments this month
+      var monthPayQTZ = 0, monthPayUSD = 0;
+      var monthPayments = [];
+      ownerPayments.forEach(function(p) {
+        if (p.date.slice(0, 7) === mm) {
+          var sign = paymentSign(p, owner);
+          monthPayQTZ += sign * (p.amount_qtz || 0);
+          monthPayUSD += sign * (p.amount_usd || 0);
+          monthPayments.push(p);
+        }
+      });
 
-<!-- ===== DASHBOARD ===== -->
+      // Skip months with zero activity
+      if (mc.chargeQTZ === 0 && mc.chargeUSD === 0 && monthPayments.length === 0) return;
 
-<div class="pg on" id="pg-dash">
-  <div id="token-setup-area"></div>
-  <div id="pend-section" style="display:none"></div>
-  <div id="sched-pend-section" style="display:none"></div>
-  <div id="d-quick-stats"></div>
-  <div class="sg">
-    <div class="st c1"><div class="sl">COCO</div><div class="sv" id="d-co">—</div><div class="sd">hrs 2026</div></div>
-    <div class="st c2"><div class="sl">CUCO</div><div class="sv" id="d-cu">—</div><div class="sd">hrs 2026</div></div>
-    <div class="st c3"><div class="sl">CHARTER</div><div class="sv" id="d-se">—</div><div class="sd">hrs 2026</div></div>
-  </div>
-  <div class="card">
-    <div class="ch"><div class="ct">Horas mensuales 2026</div><div style="display:flex;gap:6px;font-size:8px"><span style="color:#4A7CC7">■ COCO</span><span style="color:#2DA05A">■ CUCO</span><span style="color:#E08B20">■ Charter</span></div></div>
-    <div class="cb" id="d-bars"></div>
-  </div>
-  <div class="card">
-    <div class="ch"><div class="ct">Últimos vuelos</div><a href="#" onclick="App.nav('vl',2);return false" style="font-size:10px;color:#4A9EE8;text-decoration:none;font-weight:600">Ver todos</a></div>
-    <div id="d-rec"></div>
-  </div>
-  <div class="card"><div class="ch"><div class="ct">Resumen 2026</div></div><div class="cb" id="d-sum"></div></div>
-  <div class="card" id="d-xch-card" style="display:none;cursor:pointer" onclick="App.nav('xch',5)"><div class="ch"><div class="ct">🤝 Intercambios</div><a href="#" onclick="App.nav('xch',5);return false" style="font-size:10px;color:#4A9EE8;text-decoration:none;font-weight:600">Ver todos</a></div><div class="cb" id="d-xch"></div></div>
-</div>
+      runQTZ += mc.chargeQTZ + monthPayQTZ;
+      runUSD += mc.chargeUSD + monthPayUSD;
 
-<!-- ===== SCHEDULE / CALENDAR ===== -->
 
-<div class="pg" id="pg-sched">
-  <div id="plane-sel-sched" class="plane-sel" style="margin-bottom:10px"></div>
-  <div class="card">
-    <div class="cb">
-      <div class="cal-nav">
-        <button class="cal-btn" onclick="Calendar.calNav(-1)">‹</button>
-        <div class="cal-title" id="cal-title"></div>
-        <button class="cal-btn" onclick="Calendar.calNav(1)">›</button>
-      </div>
-      <div class="cal-grid" id="cal-grid"></div>
-    </div>
-  </div>
-  <div id="day-detail"></div>
-</div>
+      h += '<div style="border-top:1px solid #E2E6EE;margin-top:6px;padding-top:6px">';
+      h += '<div class="bil-row"><div class="bil-lbl" style="font-weight:700;font-size:11px">' + MO[monthNum] + ' ' + year + '</div><div class="bil-val" style="font-size:9px;color:#8892A4"></div></div>';
 
-<!-- ===== VUELOS ===== -->
+      // Charge details
+      mc.details.forEach(function(d) {
+        if (d.amt === 0) return;
+        var absAmt = Math.abs(d.amt);
+        var cur = d.currency === 'QTZ' ? fQ(absAmt) : fD(absAmt);
+        if (d.isCredit || d.amt < 0) {
+          // Credit line (anticipo, reimbursement, etc)
+          h += '<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A;font-size:10px">- ' + d.label + '</div><div class="bil-val" style="font-size:10px;color:#1A6B3A">(' + cur + ')</div></div>';
+        } else {
+          // Charge line
+          h += '<div class="bil-row"><div class="bil-lbl" style="color:#8892A4;font-size:10px">+ ' + d.label + '</div><div class="bil-val" style="font-size:10px;color:#8B1A1A">' + cur + '</div></div>';
+        }
+      });
 
-<div class="pg" id="pg-vl">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
-    <input type="text" class="search-input" id="vl-search" placeholder="Buscar ruta…" oninput="Flights.searchVL()" autocomplete="off" style="margin-bottom:0;flex:1">
-    <button class="btn sm" style="margin-left:8px;white-space:nowrap" onclick="Exports.openExportModal('flights')">📥 Excel</button>
-  </div>
-  <div class="frow" id="flt-row">
-    <div class="fp on" onclick="Flights.filtV('ALL',this)">Todos</div>
-    <div class="fp" onclick="Flights.filtV('COCO',this)">COCO</div>
-    <div class="fp" onclick="Flights.filtV('CUCO',this)">CUCO</div>
-    <div class="fp" onclick="Flights.filtV('SENSHI',this)">Charter</div>
-    <div class="fp" onclick="Flights.filtV('2026',this)">2026</div>
-    <div class="fp" onclick="Flights.filtV('2025',this)">2025</div>
-    <div class="fp" onclick="Flights.filtV('2024',this)">2024</div>
-  </div>
-  <div class="card" id="vl-list"></div>
-</div>
+      // Payment details
+      monthPayments.forEach(function(p) {
+        var dir;
+        if (p.type === 'credit') {
+          dir = 'Credito';
+        } else if (p.from === owner) {
+          dir = 'Pago';
+        } else {
+          dir = 'Reembolso';
+        }
+        var counterpart = (p.from === owner) ? p.to : p.from;
+        var parts = [];
+        if ((p.amount_qtz || 0) > 0) parts.push(fQ(p.amount_qtz));
+        if ((p.amount_usd || 0) > 0) parts.push(fD(p.amount_usd));
+        var xr = (p.exchange_rate && p.exchange_rate > 0) ? ' (TC ' + p.exchange_rate + ')' : '';
+        h += '<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A;font-size:10px">- ' + dir + ' ' + (p.from === owner ? 'a' : 'de') + ' ' + counterpart + xr + (p.notes ? ' · ' + p.notes : '') + '</div><div class="bil-val" style="font-size:10px;color:#1A6B3A">' + parts.join(' + ') + '</div></div>';
+      });
 
-<!-- ===== COMBUSTIBLE ===== -->
+      // Running balance
+      h += '<div class="bil-row" style="background:#F8F9FB;border-radius:4px;margin-top:2px">'
+        + '<div class="bil-lbl" style="font-size:10px;font-weight:600">Saldo</div>'
+        + '<div class="bil-val" style="display:flex;gap:10px;font-size:10px">'
+        + '<span class="' + (runQTZ > 0 ? '' : 'neg') + '">' + fSQ(runQTZ) + '</span>'
+        + '<span class="' + (runUSD > 0 ? '' : 'neg') + '">' + fSD(runUSD) + '</span>'
+        + '</div></div>';
+      h += '</div>';
+    });
 
-<div class="pg" id="pg-fuel">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
-    <div class="stitle" style="margin:0">Registro de combustible</div>
-    <button class="btn sm" onclick="Exports.openExportModal('fuel')">📥 Excel</button>
-  </div>
-  <div id="fuel-totals-area"></div>
-  <div class="frow" id="fuel-yr-row">
-    <div class="fp on" onclick="Fuel.filtFuelYr('ALL',this)">Todos</div>
-    <div class="fp" onclick="Fuel.filtFuelYr('2026',this)">2026</div>
-    <div class="fp" onclick="Fuel.filtFuelYr('2025',this)">2025</div>
-    <div class="fp" onclick="Fuel.filtFuelYr('2024',this)">2024</div>
-  </div>
-  <div class="card" id="fuel-list"></div>
-</div>
+    // Final balance
+    h += '<div class="bil-row" style="border-top:2px solid #1B2A4A;margin-top:8px;padding-top:8px">'
+      + '<div class="bil-lbl" style="font-weight:800;font-size:12px">Saldo actual</div>'
+      + '<div class="bil-val" style="display:flex;gap:12px;font-size:12px">'
+      + '<span class="' + (runQTZ > 0 ? '' : 'neg') + '">' + fSQ(runQTZ) + '</span>'
+      + '<span class="' + (runUSD > 0 ? '' : 'neg') + '">' + fSD(runUSD) + '</span>'
+      + '</div></div>';
 
-<!-- ===== FLIGHT-EXPENSES ===== -->
+    // Positive = owner owes Senshi, Negative = Senshi owes owner
+    h += '<div style="font-size:9px;color:#8892A4;text-align:center;margin-top:6px;padding-bottom:4px">Positivo = debe a Senshi &middot; Negativo = Senshi debe</div>';
 
- <div id="pg-fexp" class="pg">
-  <div class="card">
-    <div class="ch" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-      <div class="ct">Gastos de vuelo</div>
-      <div style="display:flex;gap:5px">
-        <button class="btn sm" onclick="Exports.openExportModal('expenses')">📥 Excel</button>
-        <button class="btn sm" onclick="FlightExpenses.openAddExpense()">+ Agregar gasto</button>
-      </div>
-    </div>
-    <div class="cb">
-      <div id="fexp-content"></div>
-    </div>
-  </div>
-</div>
-  
-  
-  
-<!-- ===== EXCHANGE ===== -->
+    h += '</div></div>';
+    container.innerHTML = h;
+  }
 
-<div class="pg" id="pg-xch">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-    <div class="stitle" style="margin:0">Intercambio de horas</div>
-    <div style="display:flex;gap:5px">
-      <button class="btn sm" onclick="Exchange.exportExchangeSummary()">📄 Exportar</button>
-      <button class="btn sm" onclick="Exchange.openNewExchange()">+ Registrar</button>
-    </div>
-  </div>
-  <div id="xch-content"></div>
-</div>
+  // ========== CHARGE CALCULATION ==========
+  // Compute charges per month for an owner, using the same logic as billing.js
+  // Returns array of { month: 'YYYY-MM', chargeQTZ, chargeUSD, details: [{label, amt, currency}] }
 
-<!-- ===== REGISTRAR ===== -->
+  function getChargeMonths(owner, fromMonth, toMonth) {
+    var results = [];
 
-<div class="pg" id="pg-new">
-  <div class="sc" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:12px" id="new-tabs">
-    <button class="sb on" onclick="Fuel.fTab('flight',this)">✈ Vuelo</button>
-    <button class="sb" onclick="Fuel.fTab('fuel',this)">⛽ Comb.</button>
-    <button class="sb" id="admin-tab" style="display:none" onclick="Fuel.fTab('admin',this)">⚙ Admin</button>
-  </div>
-  <div id="form-flight">
-    <div class="ok-bar" id="ok-f">Vuelo guardado ✓</div>
-    <div class="err-bar" id="err-f"></div>
-    <div class="card"><div class="ch"><div class="ct">Nuevo vuelo</div></div><div class="cb">
-      <div class="fs" id="plane-sel-flight"></div>
-      <div class="fs"><label class="fl">Fecha</label><input type="date" id="ff-d"></div>
-      <div class="fs"><label class="fl">Piloto</label>
-        <select id="ff-pilot"></select>
-      </div>
-      <div class="fs"><label class="fl">Responsable</label>
-        <select id="ff-resp"></select>
-      </div>
-      <div class="fs"><label class="fl">Tipo</label>
-        <div class="tg">
-          <div class="tc on" data-t="PERSONAL" onclick="Flights.tipo('PERSONAL',this)"><div class="ti">✈</div><div class="tn">Personal</div><div class="td">Sin ingreso</div></div>
-          <div class="tc" data-t="STD" onclick="Flights.tipo('STD',this)"><div class="ti">💼</div><div class="tn">Charter STD</div><div class="td">$750/hr</div></div>
-          <div class="tc" data-t="FF" onclick="Flights.tipo('FF',this)"><div class="ti">👥</div><div class="tn">Charter FF</div><div class="td">$650/hr</div></div>
-          <div class="tc" data-t="MANTE" onclick="Flights.tipo('MANTE',this)"><div class="ti">🔧</div><div class="tn">Mante</div><div class="td">Sin ingreso</div></div>
-        </div>
-      </div>
-      <div class="fs"><label class="fl">Usuario / Cliente</label><select id="ff-u"></select></div>
-      <div class="fs"><label class="fl">Ruta</label><input type="text" id="ff-rt" placeholder="ej. AUR-MGPB" autocomplete="off" oninput="this.value=this.value.toUpperCase()"></div>
-      <div class="row2">
-        <div><label class="fl">HRM Inicio</label><input type="number" id="ff-hi" step="0.1" inputmode="decimal" oninput="Flights.calcH()"></div>
-        <div><label class="fl">HRM Fin</label><input type="number" id="ff-hf" step="0.1" inputmode="decimal" oninput="Flights.calcH()"></div>
-      </div>
-      <div class="hcalc" id="hcalc"></div>
-      <div class="row2">
-        <div><label class="fl">Combustible (QTZ)</label><input type="number" id="ff-cb" placeholder="0.00" step="0.01" inputmode="decimal"></div>
-        <div><label class="fl">Espera tierra (hrs)</label><input type="number" id="ff-es" value="0" step="0.5" inputmode="decimal"></div>
-      </div>
-      <div id="rev-sec" style="display:none" class="fs"><label class="fl">Ingreso charter ($)</label><input type="number" id="ff-rv" placeholder="auto" step="0.01" inputmode="decimal"><div class="hint" id="rev-hint"></div></div>
-      <div class="fs"><label class="fl">Notas</label><input type="text" id="ff-no" placeholder="opcional"></div>
-      <button class="btn" onclick="Flights.saveF()">Guardar vuelo</button>
-    </div></div>
-  </div>
+    // Clamp start to TRACKING_START — pre-2026 is settled
+    var effectiveFrom = fromMonth < TRACKING_START ? TRACKING_START : fromMonth;
 
-  <div id="form-fuel" style="display:none">
-    <div class="ok-bar" id="ok-fu">Combustible guardado ✓</div>
-    <div class="err-bar" id="err-fu"></div>
-    <div class="card"><div class="ch"><div class="ct">Nueva carga</div></div><div class="cb">
-      <div class="fs"><label class="fl">Fecha</label><input type="date" id="fu-d"></div>
-      <div class="fs"><label class="fl">Pagado por</label><select id="fu-py"></select></div>
-      <div class="fs"><label class="fl">Monto total (QTZ)</label><input type="number" id="fu-m" placeholder="0.00" step="0.01" inputmode="decimal"></div>
-      <div class="stitle" style="margin:0 0 7px">Anticipo (quién pagó de su bolsillo)</div>
-      <div id="fu-advances"></div>
-      <div class="fs"><label class="fl">Notas</label><input type="text" id="fu-no" placeholder="opcional"></div>
-      <button class="btn gr" onclick="Fuel.saveFu()">Guardar combustible</button>
-    </div></div>
-  </div>
+    // Determine month range
+    var startParts = effectiveFrom.split('-');
+    var endParts = toMonth.split('-');
+    var startY = +startParts[0], startM = +startParts[1];
+    var endY = +endParts[0], endM = +endParts[1];
 
-  <div id="form-admin" style="display:none">
-    <div class="card"><div class="ch"><div class="ct">Usuarios</div><button class="btn sm" onclick="Admin.openAddUser()">+ Agregar</button></div>
-      <div id="user-list"></div>
-    </div>
-    <div class="card"><div class="ch"><div class="ct">Pilotos (roster)</div><button class="btn sm" onclick="Admin.openAddPilot()">+ Agregar</button></div>
-      <div id="pilot-roster-list"></div>
-    </div>
-    <div class="card"><div class="ch"><div class="ct">Aviones</div><button class="btn sm" onclick="Admin.openAddPlane()">+ Agregar</button></div>
-      <div id="plane-list"></div>
-    </div>
-    <div class="card"><div class="ch"><div class="ct">🤝 Socios de intercambio</div><button class="btn sm" onclick="Exchange.openAddPartner()">+ Agregar</button></div>
-      <div id="xp-list"></div>
-    </div>
-    <div class="card"><div class="ch"><div class="ct">💰 Tarifas</div><button class="btn sm" onclick="Admin.saveRates()">Guardar</button></div><div class="cb">
-      <div id="rates-display"></div>
-      <div class="row2" style="margin-top:8px">
-        <div class="fs"><label class="fl">Piloto ($/hr)</label><input type="number" id="rt-pilot" step="1" inputmode="decimal"></div>
-        <div class="fs"><label class="fl">Espera ($/hr)</label><input type="number" id="rt-gw" step="1" inputmode="decimal"></div>
-      </div>
-      <div class="row2">
-        <div class="fs"><label class="fl">Admin fee ($/mes)</label><input type="number" id="rt-admin" step="1" inputmode="decimal"></div>
-        <div class="fs"><label class="fl">Reserva mante ($/hr)</label><input type="number" id="rt-res" step="0.5" inputmode="decimal"></div>
-      </div>
-      <div class="row2">
-        <div class="fs"><label class="fl">Charter STD ($/hr)</label><input type="number" id="rt-std" step="10" inputmode="decimal"></div>
-        <div class="fs"><label class="fl">Charter FF ($/hr)</label><input type="number" id="rt-ff" step="10" inputmode="decimal"></div>
-      </div>
-      <div class="fs"><label class="fl">Vigente desde (YYYY-MM-DD)</label><input type="date" id="rt-date"></div>
-      <div id="rates-msg" style="font-size:10px;color:#8892A4;margin-top:5px"></div>
-    </div></div>
-    <div class="card"><div class="ch"><div class="ct">Conexión Worker</div></div><div class="cb">
-      <div class="fs"><label class="fl">Worker URL</label><input type="url" id="cfg-url" placeholder="https://tgshi-api.xxx.workers.dev"></div>
-      <div class="fs"><label class="fl">Worker Secret</label><input type="password" id="cfg-secret" placeholder="secret"></div>
-      <div style="display:flex;gap:7px">
-        <button class="btn sm" onclick="Admin.saveWorkerCfg()">Guardar</button>
-        <button class="btn sm" style="background:#E8F0FD;color:#1B4E8A" onclick="API.testWorker()">Probar</button>
-      </div>
-      <div id="cfg-msg" style="font-size:10px;color:#8892A4;margin-top:5px"></div>
-    </div></div>
-  </div>
-</div>
+    var y = startY, m = startM;
+    while (y < endY || (y === endY && m < endM)) {
+      var mm = y + '-' + App.pad2(m);
+      var fd = mm + '-01', td = mm + '-31';
 
-<!-- ===== MAINTENANCE ===== -->
+      var fls = DB.flights.filter(function(f) { return f.d >= fd && f.d <= td && (f.verified !== false || (f.t !== 'STD' && f.t !== 'FF')); });
+      var fus = DB.fuel.filter(function(f) { return f.d >= fd && f.d <= td; });
+      var rt = App.getRateFD(fd);
 
-<div class="pg" id="pg-maint">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-    <div class="stitle" style="margin:0">Mantenimiento — <span id="maint-plane-label">TG-SHI</span></div>
-    <div style="display:flex;gap:5px">
-      <button class="btn sm" onclick="Exports.openExportModal('maintenance')">📥 Excel</button>
-      <button class="btn sm" onclick="Maintenance.openAddMaint()" id="maint-add-btn" style="display:none">+ Agregar</button>
-    </div>
-  </div>
-  <div id="maint-content"></div>
-</div>
+      // Hours
+      var hrs = { COCO: 0, CUCO: 0, SENSHI: 0 };
+      var sub = { COCO: { n: 0, a: 0 }, CUCO: { n: 0, a: 0 }, SENSHI: { n: 0, a: 0 } };
+      var espHrs = { COCO: 0, CUCO: 0, SENSHI: 0 };
 
-<!-- ===== PAYMENTS ===== -->
+      fls.forEach(function(f) {
+        var r = f.r; if (hrs[r] === undefined) return;
+        hrs[r] += f.h;
+        if (f.h > 0 && f.h < 1) { sub[r].n++; sub[r].a += f.h; }
+        espHrs[r] += (f.eh || 0);
+      });
 
-<div class="pg" id="pg-pay">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-    <div class="stitle" style="margin:0">Pagos y saldos</div>
-    <div style="display:flex;gap:5px" id="pay-admin-btns">
-      <button class="btn sm" onclick="Payments.openTransaction('payment')">+ Pago</button>
-      <button class="btn sm" style="background:#1A6B3A" onclick="Payments.openTransaction('credit')">+ Credito</button>
-      <button class="btn sm" style="background:#8B1A1A" onclick="Payments.openTransaction('charge')">+ Cargo</button>
-    </div>
-  </div>
-  <div id="pay-content"></div>
-</div>
+      var th = hrs.COCO + hrs.CUCO + hrs.SENSHI;
 
-<!-- ===== BILLING ===== -->
+      // Fuel (QTZ)
+      var tfuel = 0;
+      var antic = { COCO: 0, CUCO: 0, SENSHI: 0 };
+      fus.forEach(function(f) {
+        tfuel += f.m;
+        if (f.ac) antic.COCO += f.ac;
+        if (f.au) antic.CUCO += f.au;
+        if (f.as) antic.SENSHI += f.as;
+      });
+      var qph = th > 0 ? tfuel / th : 0;
+      var fuelProp = hrs[owner] * qph;
+      var fuelAntic = antic[owner] || 0;
+      var fuelNet = fuelProp - fuelAntic;
 
-<div class="pg" id="pg-bil">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
-    <div class="stitle" style="margin:0">Período de facturación</div>
-    <button class="btn sm" onclick="Exports.openExportModal('all')">📥 Excel</button>
-  </div>
-  <div class="card"><div class="cb">
-    <div class="row2" style="margin-bottom:10px">
-      <div><label class="fl">Desde</label><input type="month" id="b-from" placeholder="YYYY-MM"></div>
-      <div><label class="fl">Hasta</label><input type="month" id="b-to" placeholder="YYYY-MM"></div>
-    </div>
-    <div class="fs"><label class="fl">TC QTZ/USD</label><input type="number" id="b-tc" value="7.65" step="0.01" inputmode="decimal" style="max-width:110px"></div>
-    <button class="btn" onclick="Billing.calcBil()">Calcular</button>
-  </div></div>
-  <div id="bil-out"></div>
-</div>
+      // Pilotaje (USD)
+      var bilH = hrs[owner] - sub[owner].a + sub[owner].n;
+      var pilFee = bilH * rt.pilot;
+      var espFee = espHrs[owner] * rt.gw;
 
-<!-- ===== SETTINGS MODAL ===== -->
+      // Admin fee — 100% Senshi
+      var adminFee = (owner === 'SENSHI') ? rt.admin : 0;
 
-<div id="pw-modal" class="pw-modal" style="display:none">
-  <div class="pw-box">
-    <div class="pw-title">⚙️ Ajustes</div>
-    <div class="pw-sub">Usuario: <b id="pw-user-label"></b></div>
-    <div class="pw-field"><label>Contraseña actual</label><input type="password" id="pw-old"></div>
-    <div class="pw-field"><label>Nueva contraseña</label><input type="password" id="pw-new"></div>
-    <div class="pw-field"><label>Confirmar</label><input type="password" id="pw-confirm"></div>
-    <div class="pw-err" id="pw-err"></div>
-    <div class="pw-ok" id="pw-ok"></div>
-    <div class="pw-btns" style="margin-bottom:12px">
-      <button class="pw-save" onclick="App.changePw()">Cambiar contraseña</button>
-      <button class="pw-cancel" onclick="App.closeSettings()">Cerrar</button>
-    </div>
-    <button onclick="App.logout()" style="width:100%;padding:11px;background:#F0F2F6;color:#8B1A1A;border:none;border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">🚪 Cerrar sesión</button>
-  </div>
-</div>
+      // Maintenance
+      var maintUSD = 0, maintQTZ = 0;
+      if (typeof Maintenance !== 'undefined' && Maintenance.billingForPeriod) {
+        var md = Maintenance.billingForPeriod(mm, mm);
+        if (md && md[owner]) {
+          maintUSD = md[owner].USD || 0;
+          maintQTZ = md[owner].QTZ || 0;
+        }
+      }
 
-<!-- ===== LOGIN ===== -->
+      // Flight expenses
+      var fexpUSD = 0, fexpQTZ = 0;
+      var fexpCreditUSD = 0, fexpCreditQTZ = 0;
+      if (typeof FlightExpenses !== 'undefined' && FlightExpenses.billingForPeriod) {
+        var fxd = FlightExpenses.billingForPeriod(mm, mm);
+        if (fxd && fxd[owner]) {
+          fexpUSD = fxd[owner].USD || 0;
+          fexpQTZ = fxd[owner].QTZ || 0;
+        }
+        // Credit for expenses this owner paid out of pocket for other owners' flights
+        if (fxd && fxd.payer_credits && fxd.payer_credits[owner]) {
+          fexpCreditUSD = fxd.payer_credits[owner].USD || 0;
+          fexpCreditQTZ = fxd.payer_credits[owner].QTZ || 0;
+        }
+      }
 
-<div id="login-screen" class="login-screen">
-  <div class="login-logo">TG-SHI</div>
-  <div class="login-sub">Senshi Aviation</div>
-  <div class="login-card" id="login-card-main">
-    <div class="login-field"><label>Usuario</label><input type="text" id="login-uid" placeholder="ej. CUCO" autocapitalize="characters" autocomplete="off"></div>
-    <div class="login-field"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')App.doLogin()"></div>
-    <div class="login-err" id="login-err"></div>
-    <button class="login-btn" onclick="App.doLogin()">Ingresar</button>
-    <div class="login-forgot" onclick="App.showForgotPw()">¿Olvidaste tu contraseña?</div>
-  </div>
-  <div class="login-card" id="login-card-reset" style="display:none">
-    <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:10px;text-align:center">Restablecer contraseña</div>
-    <div class="login-field"><label>Usuario</label><input type="text" id="reset-uid" placeholder="ej. CUCO" autocapitalize="characters" autocomplete="off"></div>
-    <div class="login-field"><label>Email registrado</label><input type="email" id="reset-email" placeholder="tu@email.com" autocomplete="off"></div>
-    <div class="login-err" id="reset-err"></div>
-    <button class="login-btn" onclick="App.requestReset()">Enviar enlace de recuperación</button>
-    <div class="login-forgot" onclick="App.showLoginCard()">← Volver al login</div>
-  </div>
-</div>
+      // Misc charges (otros cargos)
+      var miscUSD = 0, miscQTZ = 0;
+      var miscDetails = [];
+      (DB.misc_charges || []).forEach(function(c) {
+        if (c.owner === owner && c.date >= fd && c.date <= td) {
+          if (c.currency === 'USD') miscUSD += c.amount;
+          else miscQTZ += c.amount;
+          miscDetails.push(c);
+        }
+      });
 
-<!-- ===== JS MODULES (load order matters) ===== -->
-<script src="js/app.js"></script>
-<script src="js/api.js"></script>
-<script src="js/dashboard.js"></script>
-<script src="js/calendar.js"></script>
-<script src="js/flights.js"></script>
-<script src="js/fuel.js"></script>
-<script src="js/flight-expenses.js"></script>
-<script src="js/billing.js"></script>
-<script src="js/maintenance.js"></script>
-<script src="js/payments.js"></script>
-<script src="js/admin.js"></script>
-<script src="js/exchange.js"></script>
-<script src="js/exports.js"></script>
+      var totalQTZ = fuelNet + maintQTZ + fexpQTZ - fexpCreditQTZ + miscQTZ;
+      var totalUSD = pilFee + espFee + adminFee + maintUSD + fexpUSD - fexpCreditUSD + miscUSD;
 
-</body>
-</html>
+      var details = [];
+      // Show fuel as gross charge + anticipo credit separately
+      if (fuelProp > 0) details.push({ label: 'Combustible (' + hrs[owner].toFixed(1) + 'hr x Q' + qph.toFixed(0) + '/hr)', amt: fuelProp, currency: 'QTZ' });
+      if (fuelAntic > 0) details.push({ label: 'Anticipo combustible pagado', amt: -fuelAntic, currency: 'QTZ', isCredit: true });
+      if (pilFee > 0) details.push({ label: 'Pilotaje (' + bilH.toFixed(1) + 'hr)', amt: pilFee, currency: 'USD' });
+      if (espFee > 0) details.push({ label: 'Espera (' + espHrs[owner].toFixed(1) + 'hr)', amt: espFee, currency: 'USD' });
+      if (adminFee > 0) details.push({ label: 'Admin fee', amt: adminFee, currency: 'USD' });
+      if (maintUSD > 0) details.push({ label: 'Mantenimiento', amt: maintUSD, currency: 'USD' });
+      if (maintQTZ > 0) details.push({ label: 'Mantenimiento', amt: maintQTZ, currency: 'QTZ' });
+      if (fexpUSD > 0) details.push({ label: 'Gastos vuelo', amt: fexpUSD, currency: 'USD' });
+      if (fexpQTZ > 0) details.push({ label: 'Gastos vuelo', amt: fexpQTZ, currency: 'QTZ' });
+      if (fexpCreditQTZ > 0) details.push({ label: 'Credito gasto pagado de bolsillo', amt: -fexpCreditQTZ, currency: 'QTZ', isCredit: true });
+      if (fexpCreditUSD > 0) details.push({ label: 'Credito gasto pagado de bolsillo', amt: -fexpCreditUSD, currency: 'USD', isCredit: true });
+      miscDetails.forEach(function(c) {
+        details.push({ label: c.description || 'Otro cargo', amt: c.amount, currency: c.currency });
+      });
+
+      results.push({
+        month: mm,
+        chargeQTZ: totalQTZ,
+        chargeUSD: totalUSD,
+        details: details
+      });
+
+      // Next month
+      m++;
+      if (m > 12) { m = 1; y++; }
+    }
+
+    return results;
+  }
+
+  // ========== PAYMENTS LIST ==========
+
+  function buildPaymentsList() {
+    ensureData();
+    var owner = stmtOwner;
+    var year = stmtYear;
+
+    // Build unified list of payments + misc charges
+    var items = [];
+
+    DB.payments.forEach(function(p) {
+      if ((p.from === owner || p.to === owner) && p.date.startsWith(year)) {
+        items.push({ kind: 'payment', date: p.date, data: p });
+      }
+    });
+
+    (DB.misc_charges || []).forEach(function(c) {
+      if (c.owner === owner && c.date.startsWith(year)) {
+        items.push({ kind: 'charge', date: c.date, data: c });
+      }
+    });
+
+    items.sort(function(a, b) { return b.date.localeCompare(a.date); });
+
+    var container = document.getElementById('pay-list');
+    if (!container) return;
+
+    if (items.length === 0) {
+      container.innerHTML = '<div class="card"><div class="empty"><div class="big">💳</div>Sin movimientos para ' + (owner === 'SENSHI' ? 'Charter' : owner) + ' en ' + year + '</div></div>';
+      return;
+    }
+
+    var fQ = function(v) { return 'Q' + v.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    var fD = function(v) { return '$' + v.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+
+    var h = '<div class="card">';
+    items.forEach(function(item) {
+      if (item.kind === 'payment') {
+        var p = item.data;
+        var dirIcon = (p.from === owner) ? '↗' : '↙';
+        var dirLabel = (p.from === owner) ? (owner === 'SENSHI' ? 'Charter' : owner) + ' → ' + p.to : p.from + ' → ' + (owner === 'SENSHI' ? 'Charter' : owner);
+        var amounts = [];
+        if ((p.amount_qtz || 0) > 0) amounts.push(fQ(p.amount_qtz));
+        if ((p.amount_usd || 0) > 0) amounts.push(fD(p.amount_usd));
+        var xr = (p.exchange_rate && p.exchange_rate > 0) ? ' TC ' + p.exchange_rate : '';
+        var typeBadge = (p.type === 'credit')
+          ? '<span style="background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;margin-left:4px">CREDITO</span>'
+          : '';
+
+        h += '<div class="fue" style="cursor:pointer" onclick="Payments.editPayment(' + p.id + ')">'
+          + '<div>'
+          + '<div class="fue-l">' + dirIcon + ' ' + amounts.join(' + ') + typeBadge + '</div>'
+          + '<div class="fue-s">' + dirLabel + xr + (p.notes ? ' · ' + p.notes : '') + '</div>'
+          + '</div>'
+          + '<div class="fue-r">'
+          + '<div class="fue-d">' + p.date.slice(5) + '</div>'
+          + '<div style="font-size:8px;color:#8892A4">' + p.date.slice(0, 4) + '</div>'
+          + '</div></div>';
+      } else {
+        var c = item.data;
+        var amtStr = c.currency === 'USD' ? fD(c.amount) : fQ(c.amount);
+
+        h += '<div class="fue" style="cursor:pointer;border-left:3px solid #8B1A1A" onclick="Payments.editCharge(' + c.id + ')">'
+          + '<div>'
+          + '<div class="fue-l" style="color:#8B1A1A">+ ' + amtStr + ' <span style="background:#FEE2E2;color:#991B1B;padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;margin-left:4px">CARGO</span></div>'
+          + '<div class="fue-s">' + (c.description || 'Otro cargo') + '</div>'
+          + '</div>'
+          + '<div class="fue-r">'
+          + '<div class="fue-d">' + c.date.slice(5) + '</div>'
+          + '<div style="font-size:8px;color:#8892A4">' + c.date.slice(0, 4) + '</div>'
+          + '</div></div>';
+      }
+    });
+    h += '</div>';
+    container.innerHTML = h;
+  }
+
+  // ========== UNIFIED TRANSACTION FORM ==========
+
+  function openTransaction(defaultType) {
+    if (!App.isAdmin()) return;
+    ensureData();
+
+    var today = App.todayStr();
+    var ownerOpts = '<option value="COCO">COCO</option><option value="CUCO">CUCO</option><option value="SENSHI">Charter (Senshi)</option>';
+
+    document.getElementById('book-modal-title').textContent = 'Registrar movimiento';
+
+    var typeChecked = function(t) { return t === (defaultType || 'payment') ? ' checked' : ''; };
+
+    document.getElementById('book-form').innerHTML =
+      // Type selector
+      '<div class="fs"><label class="fl">Tipo</label>'
+      + '<div style="display:flex;gap:6px;margin-top:4px">'
+      + '<label style="flex:1;text-align:center;padding:10px 6px;border:2px solid #E2E6EE;border-radius:9px;cursor:pointer;font-size:11px;font-weight:700" id="txn-lbl-payment"><input type="radio" name="txn-type" value="payment" style="display:none"' + typeChecked('payment') + ' onchange="Payments.onTxnTypeChange()"> Pago</label>'
+      + '<label style="flex:1;text-align:center;padding:10px 6px;border:2px solid #E2E6EE;border-radius:9px;cursor:pointer;font-size:11px;font-weight:700" id="txn-lbl-credit"><input type="radio" name="txn-type" value="credit" style="display:none"' + typeChecked('credit') + ' onchange="Payments.onTxnTypeChange()"> Credito</label>'
+      + '<label style="flex:1;text-align:center;padding:10px 6px;border:2px solid #E2E6EE;border-radius:9px;cursor:pointer;font-size:11px;font-weight:700" id="txn-lbl-charge"><input type="radio" name="txn-type" value="charge" style="display:none"' + typeChecked('charge') + ' onchange="Payments.onTxnTypeChange()"> Cargo</label>'
+      + '</div></div>'
+      // Date
+      + '<div class="fs"><label class="fl">Fecha</label><input type="date" id="txn-date" value="' + today + '"></div>'
+      // Owner (for charge) / From-To (for payment/credit)
+      + '<div id="txn-party-section">'
+      + '<div class="row2" id="txn-fromto">'
+      + '<div class="fs"><label class="fl" id="txn-from-lbl">De</label><select id="txn-from"><option value="SENSHI">Senshi</option>' + ownerOpts + '</select></div>'
+      + '<div class="fs"><label class="fl" id="txn-to-lbl">A</label><select id="txn-to"><option value="SENSHI">Senshi</option>' + ownerOpts + '</select></div>'
+      + '</div>'
+      + '<div class="fs" id="txn-owner-row" style="display:none"><label class="fl">Cobrar a</label><select id="txn-owner">' + ownerOpts + '</select></div>'
+      + '</div>'
+      // Amounts
+      + '<div class="row2">'
+      + '<div class="fs"><label class="fl">Monto QTZ</label><input type="number" id="txn-qtz" placeholder="0.00" step="0.01" inputmode="decimal" value="0"></div>'
+      + '<div class="fs"><label class="fl">Monto USD</label><input type="number" id="txn-usd" placeholder="0.00" step="0.01" inputmode="decimal" value="0"></div>'
+      + '</div>'
+      // Exchange rate (payment/credit only)
+      + '<div class="fs" id="txn-xr-row"><label class="fl">Tipo de cambio (opcional)</label><input type="number" id="txn-xr" placeholder="ej. 7.65" step="0.01" inputmode="decimal" value="0"></div>'
+      // Description (charge) / Notes (payment/credit)
+      + '<div class="fs"><label class="fl" id="txn-notes-lbl">Notas</label><input type="text" id="txn-notes" placeholder=""></div>'
+      // Save
+      + '<button class="btn" id="txn-save-btn" onclick="Payments.saveTransaction()">Guardar</button>';
+
+    document.getElementById('book-modal').style.display = 'flex';
+    onTxnTypeChange();
+  }
+
+  function onTxnTypeChange() {
+    var radios = document.querySelectorAll('input[name="txn-type"]');
+    var type = 'payment';
+    radios.forEach(function(r) { if (r.checked) type = r.value; });
+
+    // Style the selected radio label
+    ['payment', 'credit', 'charge'].forEach(function(t) {
+      var lbl = document.getElementById('txn-lbl-' + t);
+      if (!lbl) return;
+      if (t === type) {
+        var colors = { payment: '#1B2A4A', credit: '#1A6B3A', charge: '#8B1A1A' };
+        lbl.style.borderColor = colors[t];
+        lbl.style.background = t === 'payment' ? '#EAF0FD' : t === 'credit' ? '#D1FAE5' : '#FEE2E2';
+        lbl.style.color = colors[t];
+      } else {
+        lbl.style.borderColor = '#E2E6EE';
+        lbl.style.background = '#fff';
+        lbl.style.color = '#8892A4';
+      }
+    });
+
+    var fromTo = document.getElementById('txn-fromto');
+    var ownerRow = document.getElementById('txn-owner-row');
+    var xrRow = document.getElementById('txn-xr-row');
+    var fromLbl = document.getElementById('txn-from-lbl');
+    var toLbl = document.getElementById('txn-to-lbl');
+    var notesLbl = document.getElementById('txn-notes-lbl');
+    var notesInput = document.getElementById('txn-notes');
+    var saveBtn = document.getElementById('txn-save-btn');
+    var fromEl = document.getElementById('txn-from');
+    var toEl = document.getElementById('txn-to');
+    var ownerEl = document.getElementById('txn-owner');
+
+    if (type === 'charge') {
+      fromTo.style.display = 'none';
+      ownerRow.style.display = 'block';
+      xrRow.style.display = 'none';
+      notesLbl.textContent = 'Descripcion';
+      notesInput.placeholder = 'ej. 50% tarjeta TG-SHI 2026';
+      saveBtn.textContent = 'Guardar cargo';
+      saveBtn.className = 'btn';
+      saveBtn.style.background = '#8B1A1A';
+      if (ownerEl) ownerEl.value = stmtOwner;
+    } else if (type === 'credit') {
+      fromTo.style.display = 'grid';
+      ownerRow.style.display = 'none';
+      xrRow.style.display = 'block';
+      fromLbl.textContent = 'De (quien otorga)';
+      toLbl.textContent = 'A (quien recibe)';
+      notesLbl.textContent = 'Notas';
+      notesInput.placeholder = 'ej. Reintegro viaticos';
+      saveBtn.textContent = 'Guardar credito';
+      saveBtn.className = 'btn gr';
+      saveBtn.style.background = '';
+      if (fromEl) fromEl.value = 'SENSHI';
+      if (toEl) toEl.value = stmtOwner;
+    } else {
+      fromTo.style.display = 'grid';
+      ownerRow.style.display = 'none';
+      xrRow.style.display = 'block';
+      fromLbl.textContent = 'De (quien paga)';
+      toLbl.textContent = 'A (quien recibe)';
+      notesLbl.textContent = 'Notas';
+      notesInput.placeholder = 'ej. Pago parcial marzo';
+      saveBtn.textContent = 'Guardar pago';
+      saveBtn.className = 'btn';
+      saveBtn.style.background = '';
+      if (fromEl) fromEl.value = stmtOwner;
+      if (toEl) toEl.value = 'SENSHI';
+    }
+  }
+
+  async function saveTransaction() {
+    ensureData();
+    var radios = document.querySelectorAll('input[name="txn-type"]');
+    var type = 'payment';
+    radios.forEach(function(r) { if (r.checked) type = r.value; });
+
+    var date = document.getElementById('txn-date').value;
+    if (!date) { alert('Selecciona fecha'); return; }
+
+    if (type === 'charge') {
+      // Save as misc charge
+      var owner = document.getElementById('txn-owner').value;
+      var qtz = parseFloat(document.getElementById('txn-qtz').value) || 0;
+      var usd = parseFloat(document.getElementById('txn-usd').value) || 0;
+      var desc = document.getElementById('txn-notes').value.trim();
+      if (qtz <= 0 && usd <= 0) { alert('Ingresa al menos un monto'); return; }
+      if (!desc) { alert('Ingresa descripcion'); return; }
+
+      // Support dual-currency charges as two separate entries
+      if (qtz > 0) {
+        var idQ = (DB.meta.last_misc_charge_id || 0) + 1;
+        DB.meta.last_misc_charge_id = idQ;
+        DB.misc_charges.push({ id: idQ, date: date, owner: owner, amount: qtz, currency: 'QTZ', description: desc, recorded_by: App.currentUser(), recorded_at: new Date().toISOString() });
+      }
+      if (usd > 0) {
+        var idU = (DB.meta.last_misc_charge_id || 0) + 1;
+        DB.meta.last_misc_charge_id = idU;
+        DB.misc_charges.push({ id: idU, date: date, owner: owner, amount: usd, currency: 'USD', description: desc, recorded_by: App.currentUser(), recorded_at: new Date().toISOString() });
+      }
+    } else {
+      // Save as payment or credit
+      var from = document.getElementById('txn-from').value;
+      var to = document.getElementById('txn-to').value;
+      var qtz = parseFloat(document.getElementById('txn-qtz').value) || 0;
+      var usd = parseFloat(document.getElementById('txn-usd').value) || 0;
+      var xr = parseFloat(document.getElementById('txn-xr').value) || 0;
+      var notes = document.getElementById('txn-notes').value.trim();
+      if (from === to) { alert('Origen y destino no pueden ser iguales'); return; }
+      if (qtz <= 0 && usd <= 0) { alert('Ingresa al menos un monto'); return; }
+
+      var id = (DB.meta.last_payment_id || 0) + 1;
+      DB.meta.last_payment_id = id;
+      DB.payments.push({ id: id, type: type, date: date, from: from, to: to, amount_qtz: qtz, amount_usd: usd, exchange_rate: xr, notes: notes, recorded_by: App.currentUser(), recorded_at: new Date().toISOString() });
+    }
+
+    var ok = await API.saveData();
+    if (ok) {
+      document.getElementById('book-modal').style.display = 'none';
+      var labels = { payment: 'Pago', credit: 'Credito', charge: 'Cargo' };
+      API.showNotifyToast((labels[type] || 'Movimiento') + ' registrado');
+      buildStatement();
+      buildPaymentsList();
+    } else {
+      alert('Error al guardar');
+    }
+  }
+
+  function editPayment(id) {
+    if (!App.isAdmin()) return;
+    ensureData();
+    var p = DB.payments.find(function(x) { return x.id === id; });
+    if (!p) return;
+
+    var ownerOpts = function(sel) {
+      return '<option value="COCO"' + (sel === 'COCO' ? ' selected' : '') + '>COCO</option>'
+        + '<option value="CUCO"' + (sel === 'CUCO' ? ' selected' : '') + '>CUCO</option>'
+        + '<option value="SENSHI"' + (sel === 'SENSHI' ? ' selected' : '') + '>Charter (Senshi)</option>';
+    };
+
+    var ptype = p.type || 'payment';
+
+    document.getElementById('edit-modal-title').textContent = 'Editar movimiento #' + id;
+    document.getElementById('edit-form-content').innerHTML =
+      '<div class="fs"><label class="fl">Tipo</label><select id="ep-type"><option value="payment"' + (ptype === 'payment' ? ' selected' : '') + '>Pago</option><option value="credit"' + (ptype === 'credit' ? ' selected' : '') + '>Credito</option></select></div>'
+      + '<div class="fs"><label class="fl">Fecha</label><input type="date" id="ep-date" value="' + p.date + '"></div>'
+      + '<div class="row2">'
+      + '<div class="fs"><label class="fl">De</label><select id="ep-from"><option value="SENSHI"' + (p.from === 'SENSHI' ? ' selected' : '') + '>Senshi</option>' + ownerOpts(p.from) + '</select></div>'
+      + '<div class="fs"><label class="fl">A</label><select id="ep-to"><option value="SENSHI"' + (p.to === 'SENSHI' ? ' selected' : '') + '>Senshi</option>' + ownerOpts(p.to) + '</select></div>'
+      + '</div>'
+      + '<div class="row2">'
+      + '<div class="fs"><label class="fl">Monto QTZ</label><input type="number" id="ep-qtz" value="' + (p.amount_qtz || 0) + '" step="0.01" inputmode="decimal"></div>'
+      + '<div class="fs"><label class="fl">Monto USD</label><input type="number" id="ep-usd" value="' + (p.amount_usd || 0) + '" step="0.01" inputmode="decimal"></div>'
+      + '</div>'
+      + '<div class="fs"><label class="fl">Tipo de cambio</label><input type="number" id="ep-xr" value="' + (p.exchange_rate || 0) + '" step="0.01" inputmode="decimal"></div>'
+      + '<div class="fs"><label class="fl">Notas</label><input type="text" id="ep-notes" value="' + (p.notes || '') + '"></div>'
+      + '<div style="font-size:9px;color:#8892A4;margin-bottom:10px">Registrado por ' + (p.recorded_by || '?') + ' el ' + (p.recorded_at ? p.recorded_at.slice(0, 10) : '?') + '</div>'
+      + '<div style="display:flex;gap:8px">'
+      + '<button class="btn" onclick="Payments.updatePayment(' + id + ')">Guardar</button>'
+      + '<button class="btn" style="background:#8B1A1A" onclick="Payments.deletePayment(' + id + ')">Eliminar</button>'
+      + '</div>';
+    document.getElementById('edit-modal').style.display = 'flex';
+  }
+
+  async function updatePayment(id) {
+    ensureData();
+    var p = DB.payments.find(function(x) { return x.id === id; });
+    if (!p) return;
+
+    var from = document.getElementById('ep-from').value;
+    var to = document.getElementById('ep-to').value;
+    if (from === to) { alert('Origen y destino no pueden ser iguales'); return; }
+
+    p.type = document.getElementById('ep-type').value;
+    p.date = document.getElementById('ep-date').value;
+    p.from = from;
+    p.to = to;
+    p.amount_qtz = parseFloat(document.getElementById('ep-qtz').value) || 0;
+    p.amount_usd = parseFloat(document.getElementById('ep-usd').value) || 0;
+    p.exchange_rate = parseFloat(document.getElementById('ep-xr').value) || 0;
+    p.notes = document.getElementById('ep-notes').value.trim();
+
+    Admin.closeEdit();
+    var ok = await API.saveData();
+    if (ok) {
+      API.showNotifyToast('Pago actualizado');
+      buildStatement();
+      buildPaymentsList();
+    }
+  }
+
+  async function deletePayment(id) {
+    if (!confirm('Eliminar este pago?')) return;
+    DB.payments = DB.payments.filter(function(p) { return p.id !== id; });
+    Admin.closeEdit();
+    var ok = await API.saveData();
+    if (ok) {
+      API.showNotifyToast('Pago eliminado');
+      buildStatement();
+      buildPaymentsList();
+    }
+  }
+
+  // ========== MISC CHARGES (Otros cargos) ==========
+
+  function openAddCharge() {
+    if (!App.isAdmin()) return;
+    ensureData();
+    var today = App.todayStr();
+    var ownerOpts = '<option value="COCO">COCO</option><option value="CUCO">CUCO</option><option value="SENSHI">Charter (Senshi)</option>';
+
+    document.getElementById('book-modal-title').textContent = 'Otro cargo';
+    document.getElementById('book-form').innerHTML =
+      '<div class="fs"><label class="fl">Fecha</label><input type="date" id="mc-date" value="' + today + '"></div>'
+      + '<div class="fs"><label class="fl">Cobrar a</label><select id="mc-owner">' + ownerOpts + '</select></div>'
+      + '<div class="row2">'
+      + '<div class="fs"><label class="fl">Monto</label><input type="number" id="mc-amount" placeholder="0.00" step="0.01" inputmode="decimal"></div>'
+      + '<div class="fs"><label class="fl">Moneda</label><select id="mc-currency"><option value="QTZ">QTZ</option><option value="USD">USD</option></select></div>'
+      + '</div>'
+      + '<div class="fs"><label class="fl">Descripcion</label><input type="text" id="mc-desc" placeholder="ej. 50% tarjeta TG-SHI 2026"></div>'
+      + '<button class="btn" onclick="Payments.saveCharge()">Guardar cargo</button>';
+    document.getElementById('book-modal').style.display = 'flex';
+
+    var ownerEl = document.getElementById('mc-owner');
+    if (ownerEl) ownerEl.value = stmtOwner;
+  }
+
+  async function saveCharge() {
+    ensureData();
+    var date = document.getElementById('mc-date').value;
+    var owner = document.getElementById('mc-owner').value;
+    var amount = parseFloat(document.getElementById('mc-amount').value) || 0;
+    var currency = document.getElementById('mc-currency').value;
+    var desc = document.getElementById('mc-desc').value.trim();
+
+    if (!date) { alert('Selecciona fecha'); return; }
+    if (amount <= 0) { alert('Ingresa un monto'); return; }
+    if (!desc) { alert('Ingresa descripcion'); return; }
+
+    var id = (DB.meta.last_misc_charge_id || 0) + 1;
+    DB.meta.last_misc_charge_id = id;
+
+    DB.misc_charges.push({
+      id: id,
+      date: date,
+      owner: owner,
+      amount: amount,
+      currency: currency,
+      description: desc,
+      recorded_by: App.currentUser(),
+      recorded_at: new Date().toISOString()
+    });
+
+    var ok = await API.saveData();
+    if (ok) {
+      document.getElementById('book-modal').style.display = 'none';
+      API.showNotifyToast('Cargo registrado');
+      buildStatement();
+      buildPaymentsList();
+    } else {
+      alert('Error al guardar');
+      DB.misc_charges = DB.misc_charges.filter(function(c) { return c.id !== id; });
+    }
+  }
+
+  function editCharge(id) {
+    if (!App.isAdmin()) return;
+    ensureData();
+    var c = DB.misc_charges.find(function(x) { return x.id === id; });
+    if (!c) return;
+
+    var ownerOpts = function(sel) {
+      return '<option value="COCO"' + (sel === 'COCO' ? ' selected' : '') + '>COCO</option>'
+        + '<option value="CUCO"' + (sel === 'CUCO' ? ' selected' : '') + '>CUCO</option>'
+        + '<option value="SENSHI"' + (sel === 'SENSHI' ? ' selected' : '') + '>Charter (Senshi)</option>';
+    };
+
+    document.getElementById('edit-modal-title').textContent = 'Editar cargo #' + id;
+    document.getElementById('edit-form-content').innerHTML =
+      '<div class="fs"><label class="fl">Fecha</label><input type="date" id="ec-date" value="' + c.date + '"></div>'
+      + '<div class="fs"><label class="fl">Cobrar a</label><select id="ec-owner">' + ownerOpts(c.owner) + '</select></div>'
+      + '<div class="row2">'
+      + '<div class="fs"><label class="fl">Monto</label><input type="number" id="ec-amount" value="' + c.amount + '" step="0.01" inputmode="decimal"></div>'
+      + '<div class="fs"><label class="fl">Moneda</label><select id="ec-currency"><option value="QTZ"' + (c.currency === 'QTZ' ? ' selected' : '') + '>QTZ</option><option value="USD"' + (c.currency === 'USD' ? ' selected' : '') + '>USD</option></select></div>'
+      + '</div>'
+      + '<div class="fs"><label class="fl">Descripcion</label><input type="text" id="ec-desc" value="' + (c.description || '') + '"></div>'
+      + '<div style="font-size:9px;color:#8892A4;margin-bottom:10px">Registrado por ' + (c.recorded_by || '?') + '</div>'
+      + '<div style="display:flex;gap:8px">'
+      + '<button class="btn" onclick="Payments.updateCharge(' + id + ')">Guardar</button>'
+      + '<button class="btn" style="background:#8B1A1A" onclick="Payments.deleteCharge(' + id + ')">Eliminar</button>'
+      + '</div>';
+    document.getElementById('edit-modal').style.display = 'flex';
+  }
+
+  async function updateCharge(id) {
+    var c = DB.misc_charges.find(function(x) { return x.id === id; });
+    if (!c) return;
+    c.date = document.getElementById('ec-date').value;
+    c.owner = document.getElementById('ec-owner').value;
+    c.amount = parseFloat(document.getElementById('ec-amount').value) || 0;
+    c.currency = document.getElementById('ec-currency').value;
+    c.description = document.getElementById('ec-desc').value.trim();
+    Admin.closeEdit();
+    var ok = await API.saveData();
+    if (ok) {
+      API.showNotifyToast('Cargo actualizado');
+      buildStatement();
+      buildPaymentsList();
+    }
+  }
+
+  async function deleteCharge(id) {
+    if (!confirm('Eliminar este cargo?')) return;
+    DB.misc_charges = DB.misc_charges.filter(function(c) { return c.id !== id; });
+    Admin.closeEdit();
+    var ok = await API.saveData();
+    if (ok) {
+      API.showNotifyToast('Cargo eliminado');
+      buildStatement();
+      buildPaymentsList();
+    }
+  }
+
+  // ========== BALANCE SUMMARY (for dashboard widget) ==========
+
+  function getOwnerBalances() {
+    ensureData();
+    var balances = {};
+
+    var now = new Date();
+    var nextMonth = (function() {
+      var ny = now.getFullYear(), nm = now.getMonth() + 2;
+      if (nm > 12) { nm = 1; ny++; }
+      return ny + '-' + App.pad2(nm);
+    })();
+
+    ['COCO', 'CUCO', 'SENSHI'].forEach(function(owner) {
+      // Start from QB opening balance
+      var ob = OPENING_BALANCES[owner] || { qtz: 0, usd: 0 };
+      balances[owner] = { qtz: ob.qtz, usd: ob.usd };
+
+      // Add all charges from tracking start to now
+      var charges = getChargeMonths(owner, TRACKING_START, nextMonth);
+      charges.forEach(function(mc) {
+        balances[owner].qtz += mc.chargeQTZ;
+        balances[owner].usd += mc.chargeUSD;
+      });
+
+      // Subtract all payments for this owner
+      DB.payments.forEach(function(p) {
+        if (p.from === owner || p.to === owner) {
+          var sign = paymentSign(p, owner);
+          balances[owner].qtz += sign * (p.amount_qtz || 0);
+          balances[owner].usd += sign * (p.amount_usd || 0);
+        }
+      });
+    });
+
+    return balances;
+  }
+
+  // ========== BILLING INTEGRATION ==========
+  // Section H in billing report: beginning balance, period charges/payments, ending balance
+
+  function buildBillingSectionH(bilFrom, bilTo) {
+    if (!App.isAdmin()) return '';
+    ensureData();
+
+    var fQ = function(v) { return 'Q' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    var fD = function(v) { return '$' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    var fSQ = function(v) { return v < 0 ? '-' + fQ(v) : fQ(v); };
+    var fSD = function(v) { return v < 0 ? '-' + fD(v) : fD(v); };
+    var sg = function(v) { return v < 0 ? 'neg' : ''; };
+
+    // Determine period boundaries
+    // bilFrom/bilTo are YYYY-MM strings from the billing period selector
+    var periodFrom = (bilFrom || TRACKING_START) + '-01';
+    var periodTo = (bilTo || bilFrom || TRACKING_START) + '-31';
+    var periodFromMonth = bilFrom || TRACKING_START;
+    var periodToMonth = bilTo || bilFrom || TRACKING_START;
+
+    // Next month after period end (for getChargeMonths exclusive end)
+    var toParts = periodToMonth.split('-');
+    var nextY = +toParts[0], nextM = +toParts[1] + 1;
+    if (nextM > 12) { nextM = 1; nextY++; }
+    var periodEndExcl = nextY + '-' + App.pad2(nextM);
+
+    // Clamp period to TRACKING_START — anything before is settled
+    var effectiveFrom = periodFromMonth < TRACKING_START ? TRACKING_START : periodFromMonth;
+    var effectiveFromDate = effectiveFrom + '-01';
+
+    var h = '<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">H — Saldos</div></div><div class="bil-bd">';
+
+    ['COCO', 'CUCO', 'SENSHI'].forEach(function(owner, idx) {
+      var label = owner === 'SENSHI' ? 'CHARTER' : owner;
+      var border = idx > 0 ? 'border-top:2px solid #E2E6EE;margin-top:8px;padding-top:8px' : '';
+
+      // --- Beginning balance: QB opening + all charges + payments BEFORE this period ---
+      var ob = OPENING_BALANCES[owner] || { qtz: 0, usd: 0 };
+      var begQTZ = ob.qtz, begUSD = ob.usd;
+
+      // Charges from tracking start up to (but not including) this period
+      if (effectiveFrom > TRACKING_START) {
+        var priorCharges = getChargeMonths(owner, TRACKING_START, effectiveFrom);
+        priorCharges.forEach(function(mc) {
+          begQTZ += mc.chargeQTZ;
+          begUSD += mc.chargeUSD;
+        });
+      }
+
+      // Payments before this period (from tracking start)
+      DB.payments.forEach(function(p) {
+        if ((p.from === owner || p.to === owner) && p.date < effectiveFromDate && p.date >= TRACKING_START + '-01') {
+          var sign = paymentSign(p, owner);
+          begQTZ += sign * (p.amount_qtz || 0);
+          begUSD += sign * (p.amount_usd || 0);
+        }
+      });
+
+      // --- Period charges (clamped to tracking start) ---
+      var periodCharges = getChargeMonths(owner, effectiveFrom, periodEndExcl);
+      var chgQTZ = 0, chgUSD = 0;
+      periodCharges.forEach(function(mc) {
+        chgQTZ += mc.chargeQTZ;
+        chgUSD += mc.chargeUSD;
+      });
+
+      // --- Period payments (clamped to tracking start) ---
+      var payQTZ = 0, payUSD = 0;
+      DB.payments.forEach(function(p) {
+        if ((p.from === owner || p.to === owner) && p.date >= effectiveFromDate && p.date <= periodTo) {
+          var sign = paymentSign(p, owner);
+          payQTZ += sign * (p.amount_qtz || 0);
+          payUSD += sign * (p.amount_usd || 0);
+        }
+      });
+
+      // --- Ending balance ---
+      var endQTZ = begQTZ + chgQTZ + payQTZ;
+      var endUSD = begUSD + chgUSD + payUSD;
+
+      h += '<div style="' + border + '">';
+      h += '<div class="bil-row"><div class="bil-lbl" style="font-weight:700;font-size:11px">' + label + '</div><div class="bil-val"></div></div>';
+
+      // Beginning balance
+      h += '<div class="bil-row"><div class="bil-lbl" style="color:#8892A4;font-size:10px">Saldo inicial</div>'
+        + '<div class="bil-val" style="display:flex;gap:8px;font-size:10px">'
+        + '<span class="' + sg(begQTZ) + '">' + fSQ(begQTZ) + '</span>'
+        + '<span class="' + sg(begUSD) + '">' + fSD(begUSD) + '</span>'
+        + '</div></div>';
+
+      // Period charges
+      if (chgQTZ !== 0 || chgUSD !== 0) {
+        h += '<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A;font-size:10px">+ Cargos del periodo</div>'
+          + '<div class="bil-val" style="display:flex;gap:8px;font-size:10px;color:#8B1A1A">'
+          + (chgQTZ !== 0 ? '<span>' + fSQ(chgQTZ) + '</span>' : '')
+          + (chgUSD !== 0 ? '<span>' + fSD(chgUSD) + '</span>' : '')
+          + '</div></div>';
+      }
+
+      // Period payments
+      if (payQTZ !== 0 || payUSD !== 0) {
+        h += '<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A;font-size:10px">- Pagos del periodo</div>'
+          + '<div class="bil-val" style="display:flex;gap:8px;font-size:10px;color:#1A6B3A">'
+          + (payQTZ !== 0 ? '<span>' + fSQ(payQTZ) + '</span>' : '')
+          + (payUSD !== 0 ? '<span>' + fSD(payUSD) + '</span>' : '')
+          + '</div></div>';
+      }
+
+      // Ending balance
+      h += '<div class="bil-row" style="background:#F5F6F8;border-radius:4px;margin-top:2px">'
+        + '<div class="bil-lbl" style="font-weight:700;font-size:11px">Saldo final</div>'
+        + '<div class="bil-val" style="display:flex;gap:8px;font-size:11px">'
+        + '<span class="' + sg(endQTZ) + '" style="font-weight:700">' + fSQ(endQTZ) + '</span>'
+        + '<span class="' + sg(endUSD) + '" style="font-weight:700">' + fSD(endUSD) + '</span>'
+        + '</div></div>';
+
+      h += '</div>';
+    });
+
+    h += '<div style="font-size:9px;color:#8892A4;text-align:center;margin-top:6px;padding-bottom:4px">Positivo = debe a Senshi &middot; Negativo = Senshi debe &middot; <a href="#" onclick="App.nav(\'pay\',9);return false" style="color:#4A9EE8">Ver detalle</a></div>';
+    h += '</div></div>';
+
+    return h;
+  }
+
+  return {
+    buildPaymentsPage: buildPaymentsPage,
+    setOwner: setOwner,
+    setYear: setYear,
+    openTransaction: openTransaction,
+    onTxnTypeChange: onTxnTypeChange,
+    saveTransaction: saveTransaction,
+    editPayment: editPayment,
+    updatePayment: updatePayment,
+    deletePayment: deletePayment,
+    openAddCharge: openAddCharge,
+    saveCharge: saveCharge,
+    editCharge: editCharge,
+    updateCharge: updateCharge,
+    deleteCharge: deleteCharge,
+    getOwnerBalances: getOwnerBalances,
+    buildBillingSectionH: buildBillingSectionH
+  };
+})();
