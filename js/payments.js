@@ -19,7 +19,7 @@ var Payments = (function() {
   // USD balances start at $0 (pilot fees tracked separately from QB).
   var OPENING_BALANCES = {
     COCO:   { qtz:  7133.71, usd: 0 },
-    CUCO:   { qtz: -19949.02, usd: 0 },
+    CUCO:   { qtz: -22129.57, usd: 0 },
     SENSHI: { qtz: 0, usd: 0 }
   };
 
