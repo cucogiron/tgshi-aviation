@@ -191,8 +191,15 @@ var Payments = (function() {
       // Charge details
       mc.details.forEach(function(d) {
         if (d.amt === 0) return;
-        var cur = d.currency === 'QTZ' ? fQ(d.amt) : fD(d.amt);
-        h += '<div class="bil-row"><div class="bil-lbl" style="color:#8892A4;font-size:10px">+ ' + d.label + '</div><div class="bil-val" style="font-size:10px;color:#8B1A1A">' + cur + '</div></div>';
+        var absAmt = Math.abs(d.amt);
+        var cur = d.currency === 'QTZ' ? fQ(absAmt) : fD(absAmt);
+        if (d.isCredit || d.amt < 0) {
+          // Credit line (anticipo, reimbursement, etc)
+          h += '<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A;font-size:10px">- ' + d.label + '</div><div class="bil-val" style="font-size:10px;color:#1A6B3A">(' + cur + ')</div></div>';
+        } else {
+          // Charge line
+          h += '<div class="bil-row"><div class="bil-lbl" style="color:#8892A4;font-size:10px">+ ' + d.label + '</div><div class="bil-val" style="font-size:10px;color:#8B1A1A">' + cur + '</div></div>';
+        }
       });
 
       // Payment details
@@ -278,7 +285,8 @@ var Payments = (function() {
       });
       var qph = th > 0 ? tfuel / th : 0;
       var fuelProp = hrs[owner] * qph;
-      var fuelNet = fuelProp - (antic[owner] || 0);
+      var fuelAntic = antic[owner] || 0;
+      var fuelNet = fuelProp - fuelAntic;
 
       // Pilotaje (USD)
       var bilH = hrs[owner] - sub[owner].a + sub[owner].n;
@@ -312,7 +320,9 @@ var Payments = (function() {
       var totalUSD = pilFee + espFee + adminFee + maintUSD + fexpUSD;
 
       var details = [];
-      if (fuelNet !== 0) details.push({ label: 'Combustible neto', amt: fuelNet, currency: 'QTZ' });
+      // Show fuel as gross charge + anticipo credit separately
+      if (fuelProp > 0) details.push({ label: 'Combustible (' + hrs[owner].toFixed(1) + 'hr x Q' + qph.toFixed(0) + '/hr)', amt: fuelProp, currency: 'QTZ' });
+      if (fuelAntic > 0) details.push({ label: 'Anticipo combustible pagado', amt: -fuelAntic, currency: 'QTZ', isCredit: true });
       if (pilFee > 0) details.push({ label: 'Pilotaje (' + bilH.toFixed(1) + 'hr)', amt: pilFee, currency: 'USD' });
       if (espFee > 0) details.push({ label: 'Espera (' + espHrs[owner].toFixed(1) + 'hr)', amt: espFee, currency: 'USD' });
       if (adminFee > 0) details.push({ label: 'Admin fee', amt: adminFee, currency: 'USD' });
