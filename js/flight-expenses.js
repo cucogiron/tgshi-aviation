@@ -231,7 +231,7 @@ var FlightExpenses = (function() {
 
     Admin.closeEdit();
     API.saveData().then(function(ok) {
-      if (ok) { buildExpensePage(); }
+      if (ok) { buildExpensePage(); Flights.buildVL(); Dashboard.render(); }
       else { alert('Error guardando'); }
     });
   }
@@ -299,7 +299,7 @@ var FlightExpenses = (function() {
 
     Admin.closeEdit();
     API.saveData().then(function(ok) {
-      if (ok) buildExpensePage();
+      if (ok) { buildExpensePage(); Flights.buildVL(); Dashboard.render(); }
       else alert('Error guardando');
     });
   }
@@ -313,7 +313,7 @@ var FlightExpenses = (function() {
     DB.flight_expenses = (DB.flight_expenses || []).filter(function(x) { return x.id !== id; });
     Admin.closeEdit();
     API.saveData().then(function(ok) {
-      if (ok) buildExpensePage();
+      if (ok) { buildExpensePage(); Flights.buildVL(); Dashboard.render(); }
       else alert('Error eliminando');
     });
   }
