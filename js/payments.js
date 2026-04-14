@@ -10,6 +10,10 @@ var Payments = (function() {
   var stmtOwner = 'COCO';
   var stmtYear = new Date().getFullYear().toString();
 
+  // Everything before this month is considered paid in full (clean slate).
+  // Charges and payments before this date are ignored.
+  var TRACKING_START = '2026-01';
+
   // --- Ensure DB.payments exists ---
   function ensureData() {
     if (!DB.payments) DB.payments = [];
@@ -32,7 +36,8 @@ var Payments = (function() {
     DB.fuel.forEach(function(f) { years[f.d.slice(0, 4)] = true; });
     var yr = new Date().getFullYear().toString();
     if (!years[yr]) years[yr] = true;
-    var sortedYears = Object.keys(years).sort().reverse();
+    var trackingStartYear = TRACKING_START.slice(0, 4);
+    var sortedYears = Object.keys(years).filter(function(y) { return y >= trackingStartYear; }).sort().reverse();
 
     var h = '';
 
@@ -99,24 +104,28 @@ var Payments = (function() {
     var fSD = function(v) { return v < 0 ? '-' + fD(v) : fD(v); };
 
     // Compute opening balance: sum all charges and payments BEFORE this year
+    // but only from TRACKING_START onwards (everything before is considered settled)
     var openQTZ = 0, openUSD = 0;
     var cutoff = year + '-01-01';
+    var effectiveStart = TRACKING_START > year + '-01' ? TRACKING_START : year + '-01';
 
-    // Historical charges (all months before this year)
-    var allMonths = getChargeMonths(owner, '2020-01', year + '-01');
-    allMonths.forEach(function(mc) {
-      if (mc.month < year + '-01') {
-        openQTZ += mc.chargeQTZ;
-        openUSD += mc.chargeUSD;
-      }
-    });
+    // Historical charges (from tracking start up to this year)
+    if (year + '-01' > TRACKING_START) {
+      var allMonths = getChargeMonths(owner, TRACKING_START, year + '-01');
+      allMonths.forEach(function(mc) {
+        if (mc.month < year + '-01') {
+          openQTZ += mc.chargeQTZ;
+          openUSD += mc.chargeUSD;
+        }
+      });
+    }
 
-    // Historical payments before this year
+    // Historical payments before this year but from tracking start onwards
     var ownerPayments = DB.payments.filter(function(p) {
       return (p.from === owner || p.to === owner);
     });
     ownerPayments.forEach(function(p) {
-      if (p.date < cutoff) {
+      if (p.date < cutoff && p.date >= TRACKING_START + '-01') {
         var sign = (p.from === owner) ? -1 : 1; // from owner = payment (reduces balance), to owner = reimbursement (increases balance)
         openQTZ += sign * (p.amount_qtz || 0);
         openUSD += sign * (p.amount_usd || 0);
@@ -531,12 +540,12 @@ var Payments = (function() {
     var toMonth = now.getFullYear() + '-' + App.pad2(now.getMonth() + 1);
 
     ['COCO', 'CUCO', 'SENSHI'].forEach(function(owner) {
-      var charges = getChargeMonths(owner, '2020-01', toMonth + '-32' > toMonth ? (function() {
-        // next month
+      var charges = getChargeMonths(owner, TRACKING_START, (function() {
+        // next month after current
         var ny = now.getFullYear(), nm = now.getMonth() + 2;
         if (nm > 12) { nm = 1; ny++; }
         return ny + '-' + App.pad2(nm);
-      })() : toMonth);
+      })());
 
       charges.forEach(function(mc) {
         balances[owner].qtz += mc.chargeQTZ;
