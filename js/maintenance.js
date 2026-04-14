@@ -266,8 +266,14 @@ const Maintenance = (() => {
     var effectiveFrom = fromYM < '2026-01' ? '2026-01' : fromYM;
     const fd = effectiveFrom + '-01';
     const td = toYM + '-31';
+
+    // Find the tach at the start of 2026 flying — any maintenance with tach
+    // window entirely below this is pre-2026 and considered settled
+    const flights2026 = DB.flights.filter(f => f.d >= '2026-01-01' && f.hi);
+    const minTach2026 = flights2026.length > 0 ? Math.min(...flights2026.map(f => f.hi)) : 0;
+
     const events = (DB.maintenance || [])
-      .filter(m => m.date >= fd && m.date <= td && (!planeId || m.plane_id === planeId))
+      .filter(m => m.date >= fd && m.date <= td && (!planeId || m.plane_id === planeId) && m.tach >= minTach2026)
       .sort((a, b) => a.tach - b.tach);
 
     const result = {
