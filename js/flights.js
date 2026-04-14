@@ -9,22 +9,77 @@ const Flights = (() => {
   let searchQuery = '';
 
   function fRow(f) {
-    const dc = f.r === 'COCO' ? 'c1' : f.r === 'CUCO' ? 'c2' : 'c3';
-    const bx = f.t === 'STD' ? '<span class="bx s">STD</span>' : f.t === 'FF' ? '<span class="bx f">FF</span>' : f.t === 'MANTE' ? '<span class="bx m">MANTE</span>' : '<span class="bx p">Personal</span>';
-    // Display "Charter" instead of "Shenshi" for SENSHI responsable
-    const displayR = f.r === 'SENSHI' ? 'Charter' : f.r;
-    const rv = (f.rv || 0) > 0 ? `<span>$${f.rv.toLocaleString()}</span>` : '';
-    const pendTag = f.verified === false ? '<span class="pend-badge">⏳</span>' : '';
-    let pilotDisplay = f.p || '';
-    if (f.pilot_roster_id) {
-      const rp = App.getPilot(f.pilot_roster_id);
-      if (rp) pilotDisplay = rp.name;
+  const dc = f.r === 'COCO' ? 'c1' : f.r === 'CUCO' ? 'c2' : 'c3';
+  const bx = f.t === 'STD'
+    ? '<span class="bx s">STD</span>'
+    : f.t === 'FF'
+      ? '<span class="bx f">FF</span>'
+      : f.t === 'MANTE'
+        ? '<span class="bx m">MANTE</span>'
+        : '<span class="bx p">Personal</span>';
+
+  // Display "Charter" instead of "SENSHI"
+  const displayR = f.r === 'SENSHI' ? 'Charter' : f.r;
+
+  // Charter revenue
+  const rv = (f.rv || 0) > 0
+    ? `<span>💵 $${Number(f.rv).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`
+    : '';
+
+  // Related flight expenses
+  const relatedExpenses = (DB.flight_expenses || []).filter(e => Number(e.flight_id) === Number(f.id));
+
+  const expenseTotals = relatedExpenses.reduce((acc, e) => {
+    const cur = (e.currency || 'QTZ').toUpperCase();
+    if (cur === 'USD') acc.usd += Number(e.amount || 0);
+    else acc.qtz += Number(e.amount || 0);
+    return acc;
+  }, { usd: 0, qtz: 0 });
+
+  let exp = '';
+  if (expenseTotals.usd > 0 || expenseTotals.qtz > 0) {
+    const parts = [];
+    if (expenseTotals.usd > 0) {
+      parts.push(`$${expenseTotals.usd.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
     }
-    const editBtn = App.isAdmin() ? `<button class="edit-btn" onclick="Flights.openEdit(${f.id})">editar</button>` : '';
-    const dupBtn = App.isAdmin() ? `<button class="dup-btn" onclick="Flights.duplicateFlight(${f.id})">duplicar</button>` : '';
-    const tachDisplay = f.hf ? `<div class="tach-sm">TACH ${f.hf.toFixed(1)}</div>` : '';
-    return `<div class="fi"><div class="fdot ${dc}"></div><div class="fm"><div class="fr">${f.rt || '—'} ${bx}${pendTag}</div><div class="fme"><span>${displayR}</span>${pilotDisplay ? `<span>🧑‍✈️ ${pilotDisplay}</span>` : ''}${rv}${editBtn}${dupBtn}</div></div><div class="frt"><div class="fh">${f.h.toFixed(1)}<small>hr</small></div><div class="fdt">${f.d.slice(5)}</div>${tachDisplay}</div></div>`;
+    if (expenseTotals.qtz > 0) {
+      parts.push(`Q${expenseTotals.qtz.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+    }
+    exp = `<span>🧾 ${parts.join(' + ')}</span>`;
   }
+
+  const pendTag = f.verified === false ? '<span class="pend-badge">⏳</span>' : '';
+  let pilotDisplay = f.p || '';
+
+  if (f.pilot_roster_id) {
+    const rp = App.getPilot(f.pilot_roster_id);
+    if (rp) pilotDisplay = rp.name;
+  }
+
+  const editBtn = App.isAdmin() ? `<button class="edit-btn" onclick="Flights.openEdit(${f.id})">editar</button>` : '';
+  const dupBtn = App.isAdmin() ? `<button class="dup-btn" onclick="Flights.duplicateFlight(${f.id})">duplicar</button>` : '';
+  const tachDisplay = f.hf ? `<div class="tach-sm">TACH ${f.hf.toFixed(1)}</div>` : '';
+
+  return `<div class="fi">
+    <div class="fdot ${dc}"></div>
+    <div class="fm">
+      <div class="fr">${f.rt || '—'} ${bx}${pendTag}</div>
+      <div class="fme">
+        <span>${displayR}</span>
+        ${pilotDisplay ? `<span>🧑‍✈️ ${pilotDisplay}</span>` : ''}
+        ${rv}
+        ${exp}
+        ${editBtn}
+        ${dupBtn}
+      </div>
+    </div>
+    <div class="frt">
+      <div class="fh">${f.h.toFixed(1)}<small>hr</small></div>
+      <div class="fdt">${f.d.slice(5)}</div>
+      ${tachDisplay}
+    </div>
+  </div>`;
+}
 
   function getFilteredFlights() {
     let out = [...DB.flights].reverse();
