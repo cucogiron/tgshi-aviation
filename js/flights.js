@@ -45,7 +45,7 @@ const Flights = (() => {
     if (expenseTotals.qtz > 0) {
       parts.push(`Q${expenseTotals.qtz.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
     }
-    exp = `<span>🧾 ${parts.join(' + ')}</span>`;
+    exp = `<span style="color:#8B5E00">🧾 ${parts.join(' + ')}</span>`;
   }
 
   const pendTag = f.verified === false ? '<span class="pend-badge">⏳</span>' : '';
