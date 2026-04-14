@@ -27,8 +27,10 @@ const Flights = (() => {
     : '';
 
   // Related flight expenses
-  const relatedExpenses = (DB.flight_expenses || []).filter(e => Number(e.flight_id) === Number(f.id));
-
+const relatedExpenses = Array.isArray(DB.flight_expenses)
+  ? DB.flight_expenses.filter(e => Number(e.flight_id) === Number(f.id))
+  : [];
+    
   const expenseTotals = relatedExpenses.reduce((acc, e) => {
     const cur = (e.currency || 'QTZ').toUpperCase();
     if (cur === 'USD') acc.usd += Number(e.amount || 0);
