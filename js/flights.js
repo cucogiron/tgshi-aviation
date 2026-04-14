@@ -20,9 +20,10 @@ function fRow(f) {
 
   const displayR = f.r === 'SENSHI' ? 'Charter' : f.r;
 
-  const revenue = Number(f.rv || 0);
-  const rv = revenue > 0
-    ? `<span>💵 $${revenue.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`
+  const revenueUsd = Number(f.rv || 0);
+
+  const rv = revenueUsd > 0
+    ? `<span>💵 $${revenueUsd.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`
     : '';
 
   const relatedExpenses = Array.isArray(DB.flight_expenses)
@@ -49,19 +50,29 @@ function fRow(f) {
     exp = `<span style="color:#8B5E00">🧾 ${parts.join(' + ')}</span>`;
   }
 
-  // Net profitability
+  // Net by currency, kept separate
+  const netUsd = revenueUsd - expenseTotals.usd;
+  const netQtz = 0 - expenseTotals.qtz;
+
   let net = '';
-  if (revenue > 0) {
-    if (expenseTotals.qtz === 0) {
-      const netUsd = revenue - expenseTotals.usd;
-      const netColor = netUsd >= 0 ? '#1A6B3A' : '#B42318';
-      net = `<span style="color:${netColor};font-weight:700">📊 Net $${netUsd.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
-    } else {
-      // Mixed currencies: show partial net and warning
-      const netUsdOnly = revenue - expenseTotals.usd;
-      const netColor = netUsdOnly >= 0 ? '#1A6B3A' : '#B42318';
-      net = `<span style="color:${netColor};font-weight:700">📊 Net $${netUsdOnly.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Q pendiente</span>`;
+  if (revenueUsd > 0 || expenseTotals.usd > 0 || expenseTotals.qtz > 0) {
+    const netParts = [];
+
+    if (revenueUsd > 0 || expenseTotals.usd > 0) {
+      const usdColor = netUsd >= 0 ? '#1A6B3A' : '#B42318';
+      netParts.push(
+        `<span style="color:${usdColor};font-weight:700">📊 Net $${netUsd.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`
+      );
     }
+
+    if (expenseTotals.qtz > 0) {
+      const qtzColor = netQtz >= 0 ? '#1A6B3A' : '#B42318';
+      netParts.push(
+        `<span style="color:${qtzColor};font-weight:700">📊 Net Q${netQtz.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`
+      );
+    }
+
+    net = netParts.join(' ');
   }
 
   const pendTag = f.verified === false ? '<span class="pend-badge">⏳</span>' : '';
