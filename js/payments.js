@@ -10,32 +10,10 @@ var Payments = (function() {
   var stmtOwner = 'COCO';
   var stmtYear = new Date().getFullYear().toString();
 
-  // Everything before this month is considered paid in full (clean slate).
-  // Charges and payments before this date are ignored — billing starts here.
-  var TRACKING_START = '2026-01';
-
-  // QuickBooks opening balances as of Dec 31, 2025 (QTZ).
-  // Positive = owner owes Senshi, Negative = Senshi owes owner.
-  // USD balances start at $0 (pilot fees tracked separately from QB).
-  var OPENING_BALANCES = {
-    COCO:   { qtz:  7133.71, usd: 0 },
-    CUCO:   { qtz: -22129.57, usd: 0 },
-    SENSHI: { qtz: 0, usd: 0 }
-  };
-
   // --- Ensure DB.payments exists ---
   function ensureData() {
     if (!DB.payments) DB.payments = [];
     if (!DB.meta.last_payment_id) DB.meta.last_payment_id = 0;
-  }
-
-  // --- Payment sign: how a payment affects an owner's balance ---
-  // Returns -1 if payment reduces owner's balance (they paid or got reimbursed)
-  // Returns +1 if payment increases owner's balance (rare: another owner paid on their behalf)
-  function paymentSign(p, owner) {
-    if (p.from === owner) return -1;                          // owner paid
-    if (p.from === 'SENSHI' && p.to === owner) return -1;    // Senshi reimbursed owner
-    return 1;                                                  // owner-to-owner transfer, recipient
   }
 
   // ========== STATEMENT VIEW ==========
@@ -54,8 +32,7 @@ var Payments = (function() {
     DB.fuel.forEach(function(f) { years[f.d.slice(0, 4)] = true; });
     var yr = new Date().getFullYear().toString();
     if (!years[yr]) years[yr] = true;
-    var trackingStartYear = TRACKING_START.slice(0, 4);
-    var sortedYears = Object.keys(years).filter(function(y) { return y >= trackingStartYear; }).sort().reverse();
+    var sortedYears = Object.keys(years).sort().reverse();
 
     var h = '';
 
@@ -116,38 +93,31 @@ var Payments = (function() {
     var container = document.getElementById('pay-stmt');
     if (!container) return;
 
-
     var fQ = function(v) { return 'Q' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
     var fD = function(v) { return '$' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
     var fSQ = function(v) { return v < 0 ? '-' + fQ(v) : fQ(v); };
     var fSD = function(v) { return v < 0 ? '-' + fD(v) : fD(v); };
 
-    // --- Opening balance ---
-    // Start from QB opening balances (Dec 31 2025),
-    // then accumulate charges + payments from TRACKING_START up to this year.
-    var ob = OPENING_BALANCES[owner] || { qtz: 0, usd: 0 };
-    var openQTZ = ob.qtz;
-    var openUSD = ob.usd;
+    // Compute opening balance: sum all charges and payments BEFORE this year
+    var openQTZ = 0, openUSD = 0;
     var cutoff = year + '-01-01';
 
-    // If viewing a year after TRACKING_START year, accumulate prior year charges + payments
-    if (year + '-01' > TRACKING_START) {
-      var allMonths = getChargeMonths(owner, TRACKING_START, year + '-01');
-      allMonths.forEach(function(mc) {
+    // Historical charges (all months before this year)
+    var allMonths = getChargeMonths(owner, '2020-01', year + '-01');
+    allMonths.forEach(function(mc) {
+      if (mc.month < year + '-01') {
         openQTZ += mc.chargeQTZ;
         openUSD += mc.chargeUSD;
-      });
-    }
+      }
+    });
 
-    // All payments for this owner (used for opening balance + monthly rows)
+    // Historical payments before this year
     var ownerPayments = DB.payments.filter(function(p) {
       return (p.from === owner || p.to === owner);
     });
-
-    // Historical payments before this year but from tracking start onwards
     ownerPayments.forEach(function(p) {
-      if (p.date < cutoff && p.date >= TRACKING_START + '-01') {
-        var sign = paymentSign(p, owner);
+      if (p.date < cutoff) {
+        var sign = (p.from === owner) ? -1 : 1; // from owner = payment (reduces balance), to owner = reimbursement (increases balance)
         openQTZ += sign * (p.amount_qtz || 0);
         openUSD += sign * (p.amount_usd || 0);
       }
@@ -167,10 +137,8 @@ var Payments = (function() {
       + (owner === 'SENSHI' ? 'Charter' : owner) + ' — ' + year + '</div></div><div class="bil-bd">';
 
     // Opening balance row
-    var trackingStartYear = TRACKING_START.slice(0, 4);
-    var openLabel = (year === trackingStartYear) ? 'Saldo QB Dic ' + (+trackingStartYear - 1) : 'Saldo inicial ' + year;
     h += '<div class="bil-row" style="background:#F5F6F8;border-radius:6px;margin-bottom:4px">'
-      + '<div class="bil-lbl" style="font-weight:700">' + openLabel + '</div>'
+      + '<div class="bil-lbl" style="font-weight:700">Saldo inicial ' + year + '</div>'
       + '<div class="bil-val" style="display:flex;gap:10px">'
       + '<span class="' + (runQTZ > 0 ? '' : 'neg') + '">' + fSQ(runQTZ) + '</span>'
       + '<span class="' + (runUSD > 0 ? '' : 'neg') + '">' + fSD(runUSD) + '</span>'
@@ -195,7 +163,7 @@ var Payments = (function() {
       var monthPayments = [];
       ownerPayments.forEach(function(p) {
         if (p.date.slice(0, 7) === mm) {
-          var sign = paymentSign(p, owner);
+          var sign = (p.from === owner) ? -1 : 1;
           monthPayQTZ += sign * (p.amount_qtz || 0);
           monthPayUSD += sign * (p.amount_usd || 0);
           monthPayments.push(p);
@@ -208,22 +176,14 @@ var Payments = (function() {
       runQTZ += mc.chargeQTZ + monthPayQTZ;
       runUSD += mc.chargeUSD + monthPayUSD;
 
-
       h += '<div style="border-top:1px solid #E2E6EE;margin-top:6px;padding-top:6px">';
       h += '<div class="bil-row"><div class="bil-lbl" style="font-weight:700;font-size:11px">' + MO[monthNum] + ' ' + year + '</div><div class="bil-val" style="font-size:9px;color:#8892A4"></div></div>';
 
       // Charge details
       mc.details.forEach(function(d) {
         if (d.amt === 0) return;
-        var absAmt = Math.abs(d.amt);
-        var cur = d.currency === 'QTZ' ? fQ(absAmt) : fD(absAmt);
-        if (d.isCredit || d.amt < 0) {
-          // Credit line (anticipo, reimbursement, etc)
-          h += '<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A;font-size:10px">- ' + d.label + '</div><div class="bil-val" style="font-size:10px;color:#1A6B3A">(' + cur + ')</div></div>';
-        } else {
-          // Charge line
-          h += '<div class="bil-row"><div class="bil-lbl" style="color:#8892A4;font-size:10px">+ ' + d.label + '</div><div class="bil-val" style="font-size:10px;color:#8B1A1A">' + cur + '</div></div>';
-        }
+        var cur = d.currency === 'QTZ' ? fQ(d.amt) : fD(d.amt);
+        h += '<div class="bil-row"><div class="bil-lbl" style="color:#8892A4;font-size:10px">+ ' + d.label + '</div><div class="bil-val" style="font-size:10px;color:#8B1A1A">' + cur + '</div></div>';
       });
 
       // Payment details
@@ -269,11 +229,8 @@ var Payments = (function() {
   function getChargeMonths(owner, fromMonth, toMonth) {
     var results = [];
 
-    // Clamp start to TRACKING_START — pre-2026 is settled
-    var effectiveFrom = fromMonth < TRACKING_START ? TRACKING_START : fromMonth;
-
     // Determine month range
-    var startParts = effectiveFrom.split('-');
+    var startParts = fromMonth.split('-');
     var endParts = toMonth.split('-');
     var startY = +startParts[0], startM = +startParts[1];
     var endY = +endParts[0], endM = +endParts[1];
@@ -312,8 +269,7 @@ var Payments = (function() {
       });
       var qph = th > 0 ? tfuel / th : 0;
       var fuelProp = hrs[owner] * qph;
-      var fuelAntic = antic[owner] || 0;
-      var fuelNet = fuelProp - fuelAntic;
+      var fuelNet = fuelProp - (antic[owner] || 0);
 
       // Pilotaje (USD)
       var bilH = hrs[owner] - sub[owner].a + sub[owner].n;
@@ -335,27 +291,19 @@ var Payments = (function() {
 
       // Flight expenses
       var fexpUSD = 0, fexpQTZ = 0;
-      var fexpCreditUSD = 0, fexpCreditQTZ = 0;
       if (typeof FlightExpenses !== 'undefined' && FlightExpenses.billingForPeriod) {
         var fxd = FlightExpenses.billingForPeriod(mm, mm);
         if (fxd && fxd[owner]) {
           fexpUSD = fxd[owner].USD || 0;
           fexpQTZ = fxd[owner].QTZ || 0;
         }
-        // Credit for expenses this owner paid out of pocket for other owners' flights
-        if (fxd && fxd.payer_credits && fxd.payer_credits[owner]) {
-          fexpCreditUSD = fxd.payer_credits[owner].USD || 0;
-          fexpCreditQTZ = fxd.payer_credits[owner].QTZ || 0;
-        }
       }
 
-      var totalQTZ = fuelNet + maintQTZ + fexpQTZ - fexpCreditQTZ;
-      var totalUSD = pilFee + espFee + adminFee + maintUSD + fexpUSD - fexpCreditUSD;
+      var totalQTZ = fuelNet + maintQTZ + fexpQTZ;
+      var totalUSD = pilFee + espFee + adminFee + maintUSD + fexpUSD;
 
       var details = [];
-      // Show fuel as gross charge + anticipo credit separately
-      if (fuelProp > 0) details.push({ label: 'Combustible (' + hrs[owner].toFixed(1) + 'hr x Q' + qph.toFixed(0) + '/hr)', amt: fuelProp, currency: 'QTZ' });
-      if (fuelAntic > 0) details.push({ label: 'Anticipo combustible pagado', amt: -fuelAntic, currency: 'QTZ', isCredit: true });
+      if (fuelNet !== 0) details.push({ label: 'Combustible neto', amt: fuelNet, currency: 'QTZ' });
       if (pilFee > 0) details.push({ label: 'Pilotaje (' + bilH.toFixed(1) + 'hr)', amt: pilFee, currency: 'USD' });
       if (espFee > 0) details.push({ label: 'Espera (' + espHrs[owner].toFixed(1) + 'hr)', amt: espFee, currency: 'USD' });
       if (adminFee > 0) details.push({ label: 'Admin fee', amt: adminFee, currency: 'USD' });
@@ -363,8 +311,6 @@ var Payments = (function() {
       if (maintQTZ > 0) details.push({ label: 'Mantenimiento', amt: maintQTZ, currency: 'QTZ' });
       if (fexpUSD > 0) details.push({ label: 'Gastos vuelo', amt: fexpUSD, currency: 'USD' });
       if (fexpQTZ > 0) details.push({ label: 'Gastos vuelo', amt: fexpQTZ, currency: 'QTZ' });
-      if (fexpCreditQTZ > 0) details.push({ label: 'Credito gasto pagado de bolsillo', amt: -fexpCreditQTZ, currency: 'QTZ', isCredit: true });
-      if (fexpCreditUSD > 0) details.push({ label: 'Credito gasto pagado de bolsillo', amt: -fexpCreditUSD, currency: 'USD', isCredit: true });
 
       results.push({
         month: mm,
@@ -578,157 +524,70 @@ var Payments = (function() {
 
   function getOwnerBalances() {
     ensureData();
-    var balances = {};
+    var balances = { COCO: { qtz: 0, usd: 0 }, CUCO: { qtz: 0, usd: 0 }, SENSHI: { qtz: 0, usd: 0 } };
 
+    // All charges up to today
     var now = new Date();
-    var nextMonth = (function() {
-      var ny = now.getFullYear(), nm = now.getMonth() + 2;
-      if (nm > 12) { nm = 1; ny++; }
-      return ny + '-' + App.pad2(nm);
-    })();
+    var toMonth = now.getFullYear() + '-' + App.pad2(now.getMonth() + 1);
 
     ['COCO', 'CUCO', 'SENSHI'].forEach(function(owner) {
-      // Start from QB opening balance
-      var ob = OPENING_BALANCES[owner] || { qtz: 0, usd: 0 };
-      balances[owner] = { qtz: ob.qtz, usd: ob.usd };
+      var charges = getChargeMonths(owner, '2020-01', toMonth + '-32' > toMonth ? (function() {
+        // next month
+        var ny = now.getFullYear(), nm = now.getMonth() + 2;
+        if (nm > 12) { nm = 1; ny++; }
+        return ny + '-' + App.pad2(nm);
+      })() : toMonth);
 
-      // Add all charges from tracking start to now
-      var charges = getChargeMonths(owner, TRACKING_START, nextMonth);
       charges.forEach(function(mc) {
         balances[owner].qtz += mc.chargeQTZ;
         balances[owner].usd += mc.chargeUSD;
       });
+    });
 
-      // Subtract all payments for this owner
-      DB.payments.forEach(function(p) {
-        if (p.from === owner || p.to === owner) {
-          var sign = paymentSign(p, owner);
-          balances[owner].qtz += sign * (p.amount_qtz || 0);
-          balances[owner].usd += sign * (p.amount_usd || 0);
-        }
-      });
+    // All payments
+    DB.payments.forEach(function(p) {
+      if (balances[p.from]) {
+        balances[p.from].qtz -= (p.amount_qtz || 0);
+        balances[p.from].usd -= (p.amount_usd || 0);
+      }
+      if (balances[p.to]) {
+        balances[p.to].qtz += (p.amount_qtz || 0);
+        balances[p.to].usd += (p.amount_usd || 0);
+      }
     });
 
     return balances;
   }
 
   // ========== BILLING INTEGRATION ==========
-  // Section H in billing report: beginning balance, period charges/payments, ending balance
+  // Section H in billing report: current balances
 
-  function buildBillingSectionH(bilFrom, bilTo) {
+  function buildBillingSectionH() {
     if (!App.isAdmin()) return '';
     ensureData();
+    if (!DB.payments || DB.payments.length === 0) {
+      return '<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">H — Saldos pendientes</div></div><div class="bil-bd">'
+        + '<div class="empty" style="padding:12px">Sin pagos registrados. <a href="#" onclick="App.nav(\'pay\',9);return false" style="color:#4A9EE8">Ir a Pagos</a></div>'
+        + '</div></div>';
+    }
 
+    var balances = getOwnerBalances();
     var fQ = function(v) { return 'Q' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
     var fD = function(v) { return '$' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
     var fSQ = function(v) { return v < 0 ? '-' + fQ(v) : fQ(v); };
     var fSD = function(v) { return v < 0 ? '-' + fD(v) : fD(v); };
     var sg = function(v) { return v < 0 ? 'neg' : ''; };
 
-    // Determine period boundaries
-    // bilFrom/bilTo are YYYY-MM strings from the billing period selector
-    var periodFrom = (bilFrom || TRACKING_START) + '-01';
-    var periodTo = (bilTo || bilFrom || TRACKING_START) + '-31';
-    var periodFromMonth = bilFrom || TRACKING_START;
-    var periodToMonth = bilTo || bilFrom || TRACKING_START;
-
-    // Next month after period end (for getChargeMonths exclusive end)
-    var toParts = periodToMonth.split('-');
-    var nextY = +toParts[0], nextM = +toParts[1] + 1;
-    if (nextM > 12) { nextM = 1; nextY++; }
-    var periodEndExcl = nextY + '-' + App.pad2(nextM);
-
-    // Clamp period to TRACKING_START — anything before is settled
-    var effectiveFrom = periodFromMonth < TRACKING_START ? TRACKING_START : periodFromMonth;
-    var effectiveFromDate = effectiveFrom + '-01';
-
-    var h = '<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">H — Saldos</div></div><div class="bil-bd">';
+    var h = '<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">H — Saldos pendientes</div></div><div class="bil-bd">';
 
     ['COCO', 'CUCO', 'SENSHI'].forEach(function(owner, idx) {
       var label = owner === 'SENSHI' ? 'CHARTER' : owner;
-      var border = idx > 0 ? 'border-top:2px solid #E2E6EE;margin-top:8px;padding-top:8px' : '';
-
-      // --- Beginning balance: QB opening + all charges + payments BEFORE this period ---
-      var ob = OPENING_BALANCES[owner] || { qtz: 0, usd: 0 };
-      var begQTZ = ob.qtz, begUSD = ob.usd;
-
-      // Charges from tracking start up to (but not including) this period
-      if (effectiveFrom > TRACKING_START) {
-        var priorCharges = getChargeMonths(owner, TRACKING_START, effectiveFrom);
-        priorCharges.forEach(function(mc) {
-          begQTZ += mc.chargeQTZ;
-          begUSD += mc.chargeUSD;
-        });
-      }
-
-      // Payments before this period (from tracking start)
-      DB.payments.forEach(function(p) {
-        if ((p.from === owner || p.to === owner) && p.date < effectiveFromDate && p.date >= TRACKING_START + '-01') {
-          var sign = paymentSign(p, owner);
-          begQTZ += sign * (p.amount_qtz || 0);
-          begUSD += sign * (p.amount_usd || 0);
-        }
-      });
-
-      // --- Period charges (clamped to tracking start) ---
-      var periodCharges = getChargeMonths(owner, effectiveFrom, periodEndExcl);
-      var chgQTZ = 0, chgUSD = 0;
-      periodCharges.forEach(function(mc) {
-        chgQTZ += mc.chargeQTZ;
-        chgUSD += mc.chargeUSD;
-      });
-
-      // --- Period payments (clamped to tracking start) ---
-      var payQTZ = 0, payUSD = 0;
-      DB.payments.forEach(function(p) {
-        if ((p.from === owner || p.to === owner) && p.date >= effectiveFromDate && p.date <= periodTo) {
-          var sign = paymentSign(p, owner);
-          payQTZ += sign * (p.amount_qtz || 0);
-          payUSD += sign * (p.amount_usd || 0);
-        }
-      });
-
-      // --- Ending balance ---
-      var endQTZ = begQTZ + chgQTZ + payQTZ;
-      var endUSD = begUSD + chgUSD + payUSD;
-
-      h += '<div style="' + border + '">';
-      h += '<div class="bil-row"><div class="bil-lbl" style="font-weight:700;font-size:11px">' + label + '</div><div class="bil-val"></div></div>';
-
-      // Beginning balance
-      h += '<div class="bil-row"><div class="bil-lbl" style="color:#8892A4;font-size:10px">Saldo inicial</div>'
-        + '<div class="bil-val" style="display:flex;gap:8px;font-size:10px">'
-        + '<span class="' + sg(begQTZ) + '">' + fSQ(begQTZ) + '</span>'
-        + '<span class="' + sg(begUSD) + '">' + fSD(begUSD) + '</span>'
+      var b = balances[owner];
+      var border = idx > 0 ? 'border-top:1px solid #E2E6EE;margin-top:4px;padding-top:4px' : '';
+      h += '<div class="bil-row" style="' + border + '"><div class="bil-lbl" style="font-weight:700;font-size:11px">' + label + '</div><div class="bil-val" style="display:flex;gap:10px">'
+        + '<span class="' + sg(b.qtz) + '">' + fSQ(b.qtz) + '</span>'
+        + '<span class="' + sg(b.usd) + '">' + fSD(b.usd) + '</span>'
         + '</div></div>';
-
-      // Period charges
-      if (chgQTZ !== 0 || chgUSD !== 0) {
-        h += '<div class="bil-row"><div class="bil-lbl" style="color:#8B1A1A;font-size:10px">+ Cargos del periodo</div>'
-          + '<div class="bil-val" style="display:flex;gap:8px;font-size:10px;color:#8B1A1A">'
-          + (chgQTZ !== 0 ? '<span>' + fSQ(chgQTZ) + '</span>' : '')
-          + (chgUSD !== 0 ? '<span>' + fSD(chgUSD) + '</span>' : '')
-          + '</div></div>';
-      }
-
-      // Period payments
-      if (payQTZ !== 0 || payUSD !== 0) {
-        h += '<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A;font-size:10px">- Pagos del periodo</div>'
-          + '<div class="bil-val" style="display:flex;gap:8px;font-size:10px;color:#1A6B3A">'
-          + (payQTZ !== 0 ? '<span>' + fSQ(payQTZ) + '</span>' : '')
-          + (payUSD !== 0 ? '<span>' + fSD(payUSD) + '</span>' : '')
-          + '</div></div>';
-      }
-
-      // Ending balance
-      h += '<div class="bil-row" style="background:#F5F6F8;border-radius:4px;margin-top:2px">'
-        + '<div class="bil-lbl" style="font-weight:700;font-size:11px">Saldo final</div>'
-        + '<div class="bil-val" style="display:flex;gap:8px;font-size:11px">'
-        + '<span class="' + sg(endQTZ) + '" style="font-weight:700">' + fSQ(endQTZ) + '</span>'
-        + '<span class="' + sg(endUSD) + '" style="font-weight:700">' + fSD(endUSD) + '</span>'
-        + '</div></div>';
-
-      h += '</div>';
     });
 
     h += '<div style="font-size:9px;color:#8892A4;text-align:center;margin-top:6px;padding-bottom:4px">Positivo = debe a Senshi &middot; Negativo = Senshi debe &middot; <a href="#" onclick="App.nav(\'pay\',9);return false" style="color:#4A9EE8">Ver detalle</a></div>';
