@@ -262,7 +262,9 @@ const Maintenance = (() => {
    * Returns: { COCO: { USD: n, QTZ: n }, CUCO: {...}, SENSHI: {...}, events: [...] }
    */
   function billingForPeriod(fromYM, toYM, planeId) {
-    const fd = fromYM + '-01';
+    // Clamp to 2026-01 — pre-2026 maintenance is considered settled
+    var effectiveFrom = fromYM < '2026-01' ? '2026-01' : fromYM;
+    const fd = effectiveFrom + '-01';
     const td = toYM + '-31';
     const events = (DB.maintenance || [])
       .filter(m => m.date >= fd && m.date <= td && (!planeId || m.plane_id === planeId))
