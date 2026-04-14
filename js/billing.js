@@ -303,7 +303,7 @@ const Billing = (() => {
 
     // ── H — SALDOS PENDIENTES ──
     if (typeof Payments !== 'undefined') {
-      h += Payments.buildBillingSectionH();
+      h += Payments.buildBillingSectionH(from, to);
     }
 
     // ── Download buttons — 3 invoices ──
