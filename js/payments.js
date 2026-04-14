@@ -269,8 +269,11 @@ var Payments = (function() {
   function getChargeMonths(owner, fromMonth, toMonth) {
     var results = [];
 
+    // Clamp start to TRACKING_START — pre-2026 is settled
+    var effectiveFrom = fromMonth < TRACKING_START ? TRACKING_START : fromMonth;
+
     // Determine month range
-    var startParts = fromMonth.split('-');
+    var startParts = effectiveFrom.split('-');
     var endParts = toMonth.split('-');
     var startY = +startParts[0], startM = +startParts[1];
     var endY = +endParts[0], endM = +endParts[1];
@@ -627,6 +630,10 @@ var Payments = (function() {
     if (nextM > 12) { nextM = 1; nextY++; }
     var periodEndExcl = nextY + '-' + App.pad2(nextM);
 
+    // Clamp period to TRACKING_START — anything before is settled
+    var effectiveFrom = periodFromMonth < TRACKING_START ? TRACKING_START : periodFromMonth;
+    var effectiveFromDate = effectiveFrom + '-01';
+
     var h = '<div class="bil-sec"><div class="bil-hd"><div class="bil-ht">H — Saldos</div></div><div class="bil-bd">';
 
     ['COCO', 'CUCO', 'SENSHI'].forEach(function(owner, idx) {
@@ -638,8 +645,8 @@ var Payments = (function() {
       var begQTZ = ob.qtz, begUSD = ob.usd;
 
       // Charges from tracking start up to (but not including) this period
-      if (periodFromMonth > TRACKING_START) {
-        var priorCharges = getChargeMonths(owner, TRACKING_START, periodFromMonth);
+      if (effectiveFrom > TRACKING_START) {
+        var priorCharges = getChargeMonths(owner, TRACKING_START, effectiveFrom);
         priorCharges.forEach(function(mc) {
           begQTZ += mc.chargeQTZ;
           begUSD += mc.chargeUSD;
@@ -648,25 +655,25 @@ var Payments = (function() {
 
       // Payments before this period (from tracking start)
       DB.payments.forEach(function(p) {
-        if ((p.from === owner || p.to === owner) && p.date < periodFrom && p.date >= TRACKING_START + '-01') {
+        if ((p.from === owner || p.to === owner) && p.date < effectiveFromDate && p.date >= TRACKING_START + '-01') {
           var sign = paymentSign(p, owner);
           begQTZ += sign * (p.amount_qtz || 0);
           begUSD += sign * (p.amount_usd || 0);
         }
       });
 
-      // --- Period charges ---
-      var periodCharges = getChargeMonths(owner, periodFromMonth, periodEndExcl);
+      // --- Period charges (clamped to tracking start) ---
+      var periodCharges = getChargeMonths(owner, effectiveFrom, periodEndExcl);
       var chgQTZ = 0, chgUSD = 0;
       periodCharges.forEach(function(mc) {
         chgQTZ += mc.chargeQTZ;
         chgUSD += mc.chargeUSD;
       });
 
-      // --- Period payments ---
+      // --- Period payments (clamped to tracking start) ---
       var payQTZ = 0, payUSD = 0;
       DB.payments.forEach(function(p) {
-        if ((p.from === owner || p.to === owner) && p.date >= periodFrom && p.date <= periodTo) {
+        if ((p.from === owner || p.to === owner) && p.date >= effectiveFromDate && p.date <= periodTo) {
           var sign = paymentSign(p, owner);
           payQTZ += sign * (p.amount_qtz || 0);
           payUSD += sign * (p.amount_usd || 0);
