@@ -335,16 +335,22 @@ var Payments = (function() {
 
       // Flight expenses
       var fexpUSD = 0, fexpQTZ = 0;
+      var fexpCreditUSD = 0, fexpCreditQTZ = 0;
       if (typeof FlightExpenses !== 'undefined' && FlightExpenses.billingForPeriod) {
         var fxd = FlightExpenses.billingForPeriod(mm, mm);
         if (fxd && fxd[owner]) {
           fexpUSD = fxd[owner].USD || 0;
           fexpQTZ = fxd[owner].QTZ || 0;
         }
+        // Credit for expenses this owner paid out of pocket for other owners' flights
+        if (fxd && fxd.payer_credits && fxd.payer_credits[owner]) {
+          fexpCreditUSD = fxd.payer_credits[owner].USD || 0;
+          fexpCreditQTZ = fxd.payer_credits[owner].QTZ || 0;
+        }
       }
 
-      var totalQTZ = fuelNet + maintQTZ + fexpQTZ;
-      var totalUSD = pilFee + espFee + adminFee + maintUSD + fexpUSD;
+      var totalQTZ = fuelNet + maintQTZ + fexpQTZ - fexpCreditQTZ;
+      var totalUSD = pilFee + espFee + adminFee + maintUSD + fexpUSD - fexpCreditUSD;
 
       var details = [];
       // Show fuel as gross charge + anticipo credit separately
@@ -357,6 +363,8 @@ var Payments = (function() {
       if (maintQTZ > 0) details.push({ label: 'Mantenimiento', amt: maintQTZ, currency: 'QTZ' });
       if (fexpUSD > 0) details.push({ label: 'Gastos vuelo', amt: fexpUSD, currency: 'USD' });
       if (fexpQTZ > 0) details.push({ label: 'Gastos vuelo', amt: fexpQTZ, currency: 'QTZ' });
+      if (fexpCreditQTZ > 0) details.push({ label: 'Credito gasto pagado de bolsillo', amt: -fexpCreditQTZ, currency: 'QTZ', isCredit: true });
+      if (fexpCreditUSD > 0) details.push({ label: 'Credito gasto pagado de bolsillo', amt: -fexpCreditUSD, currency: 'USD', isCredit: true });
 
       results.push({
         month: mm,
