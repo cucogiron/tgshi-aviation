@@ -8,7 +8,7 @@ const Flights = (() => {
   let currentFilter = 'ALL';
   let searchQuery = '';
 
-  function fRow(f) {
+function fRow(f) {
   const dc = f.r === 'COCO' ? 'c1' : f.r === 'CUCO' ? 'c2' : 'c3';
   const bx = f.t === 'STD'
     ? '<span class="bx s">STD</span>'
@@ -18,23 +18,22 @@ const Flights = (() => {
         ? '<span class="bx m">MANTE</span>'
         : '<span class="bx p">Personal</span>';
 
-  // Display "Charter" instead of "SENSHI"
   const displayR = f.r === 'SENSHI' ? 'Charter' : f.r;
 
-  // Charter revenue
-  const rv = (f.rv || 0) > 0
-    ? `<span>💵 $${Number(f.rv).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`
+  const revenue = Number(f.rv || 0);
+  const rv = revenue > 0
+    ? `<span>💵 $${revenue.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`
     : '';
 
-  // Related flight expenses
-const relatedExpenses = Array.isArray(DB.flight_expenses)
-  ? DB.flight_expenses.filter(e => Number(e.flight_id) === Number(f.id))
-  : [];
-    
+  const relatedExpenses = Array.isArray(DB.flight_expenses)
+    ? DB.flight_expenses.filter(e => Number(e.flight_id) === Number(f.id))
+    : [];
+
   const expenseTotals = relatedExpenses.reduce((acc, e) => {
-    const cur = (e.currency || 'QTZ').toUpperCase();
-    if (cur === 'USD') acc.usd += Number(e.amount || 0);
-    else acc.qtz += Number(e.amount || 0);
+    const cur = String(e.currency || 'QTZ').toUpperCase();
+    const amt = Number(e.amount || 0);
+    if (cur === 'USD') acc.usd += amt;
+    else acc.qtz += amt;
     return acc;
   }, { usd: 0, qtz: 0 });
 
@@ -48,6 +47,21 @@ const relatedExpenses = Array.isArray(DB.flight_expenses)
       parts.push(`Q${expenseTotals.qtz.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
     }
     exp = `<span style="color:#8B5E00">🧾 ${parts.join(' + ')}</span>`;
+  }
+
+  // Net profitability
+  let net = '';
+  if (revenue > 0) {
+    if (expenseTotals.qtz === 0) {
+      const netUsd = revenue - expenseTotals.usd;
+      const netColor = netUsd >= 0 ? '#1A6B3A' : '#B42318';
+      net = `<span style="color:${netColor};font-weight:700">📊 Net $${netUsd.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+    } else {
+      // Mixed currencies: show partial net and warning
+      const netUsdOnly = revenue - expenseTotals.usd;
+      const netColor = netUsdOnly >= 0 ? '#1A6B3A' : '#B42318';
+      net = `<span style="color:${netColor};font-weight:700">📊 Net $${netUsdOnly.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Q pendiente</span>`;
+    }
   }
 
   const pendTag = f.verified === false ? '<span class="pend-badge">⏳</span>' : '';
@@ -71,6 +85,7 @@ const relatedExpenses = Array.isArray(DB.flight_expenses)
         ${pilotDisplay ? `<span>🧑‍✈️ ${pilotDisplay}</span>` : ''}
         ${rv}
         ${exp}
+        ${net}
         ${editBtn}
         ${dupBtn}
       </div>
