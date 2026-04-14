@@ -98,6 +98,11 @@ var Payments = (function() {
     var container = document.getElementById('pay-stmt');
     if (!container) return;
 
+    console.log('[Payments] buildStatement owner=' + owner + ' year=' + year + ' DB.payments.length=' + DB.payments.length);
+    DB.payments.forEach(function(p) {
+      console.log('[Payments]   payment #' + p.id + ': ' + p.date + ' from=' + p.from + ' to=' + p.to + ' qtz=' + p.amount_qtz + ' usd=' + p.amount_usd);
+    });
+
     var fQ = function(v) { return 'Q' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
     var fD = function(v) { return '$' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
     var fSQ = function(v) { return v < 0 ? '-' + fQ(v) : fQ(v); };
@@ -126,7 +131,14 @@ var Payments = (function() {
     });
     ownerPayments.forEach(function(p) {
       if (p.date < cutoff && p.date >= TRACKING_START + '-01') {
-        var sign = (p.from === owner) ? -1 : 1; // from owner = payment (reduces balance), to owner = reimbursement (increases balance)
+        var sign;
+        if (p.from === owner) {
+          sign = -1; // owner paid → reduces balance
+        } else if (p.from === 'SENSHI' && p.to === owner) {
+          sign = -1; // Senshi reimbursed owner → reduces balance
+        } else {
+          sign = 1;  // another owner paid on their behalf
+        }
         openQTZ += sign * (p.amount_qtz || 0);
         openUSD += sign * (p.amount_usd || 0);
       }
@@ -172,7 +184,17 @@ var Payments = (function() {
       var monthPayments = [];
       ownerPayments.forEach(function(p) {
         if (p.date.slice(0, 7) === mm) {
-          var sign = (p.from === owner) ? -1 : 1;
+          // Any payment where this owner is the payer (from) or the recipient of a
+          // reimbursement (to, from Senshi) reduces their balance.
+          // Only owner-to-owner transfers where this owner is the recipient increase balance.
+          var sign;
+          if (p.from === owner) {
+            sign = -1; // owner paid → balance decreases
+          } else if (p.from === 'SENSHI' && p.to === owner) {
+            sign = -1; // Senshi reimbursed owner → balance decreases
+          } else {
+            sign = 1;  // another owner paid on their behalf → balance increases (rare)
+          }
           monthPayQTZ += sign * (p.amount_qtz || 0);
           monthPayUSD += sign * (p.amount_usd || 0);
           monthPayments.push(p);
@@ -184,6 +206,8 @@ var Payments = (function() {
 
       runQTZ += mc.chargeQTZ + monthPayQTZ;
       runUSD += mc.chargeUSD + monthPayUSD;
+
+      console.log('[Payments] ' + mm + ': chargeQ=' + mc.chargeQTZ.toFixed(2) + ' chargeU=' + mc.chargeUSD.toFixed(2) + ' payQ=' + monthPayQTZ.toFixed(2) + ' payU=' + monthPayUSD.toFixed(2) + ' payments=' + monthPayments.length + ' | runQ=' + runQTZ.toFixed(2) + ' runU=' + runUSD.toFixed(2));
 
       h += '<div style="border-top:1px solid #E2E6EE;margin-top:6px;padding-top:6px">';
       h += '<div class="bil-row"><div class="bil-lbl" style="font-weight:700;font-size:11px">' + MO[monthNum] + ' ' + year + '</div><div class="bil-val" style="font-size:9px;color:#8892A4"></div></div>';
@@ -543,6 +567,7 @@ var Payments = (function() {
 
   function getOwnerBalances() {
     ensureData();
+    console.log('[Payments] getOwnerBalances: DB.payments.length=' + DB.payments.length);
     var balances = { COCO: { qtz: 0, usd: 0 }, CUCO: { qtz: 0, usd: 0 }, SENSHI: { qtz: 0, usd: 0 } };
 
     // All charges up to today
@@ -563,15 +588,35 @@ var Payments = (function() {
       });
     });
 
-    // All payments
+    // All payments — a payment FROM an owner TO Senshi reduces that owner's balance
+    // A reimbursement FROM Senshi TO an owner also reduces that owner's balance (credit)
     DB.payments.forEach(function(p) {
-      if (balances[p.from]) {
-        balances[p.from].qtz -= (p.amount_qtz || 0);
-        balances[p.from].usd -= (p.amount_usd || 0);
-      }
-      if (balances[p.to]) {
-        balances[p.to].qtz += (p.amount_qtz || 0);
-        balances[p.to].usd += (p.amount_usd || 0);
+      // Determine which owner this payment affects
+      // Case 1: Owner pays Senshi (from=owner, to=SENSHI) → owner's balance decreases
+      // Case 2: Senshi reimburses owner (from=SENSHI, to=owner) → owner's balance decreases
+      // Case 3: Owner-to-owner transfer → from's balance decreases, to's balance increases
+      if (p.from !== 'SENSHI' && p.to === 'SENSHI') {
+        // Owner paying Senshi — reduces what they owe
+        if (balances[p.from]) {
+          balances[p.from].qtz -= (p.amount_qtz || 0);
+          balances[p.from].usd -= (p.amount_usd || 0);
+        }
+      } else if (p.from === 'SENSHI' && p.to !== 'SENSHI') {
+        // Senshi reimbursing an owner — also reduces what they owe (credit)
+        if (balances[p.to]) {
+          balances[p.to].qtz -= (p.amount_qtz || 0);
+          balances[p.to].usd -= (p.amount_usd || 0);
+        }
+      } else if (p.from !== 'SENSHI' && p.to !== 'SENSHI') {
+        // Owner-to-owner (rare) — from pays on behalf, gets credit; to owes more
+        if (balances[p.from]) {
+          balances[p.from].qtz -= (p.amount_qtz || 0);
+          balances[p.from].usd -= (p.amount_usd || 0);
+        }
+        if (balances[p.to]) {
+          balances[p.to].qtz += (p.amount_qtz || 0);
+          balances[p.to].usd += (p.amount_usd || 0);
+        }
       }
     });
 
