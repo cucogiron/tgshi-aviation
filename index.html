@@ -345,8 +345,8 @@ textarea{resize:vertical;min-height:60px}
   <button class="bt" onclick="App.nav('bil',4)"><div class="bt-i">🧾</div><div class="bt-l">Billing</div></button>
   <button class="bt" onclick="App.nav('xch',5)"><div class="bt-i">🤝</div><div class="bt-l">Interc.</div></button>
   <button class="bt" onclick="App.nav('maint',6)"><div class="bt-i">🔧</div><div class="bt-l">Mante</div></button>
-  <button class="bt" onclick="App.nav('fexp',3)"><div class="bt-i">💸</div><div class="bt-l">Expenses</div></button>
-  <button class="bt" onclick="App.nav('new',7)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
+  <button class="bt" onclick="App.nav('fexp',7)"><div class="bt-i">💸</div><div class="bt-l">Expenses</div></button>
+  <button class="bt" onclick="App.nav('new',8)"><div class="bt-i">➕</div><div class="bt-l">Nuevo</div></button>
 </div>
 
 <!-- ===== DASHBOARD ===== -->
@@ -432,7 +432,10 @@ textarea{resize:vertical;min-height:60px}
   <div class="card">
     <div class="ch" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
       <div class="ct">Gastos de vuelo</div>
-      <button class="btn sm" onclick="FlightExpenses.openAddExpense()">+ Agregar gasto</button>
+      <div style="display:flex;gap:5px">
+        <button class="btn sm" onclick="Exports.openExportModal('expenses')">📥 Excel</button>
+        <button class="btn sm" onclick="FlightExpenses.openAddExpense()">+ Agregar gasto</button>
+      </div>
     </div>
     <div class="cb">
       <div id="fexp-content"></div>
