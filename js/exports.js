@@ -29,6 +29,7 @@ var Exports = (function() {
       fuel: 'Exportar Combustible',
       schedule: 'Exportar Agenda',
       maintenance: 'Exportar Mantenimiento',
+      expenses: 'Exportar Gastos de Vuelo',
       all: 'Exportar Datos'
     };
 
@@ -71,6 +72,8 @@ var Exports = (function() {
         addScheduleSheet(wb, from, to);
       } else if (section === 'maintenance') {
         addMaintenanceSheet(wb, from, to);
+      } else if (section === 'expenses') {
+        addExpensesSheet(wb, from, to);
       } else {
         var el;
         el = document.getElementById('exp-flights');
@@ -81,9 +84,10 @@ var Exports = (function() {
         if (!el || el.checked) addScheduleSheet(wb, from, to);
         el = document.getElementById('exp-maintenance');
         if (!el || el.checked) addMaintenanceSheet(wb, from, to);
+        addExpensesSheet(wb, from, to);
       }
 
-      var labels = { flights: 'Logbook', fuel: 'Combustible', schedule: 'Agenda', maintenance: 'Mantenimiento', all: 'TG-SHI' };
+      var labels = { flights: 'Logbook', fuel: 'Combustible', schedule: 'Agenda', maintenance: 'Mantenimiento', expenses: 'Gastos_Vuelo', all: 'TG-SHI' };
       var filename = (labels[section] || 'TG-SHI') + '_' + from + '_' + to + '.xlsx';
       XLSX.writeFile(wb, filename);
 
@@ -231,6 +235,60 @@ var Exports = (function() {
     var ws = XLSX.utils.aoa_to_sheet(rows);
     formatSheet(ws, rows[0].length, rows.length);
     XLSX.utils.book_append_sheet(wb, ws, 'Mantenimiento');
+  }
+
+  // ---- Flight Expenses ----
+  function addExpensesSheet(wb, from, to) {
+    var exps = (DB.flight_expenses || []).filter(function(e) { return e.date >= from && e.date <= to; });
+    exps.sort(function(a, b) { return a.date.localeCompare(b.date); });
+
+    if (exps.length === 0) return;
+
+    var rows = [];
+    rows.push(['Fecha', 'Vuelo (ruta)', 'Vuelo (fecha)', 'Responsable', 'Categoria', 'Monto', 'Moneda', 'Pagado por', 'Registrado por', 'Notas']);
+
+    exps.forEach(function(e) {
+      var flight = DB.flights.find(function(f) { return f.id === e.flight_id; });
+      var flightRoute = flight ? (flight.rt || '--') : 'Vuelo #' + e.flight_id;
+      var flightDate = flight ? flight.d : '';
+      var owner = flight ? (flight.r === 'SENSHI' ? 'Charter' : flight.r) : '';
+      rows.push([
+        e.date,
+        flightRoute,
+        flightDate,
+        owner,
+        e.category || '',
+        e.amount || 0,
+        e.currency || 'QTZ',
+        e.paid_by || '',
+        e.logged_by || '',
+        e.notes || ''
+      ]);
+    });
+
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    formatSheet(ws, rows[0].length, rows.length);
+
+    // Add totals - separate USD and QTZ rows
+    if (rows.length > 1) {
+      var totalRow = rows.length + 1;
+      var usdTotal = 0;
+      var qtzTotal = 0;
+      exps.forEach(function(e) {
+        if (e.currency === 'USD') usdTotal += (e.amount || 0);
+        else qtzTotal += (e.amount || 0);
+      });
+      ws['A' + totalRow] = { v: 'TOTAL USD', t: 's' };
+      ws['F' + totalRow] = { v: usdTotal, t: 'n' };
+      ws['G' + totalRow] = { v: 'USD', t: 's' };
+      var totalRow2 = totalRow + 1;
+      ws['A' + totalRow2] = { v: 'TOTAL QTZ', t: 's' };
+      ws['F' + totalRow2] = { v: qtzTotal, t: 'n' };
+      ws['G' + totalRow2] = { v: 'QTZ', t: 's' };
+      ws['!ref'] = 'A1:J' + totalRow2;
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Gastos Vuelo');
   }
 
   // ---- Column auto-width ----
