@@ -664,11 +664,12 @@ var Payments = (function() {
     }
   }
 
-  function editPayment(id) {
+  function editPayment(id) { editTransaction('payment', id); }
+  function editCharge(id) { editTransaction('charge', id); }
+
+  function editTransaction(kind, id) {
     if (!App.isAdmin()) return;
     ensureData();
-    var p = DB.payments.find(function(x) { return x.id === id; });
-    if (!p) return;
 
     var ownerOpts = function(sel) {
       return '<option value="COCO"' + (sel === 'COCO' ? ' selected' : '') + '>COCO</option>'
@@ -676,64 +677,171 @@ var Payments = (function() {
         + '<option value="SENSHI"' + (sel === 'SENSHI' ? ' selected' : '') + '>Charter (Senshi)</option>';
     };
 
-    var ptype = p.type || 'payment';
+    // Load data from the right source
+    var date = '', from = '', to = '', qtz = 0, usd = 0, xr = 0, notes = '', ptype = 'payment', chargeOwner = '', chargeCurrency = 'QTZ', recordedBy = '?', recordedAt = '?';
 
-    document.getElementById('edit-modal-title').textContent = 'Editar movimiento #' + id;
+    if (kind === 'charge') {
+      var c = DB.misc_charges.find(function(x) { return x.id === id; });
+      if (!c) return;
+      date = c.date; qtz = (c.currency === 'QTZ') ? c.amount : 0; usd = (c.currency === 'USD') ? c.amount : 0;
+      notes = c.description || ''; ptype = 'charge'; chargeOwner = c.owner; chargeCurrency = c.currency;
+      recordedBy = c.recorded_by || '?'; recordedAt = c.recorded_at ? c.recorded_at.slice(0, 10) : '?';
+    } else {
+      var p = DB.payments.find(function(x) { return x.id === id; });
+      if (!p) return;
+      date = p.date; from = p.from; to = p.to; qtz = p.amount_qtz || 0; usd = p.amount_usd || 0;
+      xr = p.exchange_rate || 0; notes = p.notes || ''; ptype = p.type || 'payment'; chargeOwner = from || 'COCO';
+      recordedBy = p.recorded_by || '?'; recordedAt = p.recorded_at ? p.recorded_at.slice(0, 10) : '?';
+    }
+
+    document.getElementById('edit-modal-title').textContent = 'Editar movimiento';
     document.getElementById('edit-form-content').innerHTML =
-      '<div class="fs"><label class="fl">Tipo</label><select id="ep-type"><option value="payment"' + (ptype === 'payment' ? ' selected' : '') + '>Pago</option><option value="credit"' + (ptype === 'credit' ? ' selected' : '') + '>Credito</option></select></div>'
-      + '<div class="fs"><label class="fl">Fecha</label><input type="date" id="ep-date" value="' + p.date + '"></div>'
-      + '<div class="row2">'
-      + '<div class="fs"><label class="fl">De</label><select id="ep-from"><option value="SENSHI"' + (p.from === 'SENSHI' ? ' selected' : '') + '>Senshi</option>' + ownerOpts(p.from) + '</select></div>'
-      + '<div class="fs"><label class="fl">A</label><select id="ep-to"><option value="SENSHI"' + (p.to === 'SENSHI' ? ' selected' : '') + '>Senshi</option>' + ownerOpts(p.to) + '</select></div>'
+      // Type selector
+      '<div class="fs"><label class="fl">Tipo</label><select id="et-type" onchange="Payments.onEditTypeChange()">'
+      + '<option value="payment"' + (ptype === 'payment' ? ' selected' : '') + '>Pago</option>'
+      + '<option value="credit"' + (ptype === 'credit' ? ' selected' : '') + '>Credito</option>'
+      + '<option value="charge"' + (ptype === 'charge' ? ' selected' : '') + '>Cargo</option>'
+      + '</select></div>'
+      // Date
+      + '<div class="fs"><label class="fl">Fecha</label><input type="date" id="et-date" value="' + date + '"></div>'
+      // From/To (payment/credit)
+      + '<div class="row2" id="et-fromto">'
+      + '<div class="fs"><label class="fl" id="et-from-lbl">De</label><select id="et-from"><option value="SENSHI"' + (from === 'SENSHI' ? ' selected' : '') + '>Senshi</option>' + ownerOpts(from) + '</select></div>'
+      + '<div class="fs"><label class="fl" id="et-to-lbl">A</label><select id="et-to"><option value="SENSHI"' + (to === 'SENSHI' ? ' selected' : '') + '>Senshi</option>' + ownerOpts(to) + '</select></div>'
       + '</div>'
+      // Owner (charge)
+      + '<div class="fs" id="et-owner-row" style="display:none"><label class="fl">Cobrar a</label><select id="et-owner">' + ownerOpts(chargeOwner) + '</select></div>'
+      // Amounts
       + '<div class="row2">'
-      + '<div class="fs"><label class="fl">Monto QTZ</label><input type="number" id="ep-qtz" value="' + (p.amount_qtz || 0) + '" step="0.01" inputmode="decimal"></div>'
-      + '<div class="fs"><label class="fl">Monto USD</label><input type="number" id="ep-usd" value="' + (p.amount_usd || 0) + '" step="0.01" inputmode="decimal"></div>'
+      + '<div class="fs"><label class="fl">Monto QTZ</label><input type="number" id="et-qtz" value="' + qtz + '" step="0.01" inputmode="decimal"></div>'
+      + '<div class="fs"><label class="fl">Monto USD</label><input type="number" id="et-usd" value="' + usd + '" step="0.01" inputmode="decimal"></div>'
       + '</div>'
-      + '<div class="fs"><label class="fl">Tipo de cambio</label><input type="number" id="ep-xr" value="' + (p.exchange_rate || 0) + '" step="0.01" inputmode="decimal"></div>'
-      + '<div class="fs"><label class="fl">Notas</label><input type="text" id="ep-notes" value="' + (p.notes || '') + '"></div>'
-      + '<div style="font-size:9px;color:#8892A4;margin-bottom:10px">Registrado por ' + (p.recorded_by || '?') + ' el ' + (p.recorded_at ? p.recorded_at.slice(0, 10) : '?') + '</div>'
+      // Exchange rate
+      + '<div class="fs" id="et-xr-row"><label class="fl">Tipo de cambio</label><input type="number" id="et-xr" value="' + xr + '" step="0.01" inputmode="decimal"></div>'
+      // Notes
+      + '<div class="fs"><label class="fl" id="et-notes-lbl">Notas</label><input type="text" id="et-notes" value="' + notes.replace(/"/g, '&quot;') + '"></div>'
+      // Meta
+      + '<div style="font-size:9px;color:#8892A4;margin-bottom:10px">Registrado por ' + recordedBy + ' el ' + recordedAt + '</div>'
+      // Buttons — store original kind and id as data attributes
       + '<div style="display:flex;gap:8px">'
-      + '<button class="btn" onclick="Payments.updatePayment(' + id + ')">Guardar</button>'
-      + '<button class="btn" style="background:#8B1A1A" onclick="Payments.deletePayment(' + id + ')">Eliminar</button>'
+      + '<button class="btn" onclick="Payments.saveEditTransaction(\'' + kind + '\',' + id + ')">Guardar</button>'
+      + '<button class="btn" style="background:#8B1A1A" onclick="Payments.deleteTransaction(\'' + kind + '\',' + id + ')">Eliminar</button>'
       + '</div>';
+
     document.getElementById('edit-modal').style.display = 'flex';
+    onEditTypeChange();
   }
 
-  async function updatePayment(id) {
+  function onEditTypeChange() {
+    var type = document.getElementById('et-type').value;
+    var fromTo = document.getElementById('et-fromto');
+    var ownerRow = document.getElementById('et-owner-row');
+    var xrRow = document.getElementById('et-xr-row');
+    var notesLbl = document.getElementById('et-notes-lbl');
+
+    if (type === 'charge') {
+      fromTo.style.display = 'none';
+      ownerRow.style.display = 'block';
+      xrRow.style.display = 'none';
+      notesLbl.textContent = 'Descripcion';
+    } else {
+      fromTo.style.display = 'grid';
+      ownerRow.style.display = 'none';
+      xrRow.style.display = 'block';
+      notesLbl.textContent = 'Notas';
+    }
+  }
+
+  async function saveEditTransaction(origKind, id) {
     ensureData();
-    var p = DB.payments.find(function(x) { return x.id === id; });
-    if (!p) return;
+    var newType = document.getElementById('et-type').value;
+    var date = document.getElementById('et-date').value;
+    var notes = document.getElementById('et-notes').value.trim();
+    var qtz = parseFloat(document.getElementById('et-qtz').value) || 0;
+    var usd = parseFloat(document.getElementById('et-usd').value) || 0;
 
-    var from = document.getElementById('ep-from').value;
-    var to = document.getElementById('ep-to').value;
-    if (from === to) { alert('Origen y destino no pueden ser iguales'); return; }
+    if (!date) { alert('Selecciona fecha'); return; }
 
-    p.type = document.getElementById('ep-type').value;
-    p.date = document.getElementById('ep-date').value;
-    p.from = from;
-    p.to = to;
-    p.amount_qtz = parseFloat(document.getElementById('ep-qtz').value) || 0;
-    p.amount_usd = parseFloat(document.getElementById('ep-usd').value) || 0;
-    p.exchange_rate = parseFloat(document.getElementById('ep-xr').value) || 0;
-    p.notes = document.getElementById('ep-notes').value.trim();
+    // If type changed between payment/credit <-> charge, move between collections
+    var wasCharge = (origKind === 'charge');
+    var isCharge = (newType === 'charge');
+
+    if (wasCharge && !isCharge) {
+      // Convert charge -> payment/credit: remove from misc_charges, add to payments
+      DB.misc_charges = DB.misc_charges.filter(function(c) { return c.id !== id; });
+      var from = document.getElementById('et-from').value;
+      var to = document.getElementById('et-to').value;
+      if (from === to) { alert('Origen y destino no pueden ser iguales'); return; }
+      var newId = (DB.meta.last_payment_id || 0) + 1;
+      DB.meta.last_payment_id = newId;
+      DB.payments.push({
+        id: newId, type: newType, date: date, from: from, to: to,
+        amount_qtz: qtz, amount_usd: usd,
+        exchange_rate: parseFloat(document.getElementById('et-xr').value) || 0,
+        notes: notes, recorded_by: App.currentUser(), recorded_at: new Date().toISOString()
+      });
+    } else if (!wasCharge && isCharge) {
+      // Convert payment/credit -> charge: remove from payments, add to misc_charges
+      DB.payments = DB.payments.filter(function(p) { return p.id !== id; });
+      var owner = document.getElementById('et-owner').value;
+      // Create one or two charge records depending on currencies
+      if (qtz > 0) {
+        var cid = (DB.meta.last_misc_charge_id || 0) + 1;
+        DB.meta.last_misc_charge_id = cid;
+        DB.misc_charges.push({ id: cid, date: date, owner: owner, amount: qtz, currency: 'QTZ', description: notes, recorded_by: App.currentUser(), recorded_at: new Date().toISOString() });
+      }
+      if (usd > 0) {
+        var cid2 = (DB.meta.last_misc_charge_id || 0) + 1;
+        DB.meta.last_misc_charge_id = cid2;
+        DB.misc_charges.push({ id: cid2, date: date, owner: owner, amount: usd, currency: 'USD', description: notes, recorded_by: App.currentUser(), recorded_at: new Date().toISOString() });
+      }
+    } else if (isCharge) {
+      // Update existing charge
+      var c = DB.misc_charges.find(function(x) { return x.id === id; });
+      if (!c) return;
+      c.date = date;
+      c.owner = document.getElementById('et-owner').value;
+      c.description = notes;
+      // If both QTZ and USD, keep the original currency and update amount
+      c.amount = (c.currency === 'USD') ? usd : qtz;
+      if (qtz > 0 && usd > 0 && c.currency === 'QTZ') c.amount = qtz;
+    } else {
+      // Update existing payment/credit
+      var p = DB.payments.find(function(x) { return x.id === id; });
+      if (!p) return;
+      var from = document.getElementById('et-from').value;
+      var to = document.getElementById('et-to').value;
+      if (from === to) { alert('Origen y destino no pueden ser iguales'); return; }
+      p.type = newType;
+      p.date = date;
+      p.from = from;
+      p.to = to;
+      p.amount_qtz = qtz;
+      p.amount_usd = usd;
+      p.exchange_rate = parseFloat(document.getElementById('et-xr').value) || 0;
+      p.notes = notes;
+    }
 
     Admin.closeEdit();
     var ok = await API.saveData();
     if (ok) {
-      API.showNotifyToast('Pago actualizado');
+      API.showNotifyToast('Movimiento actualizado');
       buildStatement();
       buildPaymentsList();
     }
   }
 
-  async function deletePayment(id) {
-    if (!confirm('Eliminar este pago?')) return;
-    DB.payments = DB.payments.filter(function(p) { return p.id !== id; });
+  async function deleteTransaction(origKind, id) {
+    if (!confirm('Eliminar este movimiento?')) return;
+    if (origKind === 'charge') {
+      DB.misc_charges = DB.misc_charges.filter(function(c) { return c.id !== id; });
+    } else {
+      DB.payments = DB.payments.filter(function(p) { return p.id !== id; });
+    }
     Admin.closeEdit();
     var ok = await API.saveData();
     if (ok) {
-      API.showNotifyToast('Pago eliminado');
+      API.showNotifyToast('Movimiento eliminado');
       buildStatement();
       buildPaymentsList();
     }
@@ -798,64 +906,6 @@ var Payments = (function() {
     } else {
       alert('Error al guardar');
       DB.misc_charges = DB.misc_charges.filter(function(c) { return c.id !== id; });
-    }
-  }
-
-  function editCharge(id) {
-    if (!App.isAdmin()) return;
-    ensureData();
-    var c = DB.misc_charges.find(function(x) { return x.id === id; });
-    if (!c) return;
-
-    var ownerOpts = function(sel) {
-      return '<option value="COCO"' + (sel === 'COCO' ? ' selected' : '') + '>COCO</option>'
-        + '<option value="CUCO"' + (sel === 'CUCO' ? ' selected' : '') + '>CUCO</option>'
-        + '<option value="SENSHI"' + (sel === 'SENSHI' ? ' selected' : '') + '>Charter (Senshi)</option>';
-    };
-
-    document.getElementById('edit-modal-title').textContent = 'Editar cargo #' + id;
-    document.getElementById('edit-form-content').innerHTML =
-      '<div class="fs"><label class="fl">Fecha</label><input type="date" id="ec-date" value="' + c.date + '"></div>'
-      + '<div class="fs"><label class="fl">Cobrar a</label><select id="ec-owner">' + ownerOpts(c.owner) + '</select></div>'
-      + '<div class="row2">'
-      + '<div class="fs"><label class="fl">Monto</label><input type="number" id="ec-amount" value="' + c.amount + '" step="0.01" inputmode="decimal"></div>'
-      + '<div class="fs"><label class="fl">Moneda</label><select id="ec-currency"><option value="QTZ"' + (c.currency === 'QTZ' ? ' selected' : '') + '>QTZ</option><option value="USD"' + (c.currency === 'USD' ? ' selected' : '') + '>USD</option></select></div>'
-      + '</div>'
-      + '<div class="fs"><label class="fl">Descripcion</label><input type="text" id="ec-desc" value="' + (c.description || '') + '"></div>'
-      + '<div style="font-size:9px;color:#8892A4;margin-bottom:10px">Registrado por ' + (c.recorded_by || '?') + '</div>'
-      + '<div style="display:flex;gap:8px">'
-      + '<button class="btn" onclick="Payments.updateCharge(' + id + ')">Guardar</button>'
-      + '<button class="btn" style="background:#8B1A1A" onclick="Payments.deleteCharge(' + id + ')">Eliminar</button>'
-      + '</div>';
-    document.getElementById('edit-modal').style.display = 'flex';
-  }
-
-  async function updateCharge(id) {
-    var c = DB.misc_charges.find(function(x) { return x.id === id; });
-    if (!c) return;
-    c.date = document.getElementById('ec-date').value;
-    c.owner = document.getElementById('ec-owner').value;
-    c.amount = parseFloat(document.getElementById('ec-amount').value) || 0;
-    c.currency = document.getElementById('ec-currency').value;
-    c.description = document.getElementById('ec-desc').value.trim();
-    Admin.closeEdit();
-    var ok = await API.saveData();
-    if (ok) {
-      API.showNotifyToast('Cargo actualizado');
-      buildStatement();
-      buildPaymentsList();
-    }
-  }
-
-  async function deleteCharge(id) {
-    if (!confirm('Eliminar este cargo?')) return;
-    DB.misc_charges = DB.misc_charges.filter(function(c) { return c.id !== id; });
-    Admin.closeEdit();
-    var ok = await API.saveData();
-    if (ok) {
-      API.showNotifyToast('Cargo eliminado');
-      buildStatement();
-      buildPaymentsList();
     }
   }
 
@@ -1030,13 +1080,12 @@ var Payments = (function() {
     onTxnTypeChange: onTxnTypeChange,
     saveTransaction: saveTransaction,
     editPayment: editPayment,
-    updatePayment: updatePayment,
-    deletePayment: deletePayment,
+    editCharge: editCharge,
+    onEditTypeChange: onEditTypeChange,
+    saveEditTransaction: saveEditTransaction,
+    deleteTransaction: deleteTransaction,
     openAddCharge: openAddCharge,
     saveCharge: saveCharge,
-    editCharge: editCharge,
-    updateCharge: updateCharge,
-    deleteCharge: deleteCharge,
     getOwnerBalances: getOwnerBalances,
     buildBillingSectionH: buildBillingSectionH
   };
