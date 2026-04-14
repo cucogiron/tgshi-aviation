@@ -47,8 +47,11 @@ function fRow(f) {
   }
 
   // Show block if: has revenue, is charter, or has logged expenses
-  // Only visible to admin and owner roles (not pilot_admin)
-  if (f.h > 0 && (App.isAdmin() || App.currentRole() === 'owner') && (revenueUsd > 0 || isCharter || hasExpenses)) {
+  // Admin/owner see full P&L; pilot_admin sees only pilot + fuel costs
+  var showFullPL = App.isAdmin() || App.currentRole() === 'owner';
+  var showPilotCosts = App.isPilotAdmin();
+
+  if (f.h > 0 && (showFullPL && (revenueUsd > 0 || isCharter || hasExpenses) || showPilotCosts)) {
     // Fuel cost (QTZ) based on month average
     var fuelCostQtz = 0;
     if (f.d) {
@@ -97,12 +100,12 @@ function fRow(f) {
     // Build mini P&L
     var lines = [];
 
-    // Revenue (only charter flights have this)
-    if (revenueUsd > 0) {
+    // Revenue (owners only)
+    if (showFullPL && revenueUsd > 0) {
       lines.push('<div class="fp-row"><span class="fp-lbl">Ingreso</span><span class="fp-val" style="color:#1A6B3A">' + fmtD(revenueUsd) + '</span></div>');
     }
 
-    // Costs - always show when block is visible
+    // Fuel + Pilot costs - visible to all roles
     if (fuelCostQtz > 0) {
       lines.push('<div class="fp-row"><span class="fp-lbl">Combustible</span><span class="fp-val">' + fmtQ(fuelCostQtz) + '</span></div>');
     }
@@ -110,29 +113,31 @@ function fRow(f) {
       var pilotLabel = 'Piloto' + (waitCostUsd > 0 ? ' + espera' : '');
       lines.push('<div class="fp-row"><span class="fp-lbl">' + pilotLabel + '</span><span class="fp-val">' + fmtD(pilotCostUsd + waitCostUsd) + '</span></div>');
     }
-    if (expUsd > 0 || expQtz > 0) {
+
+    // Flight expenses (owners only)
+    if (showFullPL && (expUsd > 0 || expQtz > 0)) {
       var expParts = [];
       if (expUsd > 0) expParts.push(fmtD(expUsd));
       if (expQtz > 0) expParts.push(fmtQ(expQtz));
       lines.push('<div class="fp-row"><span class="fp-lbl">Gastos</span><span class="fp-val">' + expParts.join(' + ') + '</span></div>');
     }
 
-    // Net / Total line
-    if (revenueUsd > 0) {
-      // Charter: show net profit
-      var netColor = netUsd >= 0 ? '#1A6B3A' : '#B42318';
-      var netSign = netUsd < 0 ? '-' : '';
-      lines.push('<div class="fp-net" style="border-top:1px solid #E2E6EE;margin-top:3px;padding-top:3px"><span class="fp-lbl" style="font-weight:700">Net USD</span><span class="fp-val" style="color:' + netColor + ';font-weight:800">' + netSign + fmtD(netUsd) + '</span></div>');
-      if (totalCostQtz > 0) {
-        lines.push('<div class="fp-net"><span class="fp-lbl" style="font-weight:700">Costo QTZ</span><span class="fp-val" style="color:#B42318;font-weight:800">-' + fmtQ(totalCostQtz) + '</span></div>');
-      }
-    } else {
-      // Personal/Mante: show total cost
-      var costParts = [];
-      if (totalCostUsd > 0) costParts.push(fmtD(totalCostUsd));
-      if (totalCostQtz > 0) costParts.push(fmtQ(totalCostQtz));
-      if (costParts.length > 0) {
-        lines.push('<div class="fp-net" style="border-top:1px solid #E2E6EE;margin-top:3px;padding-top:3px"><span class="fp-lbl" style="font-weight:700">Costo total</span><span class="fp-val" style="color:#B42318;font-weight:700">' + costParts.join(' + ') + '</span></div>');
+    // Net / Total line (owners only)
+    if (showFullPL) {
+      if (revenueUsd > 0) {
+        var netColor = netUsd >= 0 ? '#1A6B3A' : '#B42318';
+        var netSign = netUsd < 0 ? '-' : '';
+        lines.push('<div class="fp-net" style="border-top:1px solid #E2E6EE;margin-top:3px;padding-top:3px"><span class="fp-lbl" style="font-weight:700">Net USD</span><span class="fp-val" style="color:' + netColor + ';font-weight:800">' + netSign + fmtD(netUsd) + '</span></div>');
+        if (totalCostQtz > 0) {
+          lines.push('<div class="fp-net"><span class="fp-lbl" style="font-weight:700">Costo QTZ</span><span class="fp-val" style="color:#B42318;font-weight:800">-' + fmtQ(totalCostQtz) + '</span></div>');
+        }
+      } else if (hasExpenses) {
+        var costParts = [];
+        if (totalCostUsd > 0) costParts.push(fmtD(totalCostUsd));
+        if (totalCostQtz > 0) costParts.push(fmtQ(totalCostQtz));
+        if (costParts.length > 0) {
+          lines.push('<div class="fp-net" style="border-top:1px solid #E2E6EE;margin-top:3px;padding-top:3px"><span class="fp-lbl" style="font-weight:700">Costo total</span><span class="fp-val" style="color:#B42318;font-weight:700">' + costParts.join(' + ') + '</span></div>');
+        }
       }
     }
 
