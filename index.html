@@ -584,7 +584,11 @@ textarea{resize:vertical;min-height:60px}
 <div class="pg" id="pg-pay">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <div class="stitle" style="margin:0">Pagos y saldos</div>
-    <button class="btn sm" onclick="Payments.openAddPayment()" id="pay-add-btn">+ Registrar pago</button>
+    <div style="display:flex;gap:5px" id="pay-admin-btns">
+      <button class="btn sm" onclick="Payments.openAddCharge()">+ Cargo</button>
+      <button class="btn sm" style="background:#1A6B3A" onclick="Payments.openAddPayment('credit')">+ Credito</button>
+      <button class="btn sm" onclick="Payments.openAddPayment('payment')">+ Pago</button>
+    </div>
   </div>
   <div id="pay-content"></div>
 </div>
