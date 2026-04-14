@@ -37,11 +37,20 @@ function fRow(f) {
   // --- Profitability / cost block ---
   var profitBlock = '';
   var revenueUsd = Number(f.rv || 0);
+  var isCharter = (f.t === 'STD' || f.t === 'FF');
 
-  if (f.h > 0) {
+  // Check if this flight has any logged expenses
+  var hasExpenses = false;
+  var expenses = DB.flight_expenses || [];
+  for (var xi = 0; xi < expenses.length; xi++) {
+    if (Number(expenses[xi].flight_id) === Number(f.id)) { hasExpenses = true; break; }
+  }
+
+  // Show block if: has revenue, is charter, or has logged expenses
+  if (f.h > 0 && (revenueUsd > 0 || isCharter || hasExpenses)) {
     // Fuel cost (QTZ) based on month average
     var fuelCostQtz = 0;
-    if (f.h > 0 && f.d) {
+    if (f.d) {
       var flightMonth = f.d.slice(0, 7);
       var monthFd = flightMonth + '-01';
       var monthTd = flightMonth + '-31';
@@ -64,10 +73,9 @@ function fRow(f) {
     var pilotCostUsd = f.h > 0 ? (f.h < 1 ? 1 : f.h) * rate.pilot : 0;
     var waitCostUsd = (f.eh || 0) * rate.gw;
 
-    // Flight expenses
+    // Flight expenses (landing fees, transport, etc.)
     var expUsd = 0;
     var expQtz = 0;
-    var expenses = DB.flight_expenses || [];
     for (var ei = 0; ei < expenses.length; ei++) {
       var e = expenses[ei];
       if (Number(e.flight_id) === Number(f.id)) {
@@ -88,12 +96,12 @@ function fRow(f) {
     // Build mini P&L
     var lines = [];
 
-    // Revenue
+    // Revenue (only charter flights have this)
     if (revenueUsd > 0) {
       lines.push('<div class="fp-row"><span class="fp-lbl">Ingreso</span><span class="fp-val" style="color:#1A6B3A">' + fmtD(revenueUsd) + '</span></div>');
     }
 
-    // Costs
+    // Costs - always show when block is visible
     if (fuelCostQtz > 0) {
       lines.push('<div class="fp-row"><span class="fp-lbl">Combustible</span><span class="fp-val">' + fmtQ(fuelCostQtz) + '</span></div>');
     }
@@ -108,17 +116,23 @@ function fRow(f) {
       lines.push('<div class="fp-row"><span class="fp-lbl">Gastos</span><span class="fp-val">' + expParts.join(' + ') + '</span></div>');
     }
 
-    // Net line
+    // Net / Total line
     if (revenueUsd > 0) {
+      // Charter: show net profit
       var netColor = netUsd >= 0 ? '#1A6B3A' : '#B42318';
       var netSign = netUsd < 0 ? '-' : '';
-      var netLine = '<div class="fp-net" style="border-top:1px solid #E2E6EE;margin-top:3px;padding-top:3px"><span class="fp-lbl" style="font-weight:700">Net USD</span><span class="fp-val" style="color:' + netColor + ';font-weight:800">' + netSign + fmtD(netUsd) + '</span></div>';
-
-      // If there are QTZ costs, show net QTZ too
+      lines.push('<div class="fp-net" style="border-top:1px solid #E2E6EE;margin-top:3px;padding-top:3px"><span class="fp-lbl" style="font-weight:700">Net USD</span><span class="fp-val" style="color:' + netColor + ';font-weight:800">' + netSign + fmtD(netUsd) + '</span></div>');
       if (totalCostQtz > 0) {
-        netLine += '<div class="fp-net"><span class="fp-lbl" style="font-weight:700">Costo QTZ</span><span class="fp-val" style="color:#B42318;font-weight:800">-' + fmtQ(totalCostQtz) + '</span></div>';
+        lines.push('<div class="fp-net"><span class="fp-lbl" style="font-weight:700">Costo QTZ</span><span class="fp-val" style="color:#B42318;font-weight:800">-' + fmtQ(totalCostQtz) + '</span></div>');
       }
-      lines.push(netLine);
+    } else {
+      // Personal/Mante: show total cost
+      var costParts = [];
+      if (totalCostUsd > 0) costParts.push(fmtD(totalCostUsd));
+      if (totalCostQtz > 0) costParts.push(fmtQ(totalCostQtz));
+      if (costParts.length > 0) {
+        lines.push('<div class="fp-net" style="border-top:1px solid #E2E6EE;margin-top:3px;padding-top:3px"><span class="fp-lbl" style="font-weight:700">Costo total</span><span class="fp-val" style="color:#B42318;font-weight:700">' + costParts.join(' + ') + '</span></div>');
+      }
     }
 
     if (lines.length > 0) {
