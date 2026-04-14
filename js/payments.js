@@ -303,16 +303,22 @@ var Payments = (function() {
       var fus = DB.fuel.filter(function(f) { return f.d >= fd && f.d <= td; });
       var rt = App.getRateFD(fd);
 
-      // Hours
+      // Hours — FF flights: costs go to SENSHI, not the responsible owner
       var hrs = { COCO: 0, CUCO: 0, SENSHI: 0 };
       var sub = { COCO: { n: 0, a: 0 }, CUCO: { n: 0, a: 0 }, SENSHI: { n: 0, a: 0 } };
       var espHrs = { COCO: 0, CUCO: 0, SENSHI: 0 };
+      var ffRev = 0; // FF revenue this owner owes Senshi
 
       fls.forEach(function(f) {
         var r = f.r; if (hrs[r] === undefined) return;
-        hrs[r] += f.h;
-        if (f.h > 0 && f.h < 1) { sub[r].n++; sub[r].a += f.h; }
-        espHrs[r] += (f.eh || 0);
+        var costOwner = (f.t === 'FF' && r !== 'SENSHI') ? 'SENSHI' : r;
+        hrs[costOwner] += f.h;
+        if (f.h > 0 && f.h < 1) { sub[costOwner].n++; sub[costOwner].a += f.h; }
+        espHrs[costOwner] += (f.eh || 0);
+        // Track FF revenue for the responsible owner
+        if (f.t === 'FF' && r === owner && r !== 'SENSHI' && (f.rv || 0) > 0) {
+          ffRev += f.rv;
+        }
       });
 
       var th = hrs.COCO + hrs.CUCO + hrs.SENSHI;
@@ -377,7 +383,7 @@ var Payments = (function() {
       });
 
       var totalQTZ = fuelNet + maintQTZ + fexpQTZ - fexpCreditQTZ + miscQTZ;
-      var totalUSD = pilFee + espFee + adminFee + maintUSD + fexpUSD - fexpCreditUSD + miscUSD;
+      var totalUSD = pilFee + espFee + adminFee + maintUSD + fexpUSD - fexpCreditUSD + miscUSD + ffRev;
 
       var details = [];
       // Show fuel as gross charge + anticipo credit separately
@@ -386,6 +392,7 @@ var Payments = (function() {
       if (pilFee > 0) details.push({ label: 'Pilotaje (' + bilH.toFixed(1) + 'hr)', amt: pilFee, currency: 'USD' });
       if (espFee > 0) details.push({ label: 'Espera (' + espHrs[owner].toFixed(1) + 'hr)', amt: espFee, currency: 'USD' });
       if (adminFee > 0) details.push({ label: 'Admin fee', amt: adminFee, currency: 'USD' });
+      if (ffRev > 0) details.push({ label: 'Ingreso FF por cobrar', amt: ffRev, currency: 'USD' });
       if (maintUSD > 0) details.push({ label: 'Mantenimiento', amt: maintUSD, currency: 'USD' });
       if (maintQTZ > 0) details.push({ label: 'Mantenimiento', amt: maintQTZ, currency: 'QTZ' });
       if (fexpUSD > 0) details.push({ label: 'Gastos vuelo', amt: fexpUSD, currency: 'USD' });
