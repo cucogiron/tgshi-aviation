@@ -1,405 +1,460 @@
 // =====================================================================
-// TG-SHI v6.0 -- js/flights.js
-// Flight log, new flight form, edit/delete, search, duplicate
+// TG-SHI v6.0 -- js/calendar.js
+// Scheduling calendar, booking modal, confirmation flow
 // =====================================================================
 
-const Flights = (() => {
-  let formType = 'PERSONAL';
-  let currentFilter = 'ALL';
-  let searchQuery = '';
+const Calendar = (() => {
+  let calDate = new Date();
+  let calSelDate = null;
+  let cfmFlightType = null;
 
-function fRow(f) {
-  var dc = f.r === 'COCO' ? 'c1' : f.r === 'CUCO' ? 'c2' : 'c3';
-  var bx = f.t === 'STD'
-    ? '<span class="bx s">STD</span>'
-    : f.t === 'FF'
-      ? '<span class="bx f">FF</span>'
-      : f.t === 'MANTE'
-        ? '<span class="bx m">MANTE</span>'
-        : '<span class="bx p">Personal</span>';
-
-  var displayR = f.r === 'SENSHI' ? 'Charter' : f.r;
-  var pendTag = f.verified === false ? '<span class="pend-badge">Pend</span>' : '';
-
-  var pilotDisplay = '';
-  if (f.pilot_roster_id) {
-    var rp = App.getPilot(f.pilot_roster_id);
-    if (rp) pilotDisplay = rp.name;
-  } else if (f.p) {
-    var pu = App.getUser(f.p);
-    pilotDisplay = pu.name || f.p;
+  function buildPlaneSelectors() {
+    var planes = DB.planes.filter(function(p) { return p.active !== false; });
+    var html = planes.map(function(p) {
+      return '<div class="plane-chip' + (p.id === selPlane ? ' on' : '') + '" onclick="Calendar.selectPlane(\'' + p.id + '\',this)">' + p.id + '</div>';
+    }).join('');
+    document.getElementById('plane-sel-sched').innerHTML = html;
   }
 
-  var editBtn = App.isAdmin() ? '<button class="edit-btn" onclick="Flights.openEdit(' + f.id + ')">editar</button>' : '';
-  var dupBtn = App.isAdmin() ? '<button class="dup-btn" onclick="Flights.duplicateFlight(' + f.id + ')">duplicar</button>' : '';
-  var tachDisplay = f.hf ? '<div class="tach-sm">TACH ' + f.hf.toFixed(1) + '</div>' : '';
-
-  // --- Profitability / cost block ---
-  var profitBlock = '';
-  var revenueUsd = Number(f.rv || 0);
-  var isCharter = (f.t === 'STD' || f.t === 'FF');
-
-  // Check if this flight has any logged expenses
-  var hasExpenses = false;
-  var expenses = DB.flight_expenses || [];
-  for (var xi = 0; xi < expenses.length; xi++) {
-    if (Number(expenses[xi].flight_id) === Number(f.id)) { hasExpenses = true; break; }
+  function selectPlane(id, el) {
+    selPlane = id;
+    document.querySelectorAll('.plane-chip').forEach(function(c) { c.classList.remove('on'); });
+    if (el) el.classList.add('on');
+    Dashboard.render();
+    buildCalendar();
   }
 
-  // Show block if: has revenue, is charter, or has logged expenses
-  // Admin/owner see full P&L; pilot_admin sees only pilot + fuel costs
-  var showFullPL = App.isAdmin() || App.currentRole() === 'owner';
-  var showPilotCosts = App.isPilotAdmin();
+  function buildCalendar() {
+    const y = calDate.getFullYear(), m = calDate.getMonth();
+    document.getElementById('cal-title').textContent = MO[m + 1] + ' ' + y;
 
-  if (f.h > 0 && (showFullPL && (revenueUsd > 0 || isCharter || hasExpenses) || showPilotCosts)) {
-    // Fuel cost (QTZ) based on month average
-    var fuelCostQtz = 0;
-    if (f.d) {
-      var flightMonth = f.d.slice(0, 7);
-      var monthFd = flightMonth + '-01';
-      var monthTd = flightMonth + '-31';
-      var totalHrsMonth = 0;
-      var totalFuelMonth = 0;
-      for (var fi = 0; fi < DB.flights.length; fi++) {
-        var fl = DB.flights[fi];
-        if (fl.d >= monthFd && fl.d <= monthTd) totalHrsMonth += (fl.h || 0);
-      }
-      for (var fu = 0; fu < DB.fuel.length; fu++) {
-        var fue = DB.fuel[fu];
-        if (fue.d >= monthFd && fue.d <= monthTd) totalFuelMonth += (fue.m || 0);
-      }
-      var qph = totalHrsMonth > 0 ? totalFuelMonth / totalHrsMonth : 0;
-      fuelCostQtz = f.h * qph;
-    }
+    const first = new Date(y, m, 1);
+    const startDay = first.getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const prevDays = new Date(y, m, 0).getDate();
 
-    // Pilot cost (USD) based on rates
-    var rate = App.getRateFD(f.d);
-    var pilotCostUsd = f.h > 0 ? (f.h < 1 ? 1 : f.h) * rate.pilot : 0;
-    var waitCostUsd = (f.eh || 0) * rate.gw;
-
-    // Flight expenses (landing fees, transport, etc.)
-    var expUsd = 0;
-    var expQtz = 0;
-    for (var ei = 0; ei < expenses.length; ei++) {
-      var e = expenses[ei];
-      if (Number(e.flight_id) === Number(f.id)) {
-        if (String(e.currency || 'QTZ').toUpperCase() === 'USD') expUsd += Number(e.amount || 0);
-        else expQtz += Number(e.amount || 0);
-      }
-    }
-
-    // Totals
-    var totalCostUsd = pilotCostUsd + waitCostUsd + expUsd;
-    var totalCostQtz = fuelCostQtz + expQtz;
-    var netUsd = revenueUsd - totalCostUsd;
-
-    // Format helpers
-    var fmtD = function(v) { return '$' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); };
-    var fmtQ = function(v) { return 'Q' + Math.abs(v).toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); };
-
-    // Build mini P&L
-    var lines = [];
-
-    // Revenue (owners only)
-    if (showFullPL && revenueUsd > 0) {
-      lines.push('<div class="fp-row"><span class="fp-lbl">Ingreso</span><span class="fp-val" style="color:#1A6B3A">' + fmtD(revenueUsd) + '</span></div>');
-    }
-
-    // Fuel + Pilot costs - visible to all roles
-    if (fuelCostQtz > 0) {
-      lines.push('<div class="fp-row"><span class="fp-lbl">Combustible</span><span class="fp-val">' + fmtQ(fuelCostQtz) + '</span></div>');
-    }
-    if (pilotCostUsd > 0) {
-      var pilotLabel = 'Piloto' + (waitCostUsd > 0 ? ' + espera' : '');
-      lines.push('<div class="fp-row"><span class="fp-lbl">' + pilotLabel + '</span><span class="fp-val">' + fmtD(pilotCostUsd + waitCostUsd) + '</span></div>');
-    }
-
-    // Flight expenses (owners only)
-    if (showFullPL && (expUsd > 0 || expQtz > 0)) {
-      var expParts = [];
-      if (expUsd > 0) expParts.push(fmtD(expUsd));
-      if (expQtz > 0) expParts.push(fmtQ(expQtz));
-      lines.push('<div class="fp-row"><span class="fp-lbl">Gastos</span><span class="fp-val">' + expParts.join(' + ') + '</span></div>');
-    }
-
-    // Net / Total line (owners only)
-    if (showFullPL) {
-      if (revenueUsd > 0) {
-        var netColor = netUsd >= 0 ? '#1A6B3A' : '#B42318';
-        var netSign = netUsd < 0 ? '-' : '';
-        lines.push('<div class="fp-net" style="border-top:1px solid #E2E6EE;margin-top:3px;padding-top:3px"><span class="fp-lbl" style="font-weight:700">Net USD</span><span class="fp-val" style="color:' + netColor + ';font-weight:800">' + netSign + fmtD(netUsd) + '</span></div>');
-        if (totalCostQtz > 0) {
-          lines.push('<div class="fp-net"><span class="fp-lbl" style="font-weight:700">Costo QTZ</span><span class="fp-val" style="color:#B42318;font-weight:800">-' + fmtQ(totalCostQtz) + '</span></div>');
-        }
-      } else if (hasExpenses) {
-        var costParts = [];
-        if (totalCostUsd > 0) costParts.push(fmtD(totalCostUsd));
-        if (totalCostQtz > 0) costParts.push(fmtQ(totalCostQtz));
-        if (costParts.length > 0) {
-          lines.push('<div class="fp-net" style="border-top:1px solid #E2E6EE;margin-top:3px;padding-top:3px"><span class="fp-lbl" style="font-weight:700">Costo total</span><span class="fp-val" style="color:#B42318;font-weight:700">' + costParts.join(' + ') + '</span></div>');
-        }
-      }
-    }
-
-    if (lines.length > 0) {
-      profitBlock = '<div class="f-profit">' + lines.join('') + '</div>';
-    }
-  }
-
-  return '<div class="fi">'
-    + '<div class="fdot ' + dc + '"></div>'
-    + '<div class="fm">'
-    + '<div class="fr">' + (f.rt || '--') + ' ' + bx + pendTag + '</div>'
-    + '<div class="fme">'
-    + '<span>' + displayR + '</span>'
-    + (pilotDisplay ? '<span>' + pilotDisplay + '</span>' : '')
-    + editBtn
-    + dupBtn
-    + '</div>'
-    + profitBlock
-    + '</div>'
-    + '<div class="frt">'
-    + '<div class="fh">' + f.h.toFixed(1) + '<small>hr</small></div>'
-    + '<div class="fdt">' + f.d.slice(5) + '</div>'
-    + tachDisplay
-    + '</div>'
-    + '</div>';
-}
-
-  function getFilteredFlights() {
-    let out = [...DB.flights].reverse();
-    if (currentFilter === 'COCO') out = out.filter(f => f.r === 'COCO');
-    else if (currentFilter === 'CUCO') out = out.filter(f => f.r === 'CUCO');
-    else if (currentFilter === 'SENSHI') out = out.filter(f => f.r === 'SENSHI');
-    else if (/^\d{4}$/.test(currentFilter)) out = out.filter(f => f.d.startsWith(currentFilter));
-    if (searchQuery) {
-      const q = searchQuery.toUpperCase();
-      out = out.filter(f => (f.rt || '').toUpperCase().includes(q));
-    }
-    return out;
-  }
-
-  function buildVL(fil) {
-    if (fil !== undefined) currentFilter = fil;
-    const out = getFilteredFlights();
-    document.getElementById('vl-list').innerHTML = out.length ? out.slice(0, 100).map(fRow).join('') : '<div class="empty"><div class="big">✈️</div>Sin vuelos</div>';
-  }
-
-  function searchVL() {
-    searchQuery = (document.getElementById('vl-search').value || '').trim();
-    buildVL();
-  }
-
-  function filtV(f, el) {
-    document.querySelectorAll('#flt-row .fp').forEach(p => p.classList.remove('on'));
-    el.classList.add('on');
-    currentFilter = f;
-    buildVL(f);
-  }
-
-  // --- Pilot / Resp / User selects ---
-  function buildPilotSelect() {
-    const sel = document.getElementById('ff-pilot'); if (!sel) return;
-    const rosterPilots = (DB.pilots || []).filter(p => p.active !== false);
-    const userPilots = Object.entries(DB.users).filter(([k, v]) => v.role === 'pilot_admin' || v.role === 'pilot')
-      .map(([k, v]) => `<option value="${k}">${v.name || k}</option>`);
-    let opts = userPilots.join('');
-    rosterPilots.forEach(rp => {
-      if (!rp.user_id || !DB.users[rp.user_id]) {
-        opts += `<option value="ROSTER_${rp.id}">${rp.name}</option>`;
-      }
+    const monthStr = y + '-' + App.pad2(m + 1);
+    const schedMap = {};
+    (DB.schedule || []).filter(function(s) { return s.date.startsWith(monthStr) && s.plane_id === selPlane && s.status !== 'cancelled'; }).forEach(function(s) {
+      if (!schedMap[s.date]) schedMap[s.date] = [];
+      schedMap[s.date].push(s);
     });
-    sel.innerHTML = opts;
-  }
 
-  function buildRespSelect() {
-    const sel = document.getElementById('ff-resp'); if (!sel) return;
-    sel.innerHTML = Object.entries(DB.users).filter(([k, v]) => v.role === 'admin' || v.role === 'owner')
-      .map(([k, v]) => `<option value="${k}">${k}</option>`).join('');
-  }
+    let html = DAYS_ES.map(function(d) { return '<div class="cal-dh">' + d + '</div>'; }).join('');
+    const today = App.todayStr();
+    const selStr = calSelDate;
 
-  function buildUserOptions() {
-    // Flight form user/client select
-    const ffU = document.getElementById('ff-u');
-    if (ffU) ffU.innerHTML = Object.keys(DB.users).map(k => `<option>${k}</option>`).join('');
-    // Fuel form paid-by
-    const fuPy = document.getElementById('fu-py');
-    if (fuPy) fuPy.innerHTML = Object.keys(DB.users).map(k => `<option>${k}</option>`).join('');
-    // Fuel advances
-    const adv = document.getElementById('fu-advances');
-    if (adv) {
-      const owners = Object.entries(DB.users).filter(([k, v]) => v.role === 'admin' || v.role === 'owner');
-      adv.innerHTML = `<div class="row2">${owners.map(([k]) => `<div><label class="fl">Anticipo ${k}</label><input type="number" id="fu-adv-${k}" value="0" step="0.01" inputmode="decimal"></div>`).join('')}</div>`;
-    }
-  }
-
-  function tipo(v, el) {
-    formType = v;
-    document.querySelectorAll('#form-flight .tc').forEach(c => c.classList.remove('on'));
-    el.classList.add('on');
-    document.getElementById('rev-sec').style.display = (v === 'STD' || v === 'FF') ? 'block' : 'none';
-    updRevH();
-  }
-
-  function setDates() {
-    const ds = App.todayStr();
-    ['ff-d', 'fu-d'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ds; });
-    const lt = Math.max(...DB.flights.map(f => f.hf || 0), 0);
-    const e = document.getElementById('ff-hi');
-    if (e && lt > 0) { e.value = lt.toFixed(1); }
-  }
-
-  function calcH() {
-    const a = parseFloat(document.getElementById('ff-hi').value), b = parseFloat(document.getElementById('ff-hf').value);
-    const div = document.getElementById('hcalc');
-    if (!isNaN(a) && !isNaN(b) && b > a) {
-      const h = (b - a).toFixed(1);
-      div.textContent = `${h}hrs · fact: ${parseFloat(h) < 1 ? '1.0 (roundup)' : h}`;
-      div.style.display = 'block';
-      updRevH();
-    } else div.style.display = 'none';
-  }
-
-  function updRevH() {
-    const a = parseFloat(document.getElementById('ff-hi').value) || 0, b = parseFloat(document.getElementById('ff-hf').value) || 0;
-    const h = Math.max(0, b - a), rate = formType === 'FF' ? 650 : 750;
-    const el = document.getElementById('rev-hint');
-    if (el && h > 0) el.textContent = `Auto: ${h.toFixed(1)}hr × $${rate} = $${(h * rate).toFixed(2)}`;
-  }
-
-  async function saveF() {
-    const d = document.getElementById('ff-d').value;
-    const hi = parseFloat(document.getElementById('ff-hi').value), hf = parseFloat(document.getElementById('ff-hf').value);
-    const rt = document.getElementById('ff-rt').value.toUpperCase().trim();
-    if (!d || !rt || isNaN(hi) || isNaN(hf) || hf <= hi) { alert('Completa campos requeridos'); return; }
-    const h = parseFloat((hf - hi).toFixed(1));
-    const pilot = document.getElementById('ff-pilot').value;
-    const resp = document.getElementById('ff-resp').value;
-    const u = document.getElementById('ff-u').value;
-    const cb = parseFloat(document.getElementById('ff-cb').value) || 0;
-    const es = parseFloat(document.getElementById('ff-es').value) || 0;
-    const rate = formType === 'FF' ? 650 : formType === 'STD' ? 750 : 0;
-    const rv = document.getElementById('ff-rv').value ? parseFloat(document.getElementById('ff-rv').value) : (rate > 0 ? parseFloat((h * rate).toFixed(2)) : 0);
-    const mid = (DB.meta.last_flight_id || 0) + 1;
-    DB.meta.last_flight_id = mid;
-    const needsVerify = !App.isAdmin() && (formType === 'STD' || formType === 'FF');
-
-    let pilotUserId = pilot;
-    let pilotRosterId = null;
-    if (pilot && pilot.startsWith('ROSTER_')) {
-      pilotRosterId = parseInt(pilot.replace('ROSTER_', ''));
-      pilotUserId = null;
+    for (let i = startDay - 1; i >= 0; i--) {
+      html += '<div class="cal-d other">' + (prevDays - i) + '</div>';
     }
 
-    DB.flights.push({
-      id: mid, d, r: resp, u: u || resp, rt, p: pilotUserId, pilot_roster_id: pilotRosterId,
-      hi, hf, h, t: formType, rv, eh: es, no: document.getElementById('ff-no').value,
-      plane_id: selPlane, logged_by: App.currentUser(), verified: !needsVerify, verified_by: needsVerify ? null : App.currentUser()
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = y + '-' + App.pad2(m + 1) + '-' + App.pad2(d);
+      const isToday = ds === today;
+      const isSel = ds === selStr;
+      const scheds = schedMap[ds] || [];
+      let dots = '';
+      if (scheds.length) {
+        dots = '<div class="cal-dots">';
+        scheds.slice(0, 3).forEach(function(s) {
+          const cls = s.booked_by === App.currentUser() ? 'mine' : s.status === 'confirmed' ? 'conf' : 'req';
+          dots += '<div class="cd ' + cls + '"></div>';
+        });
+        dots += '</div>';
+      } else {
+        dots = '<div class="cal-dots"></div>';
+      }
+      html += '<div class="cal-d' + (isToday ? ' today' : '') + (isSel ? ' sel' : '') + '" onclick="Calendar.selectDay(\'' + ds + '\')">' + d + dots + '</div>';
+    }
+
+    const totalCells = startDay + daysInMonth;
+    const remaining = totalCells % 7 === 0 ? 0 : 7 - totalCells % 7;
+    for (let i = 1; i <= remaining; i++) {
+      html += '<div class="cal-d other">' + i + '</div>';
+    }
+
+    document.getElementById('cal-grid').innerHTML = html;
+    if (calSelDate) buildDayDetail(calSelDate);
+  }
+
+  function calNav(dir) {
+    calDate.setMonth(calDate.getMonth() + dir);
+    calSelDate = null;
+    buildCalendar();
+    document.getElementById('day-detail').innerHTML = '';
+  }
+
+  function selectDay(ds) {
+    calSelDate = ds;
+    buildCalendar();
+  }
+
+  function buildDayDetail(ds) {
+    const scheds = (DB.schedule || []).filter(function(s) { return s.date === ds && s.plane_id === selPlane && s.status !== 'cancelled'; })
+      .sort(function(a, b) { return a.start.localeCompare(b.start); });
+
+    let html = '<div class="day-detail">'
+      + '<div class="dd-hd">'
+      + '<div class="dd-title">' + App.fmtDate(ds) + '</div>'
+      + '<button class="dd-add" onclick="Calendar.openBooking(\'' + ds + '\')">+ Reservar</button>'
+      + '</div>';
+
+    if (scheds.length === 0) {
+      html += '<div class="empty" style="padding:20px">Sin reservas -- disponible todo el dia</div>';
+    } else {
+      scheds.forEach(function(s) {
+        var u = App.getUser(s.booked_by);
+        var pilotDisplay = 'Sin asignar';
+        if (s.pilot_roster_id) {
+          var rp = App.getPilot(s.pilot_roster_id);
+          if (rp) pilotDisplay = rp.name + (rp.phone ? ' - ' + rp.phone : '');
+        } else if (s.pilot) {
+          pilotDisplay = App.getUser(s.pilot).name;
+        }
+        var typeTag = '';
+        if (s.flight_type) {
+          var tl = { PERSONAL: 'Personal', STD: 'Charter STD', FF: 'Charter FF', MANTE: 'Mante' };
+          var tc = { PERSONAL: 'p', STD: 's', FF: 'f', MANTE: 'm' };
+          typeTag = ' <span class="bx ' + (tc[s.flight_type] || 'p') + '">' + (tl[s.flight_type] || s.flight_type) + '</span>';
+        }
+        // Show actual plane if different from schedule plane
+        var actualPlane = s.actual_plane || s.plane_id;
+        var planeDisplay = '';
+        if (s.is_exchange) {
+          planeDisplay = '<span style="background:#DBEAFE;color:#1E40AF;padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700">INTERCAMBIO</span> <span style="color:#1B4E8A;font-weight:600">' + actualPlane + '</span>';
+          if (s.exchange_partner) planeDisplay += '<span style="color:#8892A4;font-size:9px"> (' + s.exchange_partner + ')</span>';
+        } else if (actualPlane !== s.plane_id) {
+          planeDisplay = '<span style="color:#1B4E8A;font-weight:600">' + actualPlane + '</span>';
+        }
+        var canAct = App.isAdmin() || App.isPilotAdmin() || s.booked_by === App.currentUser();
+        var actions = '';
+        if (s.status === 'requested' && App.canManageSchedule()) {
+          actions += '<button class="slot-confirm" onclick="Calendar.openConfirmModal(' + s.id + ')">Confirmar</button>';
+        }
+        if (s.status === 'confirmed' && App.canManageSchedule()) {
+          actions += '<button class="slot-confirm" onclick="Calendar.openPilotModal(' + s.id + ')" style="background:#1B4E8A">Editar</button>';
+        }
+        if (canAct && s.status !== 'completed') {
+          actions += '<button class="slot-cancel" onclick="Calendar.cancelSlot(' + s.id + ')">Cancelar</button>';
+        }
+        html += '<div class="slot">'
+          + '<div class="slot-time">' + s.start + '<br><span style="font-weight:400;font-size:9px">' + s.end + '</span></div>'
+          + '<div class="slot-body">'
+          + '<div class="slot-route">' + (s.route || 'Pendiente ruta') + ' <span class="slot-status ' + s.status + '">' + (s.status === 'requested' ? 'Solicitado' : s.status === 'confirmed' ? 'Confirmado' : s.status === 'completed' ? 'Completado' : 'Cancelado') + '</span>' + typeTag + '</div>'
+          + '<div class="slot-meta"><span>' + u.icon + ' ' + s.booked_by + '</span>' + (planeDisplay ? '<span>' + planeDisplay + '</span>' : '') + '<span>' + pilotDisplay + '</span>' + (s.notes ? '<span>' + s.notes + '</span>' : '') + '</div>'
+          + '</div>'
+          + '<div class="slot-actions">' + actions + '</div>'
+          + '</div>';
+      });
+    }
+    html += '</div>';
+    document.getElementById('day-detail').innerHTML = html;
+  }
+
+  // --- Helper: build plane options (our planes + exchange partner planes) ---
+  function buildPlaneOptions(selectedPlane) {
+    var opts = '';
+    // Our planes
+    var ourPlanes = DB.planes.filter(function(p) { return p.active !== false; });
+    ourPlanes.forEach(function(p) {
+      var sel = (p.id === selectedPlane) ? ' selected' : '';
+      opts += '<option value="' + p.id + '"' + sel + '>' + p.id + ' (propio)</option>';
     });
-    DB.meta.last_tach = hf;
-    if (cb > 0) {
-      const fid = (DB.meta.last_fuel_id || 0) + 1; DB.meta.last_fuel_id = fid;
-      DB.fuel.push({ id: fid, d, py: resp, m: cb, ac: resp === 'COCO' ? cb : 0, au: resp === 'CUCO' ? cb : 0, as: 0, no: '' });
+    // Exchange partner planes
+    var partners = DB.exchange_partners || [];
+    partners.forEach(function(partner) {
+      var planes = partner.planes || [];
+      planes.forEach(function(plane) {
+        var sel = (plane === selectedPlane) ? ' selected' : '';
+        opts += '<option value="' + plane + '"' + sel + '>' + plane + ' (' + partner.name + ')</option>';
+      });
+    });
+    return opts;
+  }
+
+  // --- Booking modal ---
+  function openBooking(ds) {
+    calSelDate = ds;
+    document.getElementById('book-modal-title').textContent = 'Reservar vuelo';
+    var timeOpts = '';
+    for (var h = 5; h <= 21; h++) {
+      for (var m = 0; m < 60; m += 30) {
+        var t = App.pad2(h) + ':' + App.pad2(m);
+        timeOpts += '<option value="' + t + '">' + t + '</option>';
+      }
     }
+    var planeOpts = buildPlaneOptions(selPlane);
+    document.getElementById('book-form').innerHTML =
+      '<div class="fs"><label class="fl">Fecha</label><input type="date" id="bk-date" value="' + ds + '"></div>'
+      + '<div class="fs"><label class="fl">Avion</label><select id="bk-plane">' + planeOpts + '</select></div>'
+      + '<div class="time-pick">'
+      + '<div><label class="fl">Inicio</label><select id="bk-start">' + timeOpts + '</select></div>'
+      + '<div class="sep">-</div>'
+      + '<div><label class="fl">Fin</label><select id="bk-end">' + timeOpts + '</select></div>'
+      + '</div>'
+      + '<div class="fs"><label class="fl">Ruta</label><input type="text" id="bk-route" placeholder="AUR-MGPB" oninput="this.value=this.value.toUpperCase()"></div>'
+      + '<div class="fs"><label class="fl">Pasajeros / Notas</label><input type="text" id="bk-notes" placeholder="opcional"></div>'
+      + '<button class="btn" onclick="Calendar.submitBooking()">Solicitar vuelo</button>'
+      + '<div class="hint" style="text-align:center;margin-top:8px">Fernando confirmara y asignara piloto</div>';
+    document.getElementById('bk-start').value = '08:00';
+    document.getElementById('bk-end').value = '10:00';
+    document.getElementById('book-modal').style.display = 'flex';
+  }
+
+  // --- Helper: check if a plane belongs to an exchange partner ---
+  function isExchangePlane(planeId) {
+    var partners = DB.exchange_partners || [];
+    for (var i = 0; i < partners.length; i++) {
+      var planes = partners[i].planes || [];
+      for (var j = 0; j < planes.length; j++) {
+        if (planes[j] === planeId) return partners[i].name;
+      }
+    }
+    return null;
+  }
+
+  function closeBooking() { document.getElementById('book-modal').style.display = 'none'; }
+
+  async function submitBooking() {
+    var date = document.getElementById('bk-date').value;
+    var start = document.getElementById('bk-start').value;
+    var end = document.getElementById('bk-end').value;
+    var route = document.getElementById('bk-route').value.toUpperCase().trim();
+    var notes = document.getElementById('bk-notes').value;
+    var plane = document.getElementById('bk-plane').value || selPlane;
+
+    if (!date || !start || !end) { alert('Selecciona fecha y horario'); return; }
+    if (start >= end) { alert('La hora de fin debe ser mayor que el inicio'); return; }
+
+    // Conflict check on the selected plane (check actual_plane field too)
+    var existing = (DB.schedule || []).filter(function(s) {
+      if (s.date !== date || s.status === 'cancelled') return false;
+      var schedPlane = s.actual_plane || s.plane_id;
+      return schedPlane === plane;
+    });
+    var conflict = existing.find(function(s) { return start < s.end && end > s.start; });
+    if (conflict) {
+      alert('Conflicto: ' + plane + ' ya reservado por ' + conflict.booked_by + ' (' + conflict.start + '-' + conflict.end + ')');
+      return;
+    }
+
+    // Detect if this is an exchange request
+    var exchangePartner = isExchangePlane(plane);
+
+    if (!DB.schedule) DB.schedule = [];
+    if (!DB.meta) DB.meta = {};
+    var id = (DB.meta.last_sched_id || 0) + 1;
+    DB.meta.last_sched_id = id;
+
+    var entry = {
+      id: id, plane_id: selPlane, actual_plane: plane, date: date, start: start, end: end,
+      booked_by: App.currentUser(), pilot: null, pilot_roster_id: null,
+      status: 'requested', flight_type: null, route: route, notes: notes
+    };
+    if (exchangePartner) {
+      entry.is_exchange = true;
+      entry.exchange_partner = exchangePartner;
+    }
+    DB.schedule.push(entry);
+
+    closeBooking();
     const ok = await API.saveData();
-    document.getElementById('ok-f').style.display = ok ? 'flex' : 'none';
-    document.getElementById('err-f').textContent = ok ? '' : 'Error guardando';
-    document.getElementById('err-f').style.display = ok ? 'none' : 'block';
-    if (ok) { setTimeout(() => document.getElementById('ok-f').style.display = 'none', 3000); App.buildAll(); }
-    document.getElementById('ff-hf').value = '';
-    document.getElementById('ff-rt').value = '';
-    document.getElementById('ff-cb').value = '';
-    document.getElementById('ff-es').value = '0';
-    document.getElementById('ff-rv').value = '';
-    document.getElementById('ff-no').value = '';
-    document.getElementById('hcalc').style.display = 'none';
-    document.getElementById('ff-hi').value = hf;
+    if (ok) {
+      buildCalendar();
+      buildSchedPending();
+      // Fire-and-forget notification
+      API.notify('flight_requested', id);
+    } else {
+      alert('Error guardando reserva');
+    }
   }
 
-  // --- Duplicate flight ---
-  function duplicateFlight(id) {
-    if (!App.isAdmin()) return;
-    const f = DB.flights.find(x => x.id === id);
-    if (!f) return;
-    // Navigate to the new flight form
-    App.nav('new', 8);
-    // Switch to flight tab
-    const flightTabBtn = document.querySelector('#new-tabs .sb');
-    if (flightTabBtn) Fuel.fTab('flight', flightTabBtn);
-    // Pre-fill fields
-    setTimeout(() => {
-      document.getElementById('ff-d').value = App.todayStr();
-      document.getElementById('ff-rt').value = f.rt || '';
-      // Set responsable
-      const respSel = document.getElementById('ff-resp');
-      if (respSel) respSel.value = f.r;
-      // Set pilot
-      const pilotSel = document.getElementById('ff-pilot');
-      if (pilotSel) {
-        if (f.pilot_roster_id) pilotSel.value = 'ROSTER_' + f.pilot_roster_id;
-        else if (f.p) pilotSel.value = f.p;
+  // --- Confirmation modal ---
+  function openConfirmModal(schedId) {
+    var s = (DB.schedule || []).find(function(x) { return x.id === schedId; });
+    if (!s) return;
+    cfmFlightType = null;
+
+    document.getElementById('book-modal-title').textContent = 'Confirmar vuelo';
+    var activePilots = (DB.pilots || []).filter(function(p) { return p.active !== false; });
+    var pilotOpts = '<option value="">-- Seleccionar piloto --</option>';
+    activePilots.forEach(function(p) {
+      pilotOpts += '<option value="' + p.id + '">' + p.name + (p.phone ? ' (' + p.phone + ')' : '') + '</option>';
+    });
+
+    var planeOpts = buildPlaneOptions(s.actual_plane || s.plane_id);
+
+    var types = [
+      { v: 'PERSONAL', icon: 'P', label: 'Personal', desc: 'Sin ingreso' },
+      { v: 'STD', icon: 'S', label: 'Charter STD', desc: '$750/hr' },
+      { v: 'FF', icon: 'FF', label: 'Charter FF', desc: '$650/hr' },
+      { v: 'MANTE', icon: 'M', label: 'Mante', desc: 'Sin ingreso' }
+    ];
+
+    document.getElementById('book-form').innerHTML =
+      '<div style="background:#F8F9FB;border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:12px">'
+      + '<div style="font-weight:700;margin-bottom:3px">' + (s.route || 'Sin ruta') + ' - ' + App.fmtDate(s.date) + '</div>'
+      + '<div style="color:#8892A4;font-size:10px">' + s.start + ' - ' + s.end + ' - Solicitado por ' + App.getUser(s.booked_by).name + ' (' + s.booked_by + ')</div>'
+      + (s.notes ? '<div style="color:#8892A4;font-size:10px;margin-top:2px">' + s.notes + '</div>' : '')
+      + '</div>'
+      + '<div class="fs"><label class="fl">Avion</label><select id="cfm-plane">' + planeOpts + '</select></div>'
+      + '<div class="fs"><label class="fl">Piloto asignado</label><select id="cfm-pilot">' + pilotOpts + '</select></div>'
+      + '<div class="fs"><label class="fl">Tipo de vuelo</label>'
+      + '<div class="confirm-type-grid" id="cfm-type-grid">'
+      + types.map(function(t) { return '<div class="confirm-type-card" data-t="' + t.v + '" onclick="Calendar.cfmTipo(\'' + t.v + '\',this)"><div class="ti">' + t.icon + '</div><div class="tn">' + t.label + '</div><div class="td">' + t.desc + '</div></div>'; }).join('')
+      + '</div>'
+      + '</div>'
+      + '<button class="btn gr" onclick="Calendar.submitConfirmation(' + schedId + ')">Confirmar vuelo</button>';
+    document.getElementById('book-modal').style.display = 'flex';
+  }
+
+  function cfmTipo(v, el) {
+    cfmFlightType = v;
+    document.querySelectorAll('#cfm-type-grid .confirm-type-card').forEach(function(c) { c.classList.remove('on'); });
+    el.classList.add('on');
+  }
+
+  async function submitConfirmation(schedId) {
+    var s = (DB.schedule || []).find(function(x) { return x.id === schedId; });
+    if (!s) return;
+    var pilotVal = document.getElementById('cfm-pilot').value;
+    var pilotId = pilotVal ? parseInt(pilotVal) : null;
+    var plane = document.getElementById('cfm-plane').value;
+    if (!cfmFlightType) { alert('Selecciona el tipo de vuelo'); return; }
+
+    s.status = 'confirmed';
+    s.flight_type = cfmFlightType;
+    if (plane) s.actual_plane = plane;
+    if (pilotId) {
+      s.pilot_roster_id = pilotId;
+      var rp = App.getPilot(pilotId);
+      if (rp && rp.user_id) s.pilot = rp.user_id;
+    }
+
+    closeBooking();
+    cfmFlightType = null;
+    const ok = await API.saveData();
+    if (ok) {
+      buildCalendar();
+      buildSchedPending();
+      API.notify('flight_confirmed', schedId);
+    } else {
+      alert('Error confirmando vuelo');
+    }
+  }
+
+  // --- Edit confirmed flight (pilot + plane) ---
+  function openPilotModal(schedId) {
+    var s = (DB.schedule || []).find(function(x) { return x.id === schedId; });
+    if (!s) return;
+
+    var activePilots = (DB.pilots || []).filter(function(p) { return p.active !== false; });
+    var pilotOpts = '<option value="">-- Seleccionar piloto --</option>';
+    activePilots.forEach(function(p) {
+      var selected = (s.pilot_roster_id === p.id) ? ' selected' : '';
+      pilotOpts += '<option value="' + p.id + '"' + selected + '>' + p.name + (p.phone ? ' (' + p.phone + ')' : '') + '</option>';
+    });
+
+    var planeOpts = buildPlaneOptions(s.actual_plane || s.plane_id);
+
+    var currentPilot = 'Sin asignar';
+    if (s.pilot_roster_id) {
+      var rp = App.getPilot(s.pilot_roster_id);
+      if (rp) currentPilot = rp.name;
+    }
+    var currentPlane = s.actual_plane || s.plane_id;
+
+    document.getElementById('book-modal-title').textContent = 'Editar vuelo';
+    document.getElementById('book-form').innerHTML =
+      '<div style="background:#F8F9FB;border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:12px">'
+      + '<div style="font-weight:700;margin-bottom:3px">' + (s.route || 'Sin ruta') + ' - ' + App.fmtDate(s.date) + '</div>'
+      + '<div style="color:#8892A4;font-size:10px">' + s.start + ' - ' + s.end + ' - Solicitado por ' + App.getUser(s.booked_by).name + ' (' + s.booked_by + ')</div>'
+      + '<div style="color:#8892A4;font-size:10px;margin-top:2px">Piloto: <b>' + currentPilot + '</b> - Avion: <b>' + currentPlane + '</b></div>'
+      + '</div>'
+      + '<div class="fs"><label class="fl">Avion</label><select id="cfm-plane">' + planeOpts + '</select></div>'
+      + '<div class="fs"><label class="fl">Piloto asignado</label><select id="cfm-pilot">' + pilotOpts + '</select></div>'
+      + '<button class="btn gr" onclick="Calendar.submitPilotAssignment(' + schedId + ')">Guardar cambios</button>';
+    document.getElementById('book-modal').style.display = 'flex';
+  }
+
+  async function submitPilotAssignment(schedId) {
+    var s = (DB.schedule || []).find(function(x) { return x.id === schedId; });
+    if (!s) return;
+    var pilotVal = document.getElementById('cfm-pilot').value;
+    var pilotId = pilotVal ? parseInt(pilotVal) : null;
+    var plane = document.getElementById('cfm-plane').value;
+
+    var changed = false;
+
+    // Update pilot
+    if (pilotId && s.pilot_roster_id !== pilotId) {
+      s.pilot_roster_id = pilotId;
+      var rp = App.getPilot(pilotId);
+      if (rp && rp.user_id) s.pilot = rp.user_id;
+      else s.pilot = null;
+      changed = true;
+    }
+
+    // Update plane
+    if (plane && plane !== (s.actual_plane || s.plane_id)) {
+      s.actual_plane = plane;
+      changed = true;
+    }
+
+    if (!changed) {
+      closeBooking();
+      return;
+    }
+
+    closeBooking();
+    var ok = await API.saveData();
+    if (ok) {
+      buildCalendar();
+      API.notify('pilot_assigned', schedId);
+    } else {
+      alert('Error guardando cambios');
+    }
+  }
+
+  async function cancelSlot(id) {
+    if (!confirm('Cancelar esta reserva?')) return;
+    var s = DB.schedule.find(function(x) { return x.id === id; });
+    if (s) {
+      s.status = 'cancelled';
+      var ok = await API.saveData();
+      if (ok) {
+        API.notify('flight_cancelled', id);
       }
-      // Set type
-      const typeCard = document.querySelector(`#form-flight .tc[data-t="${f.t}"]`);
-      if (typeCard) tipo(f.t, typeCard);
-      // Clear HRM values but set HRM inicio to last known tach
-      const lt = Math.max(...DB.flights.map(fl => fl.hf || 0), 0);
-      document.getElementById('ff-hi').value = lt > 0 ? lt.toFixed(1) : '';
-      document.getElementById('ff-hf').value = '';
-      document.getElementById('hcalc').style.display = 'none';
-    }, 100);
+      buildDayDetail(s.date);
+      buildCalendar();
+    }
   }
 
-  // --- Edit flight ---
-  let editId = null;
-
-  function openEdit(id) {
-    if (!App.isAdmin()) return;
-    const f = DB.flights.find(x => x.id === id); if (!f) return;
-    editId = id;
-    const tipos = ['PERSONAL', 'STD', 'FF', 'MANTE'];
-    const respOpts = Object.keys(DB.users).map(k => `<option ${f.r === k ? 'selected' : ''}>${k}</option>`).join('');
-    document.getElementById('edit-modal-title').textContent = 'Editar vuelo #' + id;
-    document.getElementById('edit-form-content').innerHTML = `
-      <div class="fs"><label class="fl">Fecha</label><input type="date" id="ed-d" value="${f.d}"></div>
-      <div class="fs"><label class="fl">Ruta</label><input type="text" id="ed-rt" value="${f.rt || ''}" style="text-transform:uppercase"></div>
-      <div class="fs"><label class="fl">Responsable</label><select id="ed-r">${respOpts}</select></div>
-      <div class="fs"><label class="fl">Tipo</label><select id="ed-t">${tipos.map(t => `<option ${f.t === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
-      <div class="row2"><div><label class="fl">HRM Ini</label><input type="number" id="ed-hi" value="${f.hi}" step="0.1"></div><div><label class="fl">HRM Fin</label><input type="number" id="ed-hf" value="${f.hf}" step="0.1"></div></div>
-      <div class="row2"><div><label class="fl">Espera</label><input type="number" id="ed-eh" value="${f.eh || 0}" step="0.5"></div><div><label class="fl">Ingreso $</label><input type="number" id="ed-rv" value="${f.rv || 0}" step="0.01"></div></div>
-      <div style="display:flex;gap:8px;margin-top:3px"><button class="btn" onclick="Flights.saveEdit()">Guardar</button><button class="btn" style="background:#8B1A1A" onclick="Flights.deleteFlight(${id})">Eliminar</button></div>`;
-    document.getElementById('edit-modal').style.display = 'flex';
-  }
-
-  async function saveEdit() {
-    const f = DB.flights.find(x => x.id === editId); if (!f) return;
-    f.d = document.getElementById('ed-d').value;
-    f.rt = document.getElementById('ed-rt').value;
-    f.r = document.getElementById('ed-r').value;
-    f.t = document.getElementById('ed-t').value;
-    const hi = parseFloat(document.getElementById('ed-hi').value), hf = parseFloat(document.getElementById('ed-hf').value);
-    f.hi = hi; f.hf = hf; f.h = parseFloat((hf - hi).toFixed(1));
-    f.eh = parseFloat(document.getElementById('ed-eh').value) || 0;
-    f.rv = parseFloat(document.getElementById('ed-rv').value) || 0;
-    f.verified = true; f.verified_by = App.currentUser();
-    Admin.closeEdit();
-    await API.saveData();
-    App.buildAll();
-  }
-
-  async function deleteFlight(id) {
-    if (!confirm('¿Eliminar vuelo?')) return;
-    DB.flights = DB.flights.filter(x => x.id !== id);
-    Admin.closeEdit();
-    await API.saveData();
-    App.buildAll();
+  function buildSchedPending() {
+    const pends = (DB.schedule || []).filter(function(s) { return s.status === 'requested'; });
+    const sec = document.getElementById('sched-pend-section');
+    if (!App.canManageSchedule() || pends.length === 0) { if (sec) sec.style.display = 'none'; return; }
+    sec.style.display = 'block';
+    sec.innerHTML = '<div class="pend-section"><div class="pend-hd"><span class="pend-ht">Reservas pendientes</span><span class="pend-count">' + pends.length + '</span></div>'
+      + pends.map(function(s) { return '<div class="pend-item"><div><div class="pend-info"><b>' + (s.route || 'Sin ruta') + '</b> - ' + s.plane_id + ' - ' + s.start + '-' + s.end + '</div><div class="pend-meta">' + s.date + ' - ' + App.getUser(s.booked_by).name + '</div></div><div class="pend-actions"><button class="ver-btn" onclick="Calendar.openConfirmModal(' + s.id + ')">C</button><button class="rej-btn" onclick="Calendar.cancelSlot(' + s.id + ')">X</button></div></div>'; }).join('')
+      + '</div>';
   }
 
   return {
-    fRow, buildVL, filtV, searchVL,
-    buildPilotSelect, buildRespSelect, buildUserOptions,
-    tipo, setDates, calcH, updRevH, saveF,
-    duplicateFlight,
-    openEdit, saveEdit, deleteFlight
+    buildPlaneSelectors: buildPlaneSelectors,
+    selectPlane: selectPlane,
+    buildCalendar: buildCalendar,
+    calNav: calNav,
+    selectDay: selectDay,
+    openBooking: openBooking,
+    closeBooking: closeBooking,
+    submitBooking: submitBooking,
+    openConfirmModal: openConfirmModal,
+    cfmTipo: cfmTipo,
+    submitConfirmation: submitConfirmation,
+    openPilotModal: openPilotModal,
+    submitPilotAssignment: submitPilotAssignment,
+    cancelSlot: cancelSlot,
+    buildSchedPending: buildSchedPending
   };
 })();
