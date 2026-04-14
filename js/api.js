@@ -75,6 +75,7 @@ const API = (() => {
         if (!DB.maintenance) DB.maintenance = [];
         if (!DB.flight_expenses) DB.flight_expenses = [];
         if (!DB.payments) DB.payments = [];
+        if (!DB.misc_charges) DB.misc_charges = [];
         if (!DB.rates || DB.rates.length === 0) DB.rates = [
           { d: '2023-03-01', pilot: 110, gw: 15, std: 750, ff: 650, admin: 300, res: 2 },
           { d: '2026-01-01', pilot: 110, gw: 15, std: 750, ff: 650, admin: 350, res: 2 }
