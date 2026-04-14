@@ -47,7 +47,8 @@ function fRow(f) {
   }
 
   // Show block if: has revenue, is charter, or has logged expenses
-  if (f.h > 0 && (revenueUsd > 0 || isCharter || hasExpenses)) {
+  // Only visible to admin and owner roles (not pilot_admin)
+  if (f.h > 0 && (App.isAdmin() || App.currentRole() === 'owner') && (revenueUsd > 0 || isCharter || hasExpenses)) {
     // Fuel cost (QTZ) based on month average
     var fuelCostQtz = 0;
     if (f.d) {
