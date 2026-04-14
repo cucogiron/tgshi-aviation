@@ -341,14 +341,28 @@ var FlightExpenses = (function() {
       COCO: { USD: 0, QTZ: 0, details: [] },
       CUCO: { USD: 0, QTZ: 0, details: [] },
       SENSHI: { USD: 0, QTZ: 0, details: [] },
+      // Credits for payers who paid out of pocket for someone else's flight
+      payer_credits: {
+        COCO: { USD: 0, QTZ: 0, details: [] },
+        CUCO: { USD: 0, QTZ: 0, details: [] },
+        SENSHI: { USD: 0, QTZ: 0, details: [] }
+      },
       expenses: exps
     };
 
     exps.forEach(function(e) {
       var owner = getFlightOwner(e.flight_id);
       if (!owner || !result[owner]) return;
+      // Charge goes to flight owner
       result[owner][e.currency] += e.amount;
       result[owner].details.push(e);
+
+      // If someone else paid, they get a credit
+      var payer = e.paid_by;
+      if (payer && payer !== owner && result.payer_credits[payer]) {
+        result.payer_credits[payer][e.currency] += e.amount;
+        result.payer_credits[payer].details.push(e);
+      }
     });
 
     return result;
@@ -394,6 +408,35 @@ var FlightExpenses = (function() {
       if (!subStr) subStr = '$0.00';
       h += '<div class="bil-row"><div class="bil-lbl"><b>' + label + ' total gastos</b></div><div class="bil-val"><b>' + subStr + '</b></div></div>';
     });
+
+    // Show payer credits if any
+    var hasCredits = false;
+    ['COCO', 'CUCO', 'SENSHI'].forEach(function(payer) {
+      var c = data.payer_credits[payer];
+      if (c.USD > 0 || c.QTZ > 0) hasCredits = true;
+    });
+    if (hasCredits) {
+      h += '<div style="border-top:2px solid #E2E6EE;margin-top:6px;padding-top:6px">';
+      h += '<div class="bil-row"><div class="bil-lbl" style="font-weight:600;color:#1A6B3A;font-size:9px;text-transform:uppercase;letter-spacing:.06em">Creditos por pago de bolsillo</div></div>';
+      ['COCO', 'CUCO', 'SENSHI'].forEach(function(payer) {
+        var c = data.payer_credits[payer];
+        if (c.USD === 0 && c.QTZ === 0) return;
+        var payerLabel = payer === 'SENSHI' ? 'CHARTER' : payer;
+        var creditStr = '';
+        if (c.QTZ > 0) creditStr += fQ(c.QTZ);
+        if (c.QTZ > 0 && c.USD > 0) creditStr += ' + ';
+        if (c.USD > 0) creditStr += fD(c.USD);
+        h += '<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A;font-size:10px">Credito a ' + payerLabel + ' (pago de bolsillo)</div><div class="bil-val" style="color:#1A6B3A;font-size:11px">(' + creditStr + ')</div></div>';
+        c.details.forEach(function(e) {
+          var flight = DB.flights.find(function(x) { return x.id === e.flight_id; });
+          var route = flight ? (flight.rt || '--') : '#' + e.flight_id;
+          var flightOwner = getFlightOwner(e.flight_id);
+          var ownerLabel = flightOwner === 'SENSHI' ? 'Charter' : (flightOwner || '?');
+          h += '<div class="bil-row" style="border:none;padding:2px 0"><div class="bil-lbl" style="padding-left:12px;font-size:9px;color:#8892A4">' + e.category + ' (' + route + ' ' + ownerLabel + ')</div><div class="bil-val" style="font-size:9px;color:#8892A4">' + fAmt(e.amount, e.currency) + '</div></div>';
+        });
+      });
+      h += '</div>';
+    }
 
     h += '</div></div>';
     return h;
