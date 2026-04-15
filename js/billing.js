@@ -42,17 +42,31 @@ const Billing = (() => {
     // FF revenue charged to the responsible owner (they owe Senshi this amount)
     const ffRevenue = { COCO: 0, CUCO: 0, SENSHI: 0 };
 
+    // Helper: for FF flights, determine who arranged it (owes Senshi the revenue)
+    // Check f.r first, then f.u as fallback for legacy data
+    function ffResponsible(f) {
+      if (f.r && f.r !== 'SENSHI' && (f.r === 'COCO' || f.r === 'CUCO')) return f.r;
+      if (f.u && f.u !== 'SENSHI' && (f.u === 'COCO' || f.u === 'CUCO')) return f.u;
+      // Check if f.u contains an owner name as substring (e.g. "ALQ CUCO FF")
+      if (f.u) {
+        if (f.u.toUpperCase().indexOf('COCO') >= 0) return 'COCO';
+        if (f.u.toUpperCase().indexOf('CUCO') >= 0) return 'CUCO';
+      }
+      return null;
+    }
+
     fls.forEach(f => {
       const r = f.r; if (hrs[r] === undefined) return;
       // FF flights: costs go to SENSHI, revenue charged to responsible owner
-      const costOwner = (f.t === 'FF' && r !== 'SENSHI') ? 'SENSHI' : r;
+      const ffOwner = (f.t === 'FF') ? ffResponsible(f) : null;
+      const costOwner = (f.t === 'FF' && ffOwner) ? 'SENSHI' : r;
       hrs[costOwner] += f.h;
       if (f.h > 0 && f.h < 1) { sub[costOwner].n++; sub[costOwner].a += f.h; }
       espHrs[costOwner] += (f.eh || 0);
       esp[costOwner] += (f.eh || 0) * rt.gw;
       if ((f.rv || 0) > 0) {
-        if (f.t === 'FF' && r !== 'SENSHI') {
-          ffRevenue[r] += f.rv; // Owner owes Senshi the FF revenue
+        if (f.t === 'FF' && ffOwner) {
+          ffRevenue[ffOwner] += f.rv;
         }
         charterRev += f.rv;
       }
