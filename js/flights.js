@@ -9,7 +9,7 @@ const Flights = (() => {
   let searchQuery = '';
 
 function fRow(f) {
-  var dc = f.r === 'COCO' ? 'c1' : f.r === 'CUCO' ? 'c2' : 'c3';
+  var dc = (f.t === 'FF' && f.r !== 'SENSHI') ? 'c3' : (f.r === 'COCO' ? 'c1' : f.r === 'CUCO' ? 'c2' : 'c3');
   var bx = f.t === 'STD'
     ? '<span class="bx s">STD</span>'
     : f.t === 'FF'
@@ -19,6 +19,12 @@ function fRow(f) {
         : '<span class="bx p">Personal</span>';
 
   var displayR = f.r === 'SENSHI' ? 'Charter' : f.r;
+  // For FF flights, show who arranged it
+  var ffTag = '';
+  if (f.t === 'FF' && f.r !== 'SENSHI') {
+    displayR = 'Charter';  // FF costs go to Charter
+    ffTag = ' · <span style="color:#B8600A;font-weight:600;font-size:9px">resp. ' + f.r + '</span>';
+  }
   var pendTag = f.verified === false ? '<span class="pend-badge">Pend</span>' : '';
 
   var pilotDisplay = '';
@@ -151,7 +157,7 @@ function fRow(f) {
     + '<div class="fm">'
     + '<div class="fr">' + (f.rt || '--') + ' ' + bx + pendTag + '</div>'
     + '<div class="fme">'
-    + '<span>' + displayR + '</span>'
+    + '<span>' + displayR + ffTag + '</span>'
     + (pilotDisplay ? '<span>' + pilotDisplay + '</span>' : '')
     + editBtn
     + dupBtn
