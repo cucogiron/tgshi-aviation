@@ -364,19 +364,19 @@ textarea{resize:vertical;min-height:60px}
   <div id="sched-pend-section" style="display:none"></div>
   <div id="d-quick-stats"></div>
   <div class="sg">
-    <div class="st c1"><div class="sl">COCO</div><div class="sv" id="d-co">—</div><div class="sd">hrs 2026</div></div>
-    <div class="st c2"><div class="sl">CUCO</div><div class="sv" id="d-cu">—</div><div class="sd">hrs 2026</div></div>
-    <div class="st c3"><div class="sl">CHARTER</div><div class="sv" id="d-se">—</div><div class="sd">hrs 2026</div></div>
+    <div class="st c1" style="cursor:pointer" onclick="App.nav('vl',2);setTimeout(function(){Flights.filtV('COCO',document.querySelectorAll('#flt-row .fp')[1])},150)"><div class="sl">COCO</div><div class="sv" id="d-co">—</div><div class="sd">hrs 2026</div></div>
+    <div class="st c2" style="cursor:pointer" onclick="App.nav('vl',2);setTimeout(function(){Flights.filtV('CUCO',document.querySelectorAll('#flt-row .fp')[2])},150)"><div class="sl">CUCO</div><div class="sv" id="d-cu">—</div><div class="sd">hrs 2026</div></div>
+    <div class="st c3" style="cursor:pointer" onclick="App.nav('vl',2);setTimeout(function(){Flights.filtV('SENSHI',document.querySelectorAll('#flt-row .fp')[3])},150)"><div class="sl">CHARTER</div><div class="sv" id="d-se">—</div><div class="sd">hrs 2026</div></div>
   </div>
-  <div class="card">
-    <div class="ch"><div class="ct">Horas mensuales 2026</div><div style="display:flex;gap:6px;font-size:8px"><span style="color:#4A7CC7">■ COCO</span><span style="color:#2DA05A">■ CUCO</span><span style="color:#E08B20">■ Charter</span></div></div>
-    <div class="cb" id="d-bars"></div>
+  <div class="card" id="d-bal-card" style="cursor:pointer" onclick="App.nav('pay',8)">
+    <div class="ch"><div class="ct">💳 Saldos</div><a href="#" onclick="App.nav('pay',8);return false" style="font-size:10px;color:#4A9EE8;text-decoration:none;font-weight:600">Ver detalle</a></div>
+    <div class="cb" id="d-balances"></div>
   </div>
   <div class="card">
     <div class="ch"><div class="ct">Últimos vuelos</div><a href="#" onclick="App.nav('vl',2);return false" style="font-size:10px;color:#4A9EE8;text-decoration:none;font-weight:600">Ver todos</a></div>
     <div id="d-rec"></div>
   </div>
-  <div class="card"><div class="ch"><div class="ct">Resumen 2026</div></div><div class="cb" id="d-sum"></div></div>
+  <div class="card" style="cursor:pointer" onclick="App.nav('bil',4)"><div class="ch"><div class="ct">Resumen 2026</div><a href="#" onclick="App.nav('bil',4);return false" style="font-size:10px;color:#4A9EE8;text-decoration:none;font-weight:600">Billing</a></div><div class="cb" id="d-sum"></div></div>
   <div class="card" id="d-xch-card" style="display:none;cursor:pointer" onclick="App.nav('xch',5)"><div class="ch"><div class="ct">🤝 Intercambios</div><a href="#" onclick="App.nav('xch',5);return false" style="font-size:10px;color:#4A9EE8;text-decoration:none;font-weight:600">Ver todos</a></div><div class="cb" id="d-xch"></div></div>
 </div>
 
@@ -656,19 +656,19 @@ textarea{resize:vertical;min-height:60px}
 </div>
 
 <!-- ===== JS MODULES (load order matters) ===== -->
-<script src="js/app.js?v=6.9"></script>
-<script src="js/api.js?v=6.9"></script>
-<script src="js/dashboard.js?v=6.9"></script>
-<script src="js/calendar.js?v=6.9"></script>
-<script src="js/flights.js?v=6.9"></script>
-<script src="js/fuel.js?v=6.9"></script>
-<script src="js/flight-expenses.js?v=6.9"></script>
-<script src="js/billing.js?v=6.9"></script>
-<script src="js/maintenance.js?v=6.9"></script>
-<script src="js/payments.js?v=6.9"></script>
-<script src="js/admin.js?v=6.9"></script>
-<script src="js/exchange.js?v=6.9"></script>
-<script src="js/exports.js?v=6.9"></script>
+<script src="js/app.js?v=7.0"></script>
+<script src="js/api.js?v=7.0"></script>
+<script src="js/dashboard.js?v=7.0"></script>
+<script src="js/calendar.js?v=7.0"></script>
+<script src="js/flights.js?v=7.0"></script>
+<script src="js/fuel.js?v=7.0"></script>
+<script src="js/flight-expenses.js?v=7.0"></script>
+<script src="js/billing.js?v=7.0"></script>
+<script src="js/maintenance.js?v=7.0"></script>
+<script src="js/payments.js?v=7.0"></script>
+<script src="js/admin.js?v=7.0"></script>
+<script src="js/exchange.js?v=7.0"></script>
+<script src="js/exports.js?v=7.0"></script>
 
 </body>
 </html>
