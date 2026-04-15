@@ -373,6 +373,7 @@ function fRow(f) {
 
   async function saveEdit() {
     const f = DB.flights.find(x => x.id === editId); if (!f) return;
+    API.logAction('edit', 'flights', editId, f.d + ' ' + (f.rt || '') + ' ' + f.r + ' ' + f.t);
     f.d = document.getElementById('ed-d').value;
     f.rt = document.getElementById('ed-rt').value;
     f.r = document.getElementById('ed-r').value;
@@ -389,6 +390,8 @@ function fRow(f) {
 
   async function deleteFlight(id) {
     if (!confirm('¿Eliminar vuelo?')) return;
+    var f = DB.flights.find(x => x.id === id);
+    API.logAction('delete', 'flights', id, f ? (f.d + ' ' + (f.rt || '') + ' ' + f.r + ' ' + f.h + 'hr') : '');
     DB.flights = DB.flights.filter(x => x.id !== id);
     Admin.closeEdit();
     await API.saveData();

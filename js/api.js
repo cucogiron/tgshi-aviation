@@ -76,6 +76,7 @@ const API = (() => {
         if (!DB.flight_expenses) DB.flight_expenses = [];
         if (!DB.payments) DB.payments = [];
         if (!DB.misc_charges) DB.misc_charges = [];
+        if (!DB.audit_log) DB.audit_log = [];
         if (!DB.rates || DB.rates.length === 0) DB.rates = [
           { d: '2023-03-01', pilot: 110, gw: 15, std: 750, ff: 650, admin: 300, res: 2 },
           { d: '2026-01-01', pilot: 110, gw: 15, std: 750, ff: 650, admin: 350, res: 2 }
@@ -250,12 +251,31 @@ const API = (() => {
     }, 3000);
   }
 
+  // --- Audit log ---
+  // Records edits and deletes so admins can see who changed what
+  function logAction(action, collection, recordId, details) {
+    if (!DB.audit_log) DB.audit_log = [];
+    DB.audit_log.push({
+      ts: new Date().toISOString(),
+      user: App.currentUser(),
+      action: action,       // 'edit', 'delete', 'create'
+      collection: collection, // 'flights', 'fuel', 'payments', 'misc_charges', 'maintenance', 'flight_expenses', 'schedule'
+      record_id: recordId,
+      details: details || ''
+    });
+    // Keep last 500 entries to avoid bloating the DB
+    if (DB.audit_log.length > 500) {
+      DB.audit_log = DB.audit_log.slice(-500);
+    }
+  }
+
   return {
     getWorkerUrl, getWorkerSecret, isConnected,
     setWorkerConfig, setDot,
     preloadPasswords, loadData, saveData,
     requestPasswordReset, confirmPasswordReset,
     notify, showNotifyToast,
-    testWorker, quickSetup
+    testWorker, quickSetup,
+    logAction
   };
 })();

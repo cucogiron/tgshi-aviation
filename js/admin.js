@@ -133,6 +133,26 @@ const Admin = (() => {
     var u = document.getElementById('cfg-url'), s = document.getElementById('cfg-secret');
     if (u) u.value = API.getWorkerUrl();
     if (s) s.value = API.getWorkerSecret();
+
+    // Audit log
+    var logEl = document.getElementById('audit-log-list');
+    if (logEl) {
+      var logs = (DB.audit_log || []).slice().reverse().slice(0, 50);
+      if (logs.length === 0) {
+        logEl.innerHTML = '<div class="empty">Sin cambios registrados</div>';
+      } else {
+        logEl.innerHTML = logs.map(function(l) {
+          var colors = { 'delete': '#8B1A1A', 'edit': '#B8600A', 'create': '#1A6B3A' };
+          var icons = { 'delete': '🗑', 'edit': '✏️', 'create': '➕' };
+          return '<div style="padding:6px 14px;border-bottom:1px solid #F5F6F8;font-size:10px">'
+            + '<span style="color:' + (colors[l.action] || '#8892A4') + ';font-weight:700">' + (icons[l.action] || '') + ' ' + (l.action || '').toUpperCase() + '</span> '
+            + '<b>' + (l.user || '?') + '</b> · ' + (l.collection || '') + ' #' + (l.record_id || '') + '<br>'
+            + '<span style="color:#8892A4">' + (l.details || '') + '</span><br>'
+            + '<span style="color:#C8CED8;font-size:8px">' + (l.ts ? l.ts.slice(0, 16).replace('T', ' ') : '') + '</span>'
+            + '</div>';
+        }).join('');
+      }
+    }
   }
 
   // --- Add User ---

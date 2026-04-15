@@ -769,6 +769,15 @@ var Payments = (function() {
 
     if (!date) { alert('Selecciona fecha'); return; }
 
+    // Log before modifying
+    if (origKind === 'charge') {
+      var oc = DB.misc_charges.find(function(x) { return x.id === id; });
+      API.logAction('edit', 'misc_charges', id, oc ? (oc.description + ' ' + oc.currency + oc.amount + ' ' + oc.owner) : '');
+    } else {
+      var op = DB.payments.find(function(x) { return x.id === id; });
+      API.logAction('edit', 'payments', id, op ? ((op.type || 'payment') + ' ' + op.from + '>' + op.to + ' Q' + (op.amount_qtz || 0) + ' $' + (op.amount_usd || 0)) : '');
+    }
+
     // If type changed between payment/credit <-> charge, move between collections
     var wasCharge = (origKind === 'charge');
     var isCharge = (newType === 'charge');
@@ -841,9 +850,13 @@ var Payments = (function() {
   async function deleteTransaction(origKind, id) {
     if (!confirm('Eliminar este movimiento?')) return;
     if (origKind === 'charge') {
-      DB.misc_charges = DB.misc_charges.filter(function(c) { return c.id !== id; });
+      var c = DB.misc_charges.find(function(x) { return x.id === id; });
+      API.logAction('delete', 'misc_charges', id, c ? (c.description + ' ' + c.currency + c.amount + ' ' + c.owner) : '');
+      DB.misc_charges = DB.misc_charges.filter(function(x) { return x.id !== id; });
     } else {
-      DB.payments = DB.payments.filter(function(p) { return p.id !== id; });
+      var p = DB.payments.find(function(x) { return x.id === id; });
+      API.logAction('delete', 'payments', id, p ? ((p.type || 'payment') + ' ' + p.from + '>' + p.to + ' Q' + (p.amount_qtz || 0) + ' $' + (p.amount_usd || 0)) : '');
+      DB.payments = DB.payments.filter(function(x) { return x.id !== id; });
     }
     Admin.closeEdit();
     var ok = await API.saveData();

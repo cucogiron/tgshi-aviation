@@ -231,6 +231,7 @@ const Maintenance = (() => {
   async function updateMaint(id) {
     const m = (DB.maintenance || []).find(x => x.id === id);
     if (!m) return;
+    API.logAction('edit', 'maintenance', id, m.description + ' ' + m.date + ' TACH ' + m.tach);
     m.date = document.getElementById('mt-date').value;
     m.description = document.getElementById('mt-desc').value.trim();
     m.vendor = document.getElementById('mt-vendor').value.trim();
@@ -247,6 +248,8 @@ const Maintenance = (() => {
 
   async function deleteMaint(id) {
     if (!confirm('¿Eliminar este registro de mantenimiento?')) return;
+    var m = (DB.maintenance || []).find(x => x.id === id);
+    API.logAction('delete', 'maintenance', id, m ? (m.description + ' ' + m.date + ' ' + m.currency + m.amount) : '');
     DB.maintenance = (DB.maintenance || []).filter(x => x.id !== id);
     Admin.closeEdit();
     const ok = await API.saveData();

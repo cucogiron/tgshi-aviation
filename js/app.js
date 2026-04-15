@@ -24,6 +24,7 @@ const DB = {
   flight_expenses: [],
   payments: [],
   misc_charges: [],
+  audit_log: [],
   meta: { last_tach: 0, last_flight_id: 0, last_fuel_id: 0, last_sched_id: 0, last_pilot_id: 0, last_xp_id: 0, last_xl_id: 0, last_maint_id: 0 }
 };
 

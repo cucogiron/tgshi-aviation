@@ -289,6 +289,7 @@ var FlightExpenses = (function() {
   function updateExpense(id) {
     var e = (DB.flight_expenses || []).find(function(x) { return x.id === id; });
     if (!e) return;
+    API.logAction('edit', 'flight_expenses', id, e.category + ' ' + e.currency + e.amount + ' vuelo#' + e.flight_id);
     e.flight_id = parseInt(document.getElementById('fexp-flight').value);
     e.category = document.getElementById('fexp-cat').value;
     e.amount = parseFloat(document.getElementById('fexp-amt').value);
@@ -310,6 +311,7 @@ var FlightExpenses = (function() {
     var canDel = App.isAdmin() || (e.logged_by === App.currentUser());
     if (!canDel) { alert('Sin permisos'); return; }
     if (!confirm('Eliminar este gasto?')) return;
+    API.logAction('delete', 'flight_expenses', id, e.category + ' ' + e.currency + e.amount + ' vuelo#' + e.flight_id);
     DB.flight_expenses = (DB.flight_expenses || []).filter(function(x) { return x.id !== id; });
     Admin.closeEdit();
     API.saveData().then(function(ok) {
