@@ -311,12 +311,22 @@ var Payments = (function() {
 
       fls.forEach(function(f) {
         var r = f.r; if (hrs[r] === undefined) return;
-        var costOwner = (f.t === 'FF' && r !== 'SENSHI') ? 'SENSHI' : r;
+        // Resolve FF responsible owner from f.r or f.u
+        var ffOwner = null;
+        if (f.t === 'FF') {
+          if (r !== 'SENSHI' && (r === 'COCO' || r === 'CUCO')) ffOwner = r;
+          else if (f.u && f.u !== 'SENSHI' && (f.u === 'COCO' || f.u === 'CUCO')) ffOwner = f.u;
+          else if (f.u) {
+            if (f.u.toUpperCase().indexOf('COCO') >= 0) ffOwner = 'COCO';
+            if (f.u.toUpperCase().indexOf('CUCO') >= 0) ffOwner = 'CUCO';
+          }
+        }
+        var costOwner = (f.t === 'FF' && ffOwner) ? 'SENSHI' : r;
         hrs[costOwner] += f.h;
         if (f.h > 0 && f.h < 1) { sub[costOwner].n++; sub[costOwner].a += f.h; }
         espHrs[costOwner] += (f.eh || 0);
         // Track FF revenue for the responsible owner
-        if (f.t === 'FF' && r === owner && r !== 'SENSHI' && (f.rv || 0) > 0) {
+        if (f.t === 'FF' && ffOwner === owner && (f.rv || 0) > 0) {
           ffRev += f.rv;
         }
       });
