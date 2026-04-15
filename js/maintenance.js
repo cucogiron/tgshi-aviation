@@ -133,8 +133,9 @@ const Maintenance = (() => {
     rows.reverse().forEach(({ event, allocation }) => {
       const cur = event.currency || 'USD';
       h += `<div class="card" style="margin-bottom:8px">
-        <div class="ch"><div class="ct">${event.description || 'Mantenimiento'}</div><div style="font-size:10px;color:#8892A4">${event.date}</div></div>
+        <div class="ch"><div class="ct">${event.description || 'Mantenimiento'}${typeof Attachments !== 'undefined' ? Attachments.renderBadge(event.attachments) : ''}</div><div style="font-size:10px;color:#8892A4">${event.date}</div></div>
         <div class="cb">
+          ${typeof Attachments !== 'undefined' ? Attachments.renderThumbs(event.attachments) : ''}
           <div class="bil-row"><div class="bil-lbl">Proveedor</div><div class="bil-val" style="font-weight:400">${event.vendor || '—'}</div></div>
           <div class="bil-row"><div class="bil-lbl">Monto total</div><div class="bil-val">${fAmt(event.amount, cur)}</div></div>
           <div class="bil-row"><div class="bil-lbl">TACH al servicio</div><div class="bil-val" style="font-weight:400">${event.tach.toFixed(1)}</div></div>
@@ -177,8 +178,12 @@ const Maintenance = (() => {
       <div class="fs"><label class="fl">TACH al servicio</label><input type="number" id="mt-tach" step="0.1" inputmode="decimal" value="${lastTach > 0 ? lastTach.toFixed(1) : ''}" placeholder="ej. 850.0"></div>
       <div class="fs"><label class="fl">Avión</label><div style="font-size:14px;font-weight:700;color:#1B2A4A">${selPlane}</div></div>
       <div class="fs"><label class="fl">Notas</label><input type="text" id="mt-notes" placeholder="opcional"></div>
+      <div id="mt-att-section"></div>
       <button class="btn" onclick="Maintenance.saveMaint()">Guardar</button>`;
     document.getElementById('edit-modal').style.display = 'flex';
+    if (typeof Attachments !== 'undefined') {
+      Attachments.renderEditSection('mt-att-section', [], 'mt_att');
+    }
   }
 
   async function saveMaint() {
@@ -202,7 +207,8 @@ const Maintenance = (() => {
     DB.maintenance.push({
       id, date, description: desc, vendor, amount, currency, tach,
       plane_id: selPlane, notes,
-      logged_by: App.currentUser(), logged_at: new Date().toISOString()
+      logged_by: App.currentUser(), logged_at: new Date().toISOString(),
+      attachments: (typeof Attachments !== 'undefined' && Attachments.getEditAttachments('mt_att').length > 0) ? Attachments.getEditAttachments('mt_att').slice() : undefined
     });
 
     Admin.closeEdit();
@@ -225,11 +231,15 @@ const Maintenance = (() => {
       </div>
       <div class="fs"><label class="fl">TACH al servicio</label><input type="number" id="mt-tach" step="0.1" inputmode="decimal" value="${m.tach}"></div>
       <div class="fs"><label class="fl">Notas</label><input type="text" id="mt-notes" value="${m.notes || ''}"></div>
+      <div id="mt-att-section"></div>
       <div style="display:flex;gap:8px;margin-top:3px">
         <button class="btn" onclick="Maintenance.updateMaint(${id})">Guardar</button>
         <button class="btn" style="background:#8B1A1A" onclick="Maintenance.deleteMaint(${id})">Eliminar</button>
       </div>`;
     document.getElementById('edit-modal').style.display = 'flex';
+    if (typeof Attachments !== 'undefined') {
+      Attachments.renderEditSection('mt-att-section', m.attachments || [], 'mt_att');
+    }
   }
 
   async function updateMaint(id) {
@@ -243,6 +253,7 @@ const Maintenance = (() => {
     m.currency = document.getElementById('mt-currency').value;
     m.tach = parseFloat(document.getElementById('mt-tach').value);
     m.notes = document.getElementById('mt-notes').value.trim();
+    m.attachments = (typeof Attachments !== 'undefined' && Attachments.getEditAttachments('mt_att').length > 0) ? Attachments.getEditAttachments('mt_att').slice() : undefined;
 
     Admin.closeEdit();
     const ok = await API.saveData();
