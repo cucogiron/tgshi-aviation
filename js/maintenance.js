@@ -42,12 +42,16 @@ const Maintenance = (() => {
 
     const hrs = { COCO: 0, CUCO: 0, SENSHI: 0 };
     windowFlights.forEach(f => {
-      const r = f.r;
+      var r = f.r;
       if (hrs[r] === undefined) return;
-      // Clamp flight hours to the window
-      const effectiveStart = Math.max(f.hi, prevTach);
-      const effectiveEnd = Math.min(f.hf, curTach);
-      const h = Math.max(0, effectiveEnd - effectiveStart);
+      // FF flights: hours count as Charter/SENSHI for maintenance allocation
+      if (f.t === 'FF' && r !== 'SENSHI') {
+        r = 'SENSHI';
+      }
+      // Count full flight hours — no clamping. If a flight overlaps the window,
+      // the entire flight belongs to this maintenance period (the shop tach may
+      // not exactly match flight boundaries, but the flight was complete).
+      const h = f.h || (f.hf - f.hi);
       hrs[r] += h;
     });
 
