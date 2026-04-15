@@ -469,8 +469,9 @@ var Payments = (function() {
 
         h += '<div class="fue" style="cursor:pointer" onclick="Payments.editPayment(' + p.id + ')">'
           + '<div>'
-          + '<div class="fue-l">' + dirIcon + ' ' + amounts.join(' + ') + typeBadge + '</div>'
+          + '<div class="fue-l">' + dirIcon + ' ' + amounts.join(' + ') + typeBadge + (typeof Attachments !== 'undefined' ? Attachments.renderBadge(p.attachments) : '') + '</div>'
           + '<div class="fue-s">' + dirLabel + xr + (p.notes ? ' · ' + p.notes : '') + '</div>'
+          + (typeof Attachments !== 'undefined' ? Attachments.renderThumbs(p.attachments) : '')
           + '</div>'
           + '<div class="fue-r">'
           + '<div class="fue-d">' + p.date.slice(5) + '</div>'
@@ -482,8 +483,9 @@ var Payments = (function() {
 
         h += '<div class="fue" style="cursor:pointer;border-left:3px solid #8B1A1A" onclick="Payments.editCharge(' + c.id + ')">'
           + '<div>'
-          + '<div class="fue-l" style="color:#8B1A1A">+ ' + amtStr + ' <span style="background:#FEE2E2;color:#991B1B;padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;margin-left:4px">CARGO</span></div>'
+          + '<div class="fue-l" style="color:#8B1A1A">+ ' + amtStr + ' <span style="background:#FEE2E2;color:#991B1B;padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;margin-left:4px">CARGO</span>' + (typeof Attachments !== 'undefined' ? Attachments.renderBadge(c.attachments) : '') + '</div>'
           + '<div class="fue-s">' + (c.description || 'Otro cargo') + '</div>'
+          + (typeof Attachments !== 'undefined' ? Attachments.renderThumbs(c.attachments) : '')
           + '</div>'
           + '<div class="fue-r">'
           + '<div class="fue-d">' + c.date.slice(5) + '</div>'
@@ -535,11 +537,17 @@ var Payments = (function() {
       + '<div class="fs" id="txn-xr-row"><label class="fl">Tipo de cambio (opcional)</label><input type="number" id="txn-xr" placeholder="ej. 7.65" step="0.01" inputmode="decimal" value="0"></div>'
       // Description (charge) / Notes (payment/credit)
       + '<div class="fs"><label class="fl" id="txn-notes-lbl">Notas</label><input type="text" id="txn-notes" placeholder=""></div>'
+      // Attachments
+      + '<div id="txn-att-section"></div>'
       // Save
       + '<button class="btn" id="txn-save-btn" onclick="Payments.saveTransaction()">Guardar</button>';
 
     document.getElementById('book-modal').style.display = 'flex';
     onTxnTypeChange();
+    // Initialize attachment section
+    if (typeof Attachments !== 'undefined') {
+      Attachments.renderEditSection('txn-att-section', [], 'txn_att');
+    }
   }
 
   function onTxnTypeChange() {
@@ -632,16 +640,19 @@ var Payments = (function() {
       if (qtz <= 0 && usd <= 0) { alert('Ingresa al menos un monto'); return; }
       if (!desc) { alert('Ingresa descripcion'); return; }
 
+      // Get attachments
+      var txnAtt = (typeof Attachments !== 'undefined') ? Attachments.getEditAttachments('txn_att') : [];
+
       // Support dual-currency charges as two separate entries
       if (qtz > 0) {
         var idQ = (DB.meta.last_misc_charge_id || 0) + 1;
         DB.meta.last_misc_charge_id = idQ;
-        DB.misc_charges.push({ id: idQ, date: date, owner: owner, amount: qtz, currency: 'QTZ', description: desc, recorded_by: App.currentUser(), recorded_at: new Date().toISOString() });
+        DB.misc_charges.push({ id: idQ, date: date, owner: owner, amount: qtz, currency: 'QTZ', description: desc, recorded_by: App.currentUser(), recorded_at: new Date().toISOString(), attachments: txnAtt.length > 0 ? txnAtt.slice() : undefined });
       }
       if (usd > 0) {
         var idU = (DB.meta.last_misc_charge_id || 0) + 1;
         DB.meta.last_misc_charge_id = idU;
-        DB.misc_charges.push({ id: idU, date: date, owner: owner, amount: usd, currency: 'USD', description: desc, recorded_by: App.currentUser(), recorded_at: new Date().toISOString() });
+        DB.misc_charges.push({ id: idU, date: date, owner: owner, amount: usd, currency: 'USD', description: desc, recorded_by: App.currentUser(), recorded_at: new Date().toISOString(), attachments: txnAtt.length > 0 ? txnAtt.slice() : undefined });
       }
     } else {
       // Save as payment or credit
@@ -656,7 +667,8 @@ var Payments = (function() {
 
       var id = (DB.meta.last_payment_id || 0) + 1;
       DB.meta.last_payment_id = id;
-      DB.payments.push({ id: id, type: type, date: date, from: from, to: to, amount_qtz: qtz, amount_usd: usd, exchange_rate: xr, notes: notes, recorded_by: App.currentUser(), recorded_at: new Date().toISOString() });
+      var txnAttP = (typeof Attachments !== 'undefined') ? Attachments.getEditAttachments('txn_att') : [];
+      DB.payments.push({ id: id, type: type, date: date, from: from, to: to, amount_qtz: qtz, amount_usd: usd, exchange_rate: xr, notes: notes, recorded_by: App.currentUser(), recorded_at: new Date().toISOString(), attachments: txnAttP.length > 0 ? txnAttP.slice() : undefined });
     }
 
     var ok = await API.saveData();
@@ -727,6 +739,8 @@ var Payments = (function() {
       + '<div class="fs" id="et-xr-row"><label class="fl">Tipo de cambio</label><input type="number" id="et-xr" value="' + xr + '" step="0.01" inputmode="decimal"></div>'
       // Notes
       + '<div class="fs"><label class="fl" id="et-notes-lbl">Notas</label><input type="text" id="et-notes" value="' + notes.replace(/"/g, '&quot;') + '"></div>'
+      // Attachments
+      + '<div id="et-att-section"></div>'
       // Meta
       + '<div style="font-size:9px;color:#8892A4;margin-bottom:10px">Registrado por ' + recordedBy + ' el ' + recordedAt + '</div>'
       // Buttons — store original kind and id as data attributes
@@ -737,6 +751,13 @@ var Payments = (function() {
 
     document.getElementById('edit-modal').style.display = 'flex';
     onEditTypeChange();
+    // Initialize attachment section with existing attachments
+    if (typeof Attachments !== 'undefined') {
+      var existingAtt = (kind === 'charge')
+        ? ((DB.misc_charges.find(function(x) { return x.id === id; }) || {}).attachments || [])
+        : ((DB.payments.find(function(x) { return x.id === id; }) || {}).attachments || []);
+      Attachments.renderEditSection('et-att-section', existingAtt, 'et_att');
+    }
   }
 
   function onEditTypeChange() {
@@ -769,6 +790,10 @@ var Payments = (function() {
 
     if (!date) { alert('Selecciona fecha'); return; }
 
+    // Get attachments from edit form
+    var editAtt = (typeof Attachments !== 'undefined') ? Attachments.getEditAttachments('et_att') : [];
+    var attValue = editAtt.length > 0 ? editAtt.slice() : undefined;
+
     // Log before modifying
     if (origKind === 'charge') {
       var oc = DB.misc_charges.find(function(x) { return x.id === id; });
@@ -794,7 +819,8 @@ var Payments = (function() {
         id: newId, type: newType, date: date, from: from, to: to,
         amount_qtz: qtz, amount_usd: usd,
         exchange_rate: parseFloat(document.getElementById('et-xr').value) || 0,
-        notes: notes, recorded_by: App.currentUser(), recorded_at: new Date().toISOString()
+        notes: notes, recorded_by: App.currentUser(), recorded_at: new Date().toISOString(),
+        attachments: attValue
       });
     } else if (!wasCharge && isCharge) {
       // Convert payment/credit -> charge: remove from payments, add to misc_charges
@@ -804,12 +830,12 @@ var Payments = (function() {
       if (qtz > 0) {
         var cid = (DB.meta.last_misc_charge_id || 0) + 1;
         DB.meta.last_misc_charge_id = cid;
-        DB.misc_charges.push({ id: cid, date: date, owner: owner, amount: qtz, currency: 'QTZ', description: notes, recorded_by: App.currentUser(), recorded_at: new Date().toISOString() });
+        DB.misc_charges.push({ id: cid, date: date, owner: owner, amount: qtz, currency: 'QTZ', description: notes, recorded_by: App.currentUser(), recorded_at: new Date().toISOString(), attachments: attValue });
       }
       if (usd > 0) {
         var cid2 = (DB.meta.last_misc_charge_id || 0) + 1;
         DB.meta.last_misc_charge_id = cid2;
-        DB.misc_charges.push({ id: cid2, date: date, owner: owner, amount: usd, currency: 'USD', description: notes, recorded_by: App.currentUser(), recorded_at: new Date().toISOString() });
+        DB.misc_charges.push({ id: cid2, date: date, owner: owner, amount: usd, currency: 'USD', description: notes, recorded_by: App.currentUser(), recorded_at: new Date().toISOString(), attachments: attValue });
       }
     } else if (isCharge) {
       // Update existing charge
@@ -821,6 +847,7 @@ var Payments = (function() {
       // If both QTZ and USD, keep the original currency and update amount
       c.amount = (c.currency === 'USD') ? usd : qtz;
       if (qtz > 0 && usd > 0 && c.currency === 'QTZ') c.amount = qtz;
+      c.attachments = attValue;
     } else {
       // Update existing payment/credit
       var p = DB.payments.find(function(x) { return x.id === id; });
@@ -836,6 +863,7 @@ var Payments = (function() {
       p.amount_usd = usd;
       p.exchange_rate = parseFloat(document.getElementById('et-xr').value) || 0;
       p.notes = notes;
+      p.attachments = attValue;
     }
 
     Admin.closeEdit();
