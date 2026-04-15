@@ -1098,6 +1098,69 @@ var Payments = (function() {
     return h;
   }
 
+  // Compute balance breakdown for a given owner and period
+  // Returns { begQTZ, begUSD, chgQTZ, chgUSD, payQTZ, payUSD, endQTZ, endUSD }
+  function getBalanceForPeriod(owner, bilFrom, bilTo) {
+    ensureData();
+    var periodFromMonth = bilFrom || TRACKING_START;
+    var periodToMonth = bilTo || bilFrom || TRACKING_START;
+    var effectiveFrom = periodFromMonth < TRACKING_START ? TRACKING_START : periodFromMonth;
+    var effectiveFromDate = effectiveFrom + '-01';
+    var periodTo = periodToMonth + '-31';
+
+    // Next month after period end
+    var toParts = periodToMonth.split('-');
+    var nextY = +toParts[0], nextM = +toParts[1] + 1;
+    if (nextM > 12) { nextM = 1; nextY++; }
+    var periodEndExcl = nextY + '-' + App.pad2(nextM);
+
+    // Beginning balance
+    var ob = OPENING_BALANCES[owner] || { qtz: 0, usd: 0 };
+    var begQTZ = ob.qtz, begUSD = ob.usd;
+
+    if (effectiveFrom > TRACKING_START) {
+      var priorCharges = getChargeMonths(owner, TRACKING_START, effectiveFrom);
+      priorCharges.forEach(function(mc) {
+        begQTZ += mc.chargeQTZ;
+        begUSD += mc.chargeUSD;
+      });
+    }
+
+    DB.payments.forEach(function(p) {
+      if ((p.from === owner || p.to === owner) && p.date < effectiveFromDate && p.date >= TRACKING_START + '-01') {
+        var sign = paymentSign(p, owner);
+        begQTZ += sign * (p.amount_qtz || 0);
+        begUSD += sign * (p.amount_usd || 0);
+      }
+    });
+
+    // Period charges
+    var periodCharges = getChargeMonths(owner, effectiveFrom, periodEndExcl);
+    var chgQTZ = 0, chgUSD = 0;
+    periodCharges.forEach(function(mc) {
+      chgQTZ += mc.chargeQTZ;
+      chgUSD += mc.chargeUSD;
+    });
+
+    // Period payments
+    var payQTZ = 0, payUSD = 0;
+    DB.payments.forEach(function(p) {
+      if ((p.from === owner || p.to === owner) && p.date >= effectiveFromDate && p.date <= periodTo) {
+        var sign = paymentSign(p, owner);
+        payQTZ += sign * (p.amount_qtz || 0);
+        payUSD += sign * (p.amount_usd || 0);
+      }
+    });
+
+    return {
+      begQTZ: begQTZ, begUSD: begUSD,
+      chgQTZ: chgQTZ, chgUSD: chgUSD,
+      payQTZ: payQTZ, payUSD: payUSD,
+      endQTZ: begQTZ + chgQTZ + payQTZ,
+      endUSD: begUSD + chgUSD + payUSD
+    };
+  }
+
   return {
     buildPaymentsPage: buildPaymentsPage,
     setOwner: setOwner,
@@ -1113,6 +1176,7 @@ var Payments = (function() {
     openAddCharge: openAddCharge,
     saveCharge: saveCharge,
     getOwnerBalances: getOwnerBalances,
+    getBalanceForPeriod: getBalanceForPeriod,
     buildBillingSectionH: buildBillingSectionH
   };
 })();
