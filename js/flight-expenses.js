@@ -118,7 +118,7 @@ var FlightExpenses = (function() {
       h += '<div class="card" style="margin-bottom:6px"><div class="cb">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
           '<div>' +
-            '<div style="font-size:12px;font-weight:600;color:#1A1F2E">' + e.category + '</div>' +
+            '<div style="font-size:12px;font-weight:600;color:#1A1F2E">' + e.category + (typeof Attachments !== 'undefined' ? Attachments.renderBadge(e.attachments) : '') + '</div>' +
             '<div style="font-size:10px;color:#8892A4;margin-top:1px">' + flightDate.slice(5) + ' ' + flightRoute + ' -- ' + ownerLabel + '</div>' +
             '<div style="font-size:10px;color:#8892A4;margin-top:1px">Pago: ' + e.paid_by + (e.notes ? ' -- ' + e.notes : '') + '</div>' +
           '</div>' +
@@ -127,6 +127,7 @@ var FlightExpenses = (function() {
             '<div style="font-size:9px;color:#8892A4">' + e.date + '</div>' +
           '</div>' +
         '</div>' +
+        (typeof Attachments !== 'undefined' ? Attachments.renderThumbs(e.attachments) : '') +
         actions +
         '</div></div>';
     });
@@ -181,11 +182,16 @@ var FlightExpenses = (function() {
       '<div class="fs"><label class="fl">Pagado por</label><select id="fexp-paid">' + paidByOpts + '</select></div>' +
       '<div class="fs"><label class="fl">Fecha</label><input type="date" id="fexp-date" value="' + App.todayStr() + '"></div>' +
       '<div class="fs"><label class="fl">Notas</label><input type="text" id="fexp-notes" placeholder="opcional"></div>' +
+      '<div id="fexp-att-section"></div>' +
       '<button class="btn" onclick="FlightExpenses.saveExpense()">Guardar gasto</button>';
     document.getElementById('edit-modal').style.display = 'flex';
 
     // Set date from selected flight
     FlightExpenses.onFlightChange();
+    // Initialize attachment section
+    if (typeof Attachments !== 'undefined') {
+      Attachments.renderEditSection('fexp-att-section', [], 'fexp_att');
+    }
     } catch(e) { console.error('openAddExpense error:', e); alert('Error: ' + e.message); }
   }
 
@@ -226,7 +232,8 @@ var FlightExpenses = (function() {
       date: date,
       notes: notes,
       logged_by: App.currentUser(),
-      logged_at: new Date().toISOString()
+      logged_at: new Date().toISOString(),
+      attachments: (typeof Attachments !== 'undefined' && Attachments.getEditAttachments('fexp_att').length > 0) ? Attachments.getEditAttachments('fexp_att').slice() : undefined
     });
 
     Admin.closeEdit();
@@ -279,11 +286,16 @@ var FlightExpenses = (function() {
       '<div class="fs"><label class="fl">Pagado por</label><select id="fexp-paid">' + paidByOpts + '</select></div>' +
       '<div class="fs"><label class="fl">Fecha</label><input type="date" id="fexp-date" value="' + e.date + '"></div>' +
       '<div class="fs"><label class="fl">Notas</label><input type="text" id="fexp-notes" value="' + (e.notes || '') + '"></div>' +
+      '<div id="fexp-att-section"></div>' +
       '<div style="display:flex;gap:8px;margin-top:3px">' +
         '<button class="btn" onclick="FlightExpenses.updateExpense(' + id + ')">Guardar</button>' +
         '<button class="btn" style="background:#8B1A1A" onclick="FlightExpenses.deleteExpense(' + id + ')">Eliminar</button>' +
       '</div>';
     document.getElementById('edit-modal').style.display = 'flex';
+    // Initialize attachment section with existing attachments
+    if (typeof Attachments !== 'undefined') {
+      Attachments.renderEditSection('fexp-att-section', e.attachments || [], 'fexp_att');
+    }
   }
 
   function updateExpense(id) {
@@ -297,6 +309,7 @@ var FlightExpenses = (function() {
     e.paid_by = document.getElementById('fexp-paid').value;
     e.date = document.getElementById('fexp-date').value;
     e.notes = document.getElementById('fexp-notes').value.trim();
+    e.attachments = (typeof Attachments !== 'undefined' && Attachments.getEditAttachments('fexp_att').length > 0) ? Attachments.getEditAttachments('fexp_att').slice() : undefined;
 
     Admin.closeEdit();
     API.saveData().then(function(ok) {
