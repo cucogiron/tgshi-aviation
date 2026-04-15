@@ -259,10 +259,6 @@ const Billing = (() => {
       const border = idx > 0 ? 'border-top:1px solid #E2E6EE;margin-top:6px;padding-top:6px' : '';
       const ownerFerUSD = pilFee(owner) + esp[owner];
       const ownerAdminUSD = owner === 'SENSHI' ? adminFee : 0;
-      // Use actual maintenance costs if available, fallback to flat reserva
-      const ownerMaintUSD = maintData ? maintUSD[owner] : resv(owner);
-      const ownerMaintQTZ = maintData ? maintQTZ[owner] : 0;
-      const maintLabel = maintData ? 'Mantenimiento real' : 'Reserva mante';
       // Flight expenses
       const ownerFexpUSD = fexpData ? fexpUSD[owner] : 0;
       const ownerFexpQTZ = fexpData ? fexpQTZ[owner] : 0;
@@ -273,17 +269,15 @@ const Billing = (() => {
       const ownerFFRev = ffRevenue[owner] || 0;
       // Fernando portion (what goes to Fernando via Senshi)
       const ferTotal = ownerFerUSD + ownerAdminUSD;
-      // Total USD owed to Senshi = Fernando portion + maintenance + expenses - credits + FF revenue
-      const totalUSD = ferTotal + ownerMaintUSD + ownerFexpUSD - ownerCredUSD + ownerFFRev;
-      const totalQTZ = fuelNet[owner] + ownerMaintQTZ + ownerFexpQTZ - ownerCredQTZ;
+      // Total USD owed to Senshi = Fernando portion + expenses - credits + FF revenue
+      // NOTE: Maintenance tracked separately — not included in owner balances
+      const totalUSD = ferTotal + ownerFexpUSD - ownerCredUSD + ownerFFRev;
+      const totalQTZ = fuelNet[owner] + ownerFexpQTZ - ownerCredQTZ;
 
       h += `<div class="bil-row" style="${border}"><div class="bil-lbl" style="font-weight:700;font-size:11px">${label}</div><div class="bil-val"></div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Combustible neto (QTZ)</div><div class="bil-val ${sg(fuelNet[owner])}">${fuelNet[owner] < 0 ? '(' + fQ(fuelNet[owner]) + ')' : fQ(fuelNet[owner])}</div></div>
         <div class="bil-row"><div class="bil-lbl">↳ Pilotaje + espera (USD)</div><div class="bil-val">${fD(ownerFerUSD)}</div></div>
         ${ownerAdminUSD > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Admin fee (USD, 100% Charter)</div><div class="bil-val">${fD(ownerAdminUSD)}</div></div>` : ''}
-        ${ownerMaintUSD > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ ${maintLabel} (USD)</div><div class="bil-val">${fD(ownerMaintUSD)}</div></div>` : ''}
-        ${ownerMaintQTZ > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ ${maintLabel} (QTZ)</div><div class="bil-val">${fQ(ownerMaintQTZ)}</div></div>` : ''}
-        ${ownerMaintUSD === 0 && ownerMaintQTZ === 0 ? `<div class="bil-row"><div class="bil-lbl">↳ ${maintLabel}</div><div class="bil-val">$0.00</div></div>` : ''}
         ${ownerFexpUSD > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Gastos de vuelo (USD)</div><div class="bil-val">${fD(ownerFexpUSD)}</div></div>` : ''}
         ${ownerFexpQTZ > 0 ? `<div class="bil-row"><div class="bil-lbl">↳ Gastos de vuelo (QTZ)</div><div class="bil-val">${fQ(ownerFexpQTZ)}</div></div>` : ''}
         ${ownerCredUSD > 0 ? `<div class="bil-row"><div class="bil-lbl" style="color:#1A6B3A">↳ Credito gastos pagados de bolsillo (USD)</div><div class="bil-val neg">(${fD(ownerCredUSD)})</div></div>` : ''}
@@ -400,16 +394,7 @@ const Billing = (() => {
         usdLines.push({ desc: `Espera en tierra (${d.espHrs[owner].toFixed(1)} hrs × $${d.rt.gw}/hr)`, amt: d.esp[owner] });
       }
 
-      // Maintenance: actual costs or fallback to flat reserva
-      if (d.maintData && d.maintData.events.length > 0) {
-        const mLines = (typeof Maintenance !== 'undefined') ? Maintenance.invoiceLinesForOwner(d.from, d.to, owner) : null;
-        if (mLines) {
-          mLines.usdLines.forEach(l => usdLines.push(l));
-          mLines.qtzLines.forEach(l => qtzLines.push(l));
-        }
-      } else {
-        usdLines.push({ desc: `Reserva mantenimiento (${d.hrs[owner].toFixed(1)} hrs × $${d.rt.res}/hr) — fondo Senshi`, amt: d.resv[owner] });
-      }
+      // Maintenance tracked separately — not included in owner invoices
 
       // Flight expenses
       if (d.fexpData && d.fexpData.expenses.length > 0 && typeof FlightExpenses !== 'undefined') {
