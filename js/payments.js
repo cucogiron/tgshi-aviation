@@ -355,15 +355,7 @@ var Payments = (function() {
       // Admin fee — 100% Senshi
       var adminFee = (owner === 'SENSHI') ? rt.admin : 0;
 
-      // Maintenance
-      var maintUSD = 0, maintQTZ = 0;
-      if (typeof Maintenance !== 'undefined' && Maintenance.billingForPeriod) {
-        var md = Maintenance.billingForPeriod(mm, mm);
-        if (md && md[owner]) {
-          maintUSD = md[owner].USD || 0;
-          maintQTZ = md[owner].QTZ || 0;
-        }
-      }
+      // Maintenance tracked separately — not included in owner balances
 
       // Flight expenses
       var fexpUSD = 0, fexpQTZ = 0;
@@ -392,8 +384,8 @@ var Payments = (function() {
         }
       });
 
-      var totalQTZ = fuelNet + maintQTZ + fexpQTZ - fexpCreditQTZ + miscQTZ;
-      var totalUSD = pilFee + espFee + adminFee + maintUSD + fexpUSD - fexpCreditUSD + miscUSD + ffRev;
+      var totalQTZ = fuelNet + fexpQTZ - fexpCreditQTZ + miscQTZ;
+      var totalUSD = pilFee + espFee + adminFee + fexpUSD - fexpCreditUSD + miscUSD + ffRev;
 
       var details = [];
       // Show fuel as gross charge + anticipo credit separately
@@ -403,8 +395,6 @@ var Payments = (function() {
       if (espFee > 0) details.push({ label: 'Espera (' + espHrs[owner].toFixed(1) + 'hr)', amt: espFee, currency: 'USD' });
       if (adminFee > 0) details.push({ label: 'Admin fee', amt: adminFee, currency: 'USD' });
       if (ffRev > 0) details.push({ label: 'Ingreso FF por cobrar', amt: ffRev, currency: 'USD' });
-      if (maintUSD > 0) details.push({ label: 'Mantenimiento', amt: maintUSD, currency: 'USD' });
-      if (maintQTZ > 0) details.push({ label: 'Mantenimiento', amt: maintQTZ, currency: 'QTZ' });
       if (fexpUSD > 0) details.push({ label: 'Gastos vuelo', amt: fexpUSD, currency: 'USD' });
       if (fexpQTZ > 0) details.push({ label: 'Gastos vuelo', amt: fexpQTZ, currency: 'QTZ' });
       if (fexpCreditQTZ > 0) details.push({ label: 'Credito gasto pagado de bolsillo', amt: -fexpCreditQTZ, currency: 'QTZ', isCredit: true });
