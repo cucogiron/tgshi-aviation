@@ -396,10 +396,16 @@ function fRow(f) {
     f.hi = hi; f.hf = hf; f.h = parseFloat((hf - hi).toFixed(1));
     f.eh = parseFloat(document.getElementById('ed-eh').value) || 0;
     f.rv = parseFloat(document.getElementById('ed-rv').value) || 0;
+    // Clear revenue for non-charter flights
+    if (f.t === 'PERSONAL' || f.t === 'MANTE') {
+      f.rv = 0;
+    }
     f.verified = true; f.verified_by = App.currentUser();
     Admin.closeEdit();
     await API.saveData();
     App.buildAll();
+    // Also rebuild current view if on vuelos tab
+    buildVL(currentFilter);
   }
 
   async function deleteFlight(id) {
