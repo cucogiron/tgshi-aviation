@@ -21,9 +21,17 @@ function fRow(f) {
   var displayR = f.r === 'SENSHI' ? 'Charter' : f.r;
   // For FF flights, show who arranged it
   var ffTag = '';
-  if (f.t === 'FF' && f.r !== 'SENSHI') {
-    displayR = 'Charter';  // FF costs go to Charter
-    ffTag = ' · <span style="color:#B8600A;font-weight:600;font-size:9px">resp. ' + f.r + '</span>';
+  if (f.t === 'FF') {
+    var ffResp = '';
+    if (f.r !== 'SENSHI') {
+      ffResp = f.r;
+      displayR = 'Charter';  // FF costs go to Charter
+    } else if (f.u && f.u !== 'SENSHI') {
+      ffResp = f.u;
+    }
+    if (ffResp) {
+      ffTag = ' · <span style="color:#B8600A;font-weight:600;font-size:9px">resp. ' + ffResp + '</span>';
+    }
   }
   var pendTag = f.verified === false ? '<span class="pend-badge">Pend</span>' : '';
 
