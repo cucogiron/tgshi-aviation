@@ -420,108 +420,18 @@ const Billing = (() => {
 
     // --- Balance section for COCO/CUCO invoices ---
     let balanceHTML = '';
-    if (owner !== 'SENSHI' && typeof Payments !== 'undefined') {
-      const TRACKING_START = '2026-01';
-      const OPENING_BALANCES = { COCO: { qtz: 7133.71, usd: 0 }, CUCO: { qtz: -22129.57, usd: 0 }, SENSHI: { qtz: 0, usd: 0 } };
-      const ob = OPENING_BALANCES[owner] || { qtz: 0, usd: 0 };
-      let begQTZ = ob.qtz, begUSD = ob.usd;
-
-      // Accumulate charges before this period
-      const effectiveFrom = d.from < TRACKING_START ? TRACKING_START : d.from;
-      if (effectiveFrom > TRACKING_START && Payments.getOwnerBalances) {
-        // Use getChargeMonths indirectly — compute prior charges
-        // Simple approach: get current balances and subtract this period's charges/payments
-      }
-
-      // Simpler: use the same paymentSign helper logic
-      function paymentSign(p, o) {
-        if (p.from === o) return -1;
-        if (p.from === 'SENSHI' && p.to === o) return -1;
-        return 1;
-      }
-
-      // Prior charges (tracking start to period start)
-      if (effectiveFrom > TRACKING_START) {
-        const priorMonths = [];
-        let py = +TRACKING_START.split('-')[0], pm = +TRACKING_START.split('-')[1];
-        const ey = +effectiveFrom.split('-')[0], em = +effectiveFrom.split('-')[1];
-        while (py < ey || (py === ey && pm < em)) {
-          const mm = py + '-' + String(pm).padStart(2, '0');
-          const fd2 = mm + '-01', td2 = mm + '-31';
-          const fls2 = DB.flights.filter(f => f.d >= fd2 && f.d <= td2 && (f.verified !== false || (f.t !== 'STD' && f.t !== 'FF')));
-          const fus2 = DB.fuel.filter(f => f.d >= fd2 && f.d <= td2);
-          const rt2 = App.getRateFD(fd2);
-          let h2 = {COCO:0,CUCO:0,SENSHI:0}, sub2 = {COCO:{n:0,a:0},CUCO:{n:0,a:0},SENSHI:{n:0,a:0}}, esp2 = {COCO:0,CUCO:0,SENSHI:0};
-          let ffR = 0;
-          fls2.forEach(f => {
-            const r = f.r; if (!h2.hasOwnProperty(r)) return;
-            let ffO = null;
-            if (f.t === 'FF') {
-              if (r !== 'SENSHI' && (r==='COCO'||r==='CUCO')) ffO = r;
-              else if (f.u) { if (f.u.toUpperCase().indexOf('COCO')>=0) ffO='COCO'; if (f.u.toUpperCase().indexOf('CUCO')>=0) ffO='CUCO'; }
-            }
-            const co = (f.t==='FF' && ffO) ? 'SENSHI' : r;
-            h2[co] += f.h;
-            if (f.h>0 && f.h<1) { sub2[co].n++; sub2[co].a += f.h; }
-            esp2[co] += (f.eh||0);
-            if (f.t==='FF' && ffO===owner && (f.rv||0)>0) ffR += f.rv;
-          });
-          const th2 = h2.COCO+h2.CUCO+h2.SENSHI;
-          let tf2=0, ant2={COCO:0,CUCO:0,SENSHI:0};
-          fus2.forEach(f => { tf2+=f.m; if(f.ac) ant2.COCO+=f.ac; if(f.au) ant2.CUCO+=f.au; if(f.as) ant2.SENSHI+=f.as; });
-          const qph2 = th2>0 ? tf2/th2 : 0;
-          const fNet = h2[owner]*qph2 - (ant2[owner]||0);
-          const bH = h2[owner] - sub2[owner].a + sub2[owner].n;
-          const pF = bH * rt2.pilot;
-          const eF = esp2[owner] * rt2.gw;
-          const aF = (owner==='SENSHI') ? rt2.admin : 0;
-          let fxU=0,fxQ=0,fxCU=0,fxCQ=0;
-          if (typeof FlightExpenses!=='undefined' && FlightExpenses.billingForPeriod) {
-            const fxd = FlightExpenses.billingForPeriod(mm,mm);
-            if (fxd&&fxd[owner]) { fxU=fxd[owner].USD||0; fxQ=fxd[owner].QTZ||0; }
-            if (fxd&&fxd.payer_credits&&fxd.payer_credits[owner]) { fxCU=fxd.payer_credits[owner].USD||0; fxCQ=fxd.payer_credits[owner].QTZ||0; }
-          }
-          let mU=0,mQ=0;
-          (DB.misc_charges||[]).forEach(c => { if(c.owner===owner&&c.date>=fd2&&c.date<=td2) { if(c.currency==='USD') mU+=c.amount; else mQ+=c.amount; } });
-          begQTZ += fNet + fxQ - fxCQ + mQ;
-          begUSD += pF + eF + aF + fxU - fxCU + mU + ffR;
-          pm++; if(pm>12){pm=1;py++;}
-        }
-      }
-
-      // Prior payments
-      const effFromDate = effectiveFrom + '-01';
-      (DB.payments||[]).forEach(p => {
-        if ((p.from===owner||p.to===owner) && p.date < effFromDate && p.date >= TRACKING_START+'-01') {
-          const s = paymentSign(p, owner);
-          begQTZ += s * (p.amount_qtz||0);
-          begUSD += s * (p.amount_usd||0);
-        }
-      });
-
-      // Period payments
-      const periodTo = d.to + '-31';
-      let payQTZ = 0, payUSD = 0;
-      (DB.payments||[]).forEach(p => {
-        if ((p.from===owner||p.to===owner) && p.date >= effFromDate && p.date <= periodTo) {
-          const s = paymentSign(p, owner);
-          payQTZ += s * (p.amount_qtz||0);
-          payUSD += s * (p.amount_usd||0);
-        }
-      });
-
-      const endQTZ = begQTZ + totalQTZ + payQTZ;
-      const endUSD = begUSD + totalUSD + payUSD;
+    if (owner !== 'SENSHI' && typeof Payments !== 'undefined' && Payments.getBalanceForPeriod) {
+      const bal = Payments.getBalanceForPeriod(owner, d.from, d.to);
 
       balanceHTML = `
 <div class="sec-hd" style="margin-top:24px">Estado de cuenta</div>
 <table>
   <thead><tr><th>Concepto</th><th>QTZ</th><th>USD</th></tr></thead>
   <tbody>
-    <tr><td>Saldo anterior</td><td style="text-align:right;font-weight:600">${fQs(begQTZ)}</td><td style="text-align:right;font-weight:600">${fDs(begUSD)}</td></tr>
-    <tr><td>+ Cargos del periodo</td><td style="text-align:right;color:#8B1A1A">${fQs(totalQTZ)}</td><td style="text-align:right;color:#8B1A1A">${fDs(totalUSD)}</td></tr>
-    ${(payQTZ !== 0 || payUSD !== 0) ? `<tr><td>- Pagos del periodo</td><td style="text-align:right;color:#1A6B3A">${fQs(payQTZ)}</td><td style="text-align:right;color:#1A6B3A">${fDs(payUSD)}</td></tr>` : ''}
-    <tr class="total"><td><b>Saldo al ${d.to}</b></td><td style="text-align:right" class="${endQTZ < 0 ? 'neg' : ''}"><b>${fQs(endQTZ)}</b></td><td style="text-align:right" class="${endUSD < 0 ? 'neg' : ''}"><b>${fDs(endUSD)}</b></td></tr>
+    <tr><td>Saldo anterior</td><td style="text-align:right;font-weight:600" class="${bal.begQTZ < 0 ? 'neg' : ''}">${fQs(bal.begQTZ)}</td><td style="text-align:right;font-weight:600" class="${bal.begUSD < 0 ? 'neg' : ''}">${fDs(bal.begUSD)}</td></tr>
+    <tr><td>+ Cargos del periodo</td><td style="text-align:right;color:#8B1A1A">${fQs(bal.chgQTZ)}</td><td style="text-align:right;color:#8B1A1A">${fDs(bal.chgUSD)}</td></tr>
+    ${(bal.payQTZ !== 0 || bal.payUSD !== 0) ? `<tr><td>- Pagos del periodo</td><td style="text-align:right;color:#1A6B3A">${fQs(bal.payQTZ)}</td><td style="text-align:right;color:#1A6B3A">${fDs(bal.payUSD)}</td></tr>` : ''}
+    <tr class="total"><td><b>Saldo al ${d.to}</b></td><td style="text-align:right" class="${bal.endQTZ < 0 ? 'neg' : ''}"><b>${fQs(bal.endQTZ)}</b></td><td style="text-align:right" class="${bal.endUSD < 0 ? 'neg' : ''}"><b>${fDs(bal.endUSD)}</b></td></tr>
   </tbody>
 </table>
 <div style="font-size:9px;color:#8892A4;text-align:center;margin-top:6px">Positivo = debe a Senshi · Negativo = Senshi debe</div>`;
